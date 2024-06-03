@@ -58,7 +58,9 @@ func main() {
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
 	if config.Plugin.Enable {
-		go plugin.OpenPluginPort(config.Plugin.Port)
+		log.Info("Starting Plugin")
+		//go plugin.OpenPluginPort(config.Plugin.Port)
+		go plugin.InitRPC()
 	}
 
 	<-make(chan struct{})
