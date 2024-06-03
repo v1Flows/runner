@@ -14,8 +14,8 @@ func InitRPC() {
 	rpc.Register(action)
 	// Registers an HTTP handler for RPC messages
 	rpc.HandleHTTP()
-	// Start listening for the requests on port 1234
-	listener, err := net.Listen("tcp", ":1234")
+	// Start listening for the requests on port 9854
+	listener, err := net.Listen("tcp", ":9854")
 	if err != nil {
 		log.Fatal("Listener error: ", err)
 	}
