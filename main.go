@@ -39,6 +39,12 @@ func logging(logLevel string) {
 	}
 }
 
+var (
+	ApiURL   = ""
+	ApiKey   = ""
+	RunnerID = ""
+)
+
 func main() {
 	kingpin.Version(version)
 	kingpin.HelpFlag.Short('h')
@@ -54,14 +60,21 @@ func main() {
 
 	logging(config.LogLevel)
 
+	ApiURL = config.Alertflow.URL
+	ApiKey = config.Alertflow.APIKey
+	RunnerID = config.RunnerID
+
 	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version)
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
 	if config.Plugin.Enable {
 		log.Info("Starting Plugin")
-		//go plugin.OpenPluginPort(config.Plugin.Port)
 		go plugin.InitRPC()
 	}
 
 	<-make(chan struct{})
+}
+
+func getAPIDetails() (string, string, string) {
+	return ApiURL, ApiKey, RunnerID
 }
