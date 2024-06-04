@@ -16,7 +16,8 @@ type AlertflowConf struct {
 }
 
 type PluginConf struct {
-	Enable bool `json:",default=false"`
+	Enable bool     `json:",default=false"`
+	List   []string `json:"list"`
 }
 
 type RestfulConf struct {

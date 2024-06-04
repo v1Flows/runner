@@ -19,10 +19,15 @@ type Register struct {
 
 func RegisterAtAPI(api_url string, api_key string, runner_id string, version string) {
 	register := Register{
-		Registered:       true,
-		AvailableActions: json.RawMessage(`[{}]`),
-		LastHeartbeat:    sql.NullTime{Time: time.Now(), Valid: true},
-		RunnerVersion:    version,
+		Registered: true,
+		AvailableActions: json.RawMessage(`[{
+			"name": "log",
+			"type": "action",
+			"description": "Post Log Message on API Backend Server",
+			"params": {}
+		}]`),
+		LastHeartbeat: sql.NullTime{Time: time.Now(), Valid: true},
+		RunnerVersion: version,
 	}
 
 	payloadBuf := new(bytes.Buffer)

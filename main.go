@@ -68,7 +68,8 @@ func main() {
 
 	if config.Plugins.Enable {
 		log.Info("Starting Plugin")
-		go plugin.InitRPC()
+		go plugin.InitRPCServer()
+		go plugin.InitializePlugins(config.Plugins.List)
 	}
 
 	<-make(chan struct{})

@@ -7,7 +7,7 @@ import (
 	"net/rpc"
 )
 
-func InitRPC() {
+func InitRPCServer() {
 	action := new(Action)
 	// Register the timeserver object upon which the GiveServerTime
 	// function will be called from the RPC server (from the client)

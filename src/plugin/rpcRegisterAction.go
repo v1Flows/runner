@@ -8,9 +8,10 @@ import (
 )
 
 type RegisterActionArgs struct {
-	Name   string
-	Type   string
-	Fields json.RawMessage
+	Name        string
+	Type        string
+	Description string
+	Fields      json.RawMessage
 }
 
 type Action string
@@ -25,7 +26,7 @@ func (a *Action) RegisterAction(args *RegisterActionArgs, reply *string) error {
 		return err
 	}
 
-	log.Info("Action Register incoming: Name ", args.Name, "; Type ", args.Type, "; Fields ", fields)
+	log.Info("Action Register incoming: Name ", args.Name, "; Description ", args.Description, "; Type ", args.Type, "; Fields ", fields)
 
 	*reply = "Action Registered"
 	return nil
