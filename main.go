@@ -2,10 +2,10 @@ package main
 
 import (
 	"alertflow-runner/src/config"
-	"alertflow-runner/src/heartbeat"
 	"alertflow-runner/src/incoming"
+	"alertflow-runner/src/outgoing/heartbeat"
+	"alertflow-runner/src/outgoing/register"
 	"alertflow-runner/src/plugin"
-	"alertflow-runner/src/register"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
