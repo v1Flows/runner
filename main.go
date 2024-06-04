@@ -22,7 +22,6 @@ var (
 	alertflowAPIKey = kingpin.Flag("alertflow.apikey", "Alertflow API Key").String()
 
 	pluginEnable = kingpin.Flag("plugin.enable", "Plugin Enable").Bool()
-	pluginPort   = kingpin.Flag("plugin.port", "Plugin Port").Int()
 )
 
 func logging(logLevel string) {
@@ -67,14 +66,10 @@ func main() {
 	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version)
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
-	if config.Plugin.Enable {
+	if config.Plugins.Enable {
 		log.Info("Starting Plugin")
 		go plugin.InitRPC()
 	}
 
 	<-make(chan struct{})
-}
-
-func getAPIDetails() (string, string, string) {
-	return ApiURL, ApiKey, RunnerID
 }

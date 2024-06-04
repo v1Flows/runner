@@ -1,31 +1,31 @@
 package plugin
 
 import (
-	"alertflow-runner/src/config"
-	"fmt"
-	"log"
+	"bytes"
+	"encoding/json"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type RegisterActionArgs struct {
-	Name string
-	Type string
+	Name   string
+	Type   string
+	Fields json.RawMessage
 }
 
 type Action string
 
 func (a *Action) RegisterAction(args *RegisterActionArgs, reply *string) error {
-	fmt.Println("Register Action: ", args.Name)
+	reader := bytes.NewReader(args.Fields)
+	decoder := json.NewDecoder(reader)
 
-	config, err := config.ReadConfig("config.yml")
+	var fields map[string]interface{}
+	err := decoder.Decode(&fields)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	var ApiURL = config.Alertflow.URL
-	var ApiKey = config.Alertflow.APIKey
-	var RunnerID = config.RunnerID
-
-	fmt.Println(ApiURL, ApiKey, RunnerID)
+	log.Info("Action Register incoming: Name ", args.Name, "; Type ", args.Type, "; Fields ", fields)
 
 	*reply = "Action Registered"
 	return nil
