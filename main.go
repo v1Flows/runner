@@ -3,6 +3,7 @@ package main
 import (
 	"alertflow-runner/src/config"
 	"alertflow-runner/src/heartbeat"
+	"alertflow-runner/src/incoming"
 	"alertflow-runner/src/plugin"
 	"alertflow-runner/src/register"
 
@@ -65,6 +66,11 @@ func main() {
 
 	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version)
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
+
+	if config.ReceivePayloads.Enabled {
+		log.Info("Starting ReceivePayloads")
+		go incoming.InitPayloadRouter(config.ReceivePayloads.Port)
+	}
 
 	if config.Plugins.Enable {
 		log.Info("Starting Plugin")
