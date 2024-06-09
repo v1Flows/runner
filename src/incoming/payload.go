@@ -17,9 +17,7 @@ func InitPayloadRouter(port int) {
 	payload := router.Group("/payload")
 	{
 		payload.POST("/alertmanager", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"status": "alive",
-			})
+			AlertmanagerPayloadHandler(c)
 		})
 
 		payload.POST("/zabbix", func(c *gin.Context) {
