@@ -1,0 +1,46 @@
+name: Build & Push Docker Image Main
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  go-build-test:
+    name: Go Build & Test
+    runs-on: [self-hosted, alertflow]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v ./...
+
+  docker-build-push:
+    name: Docker Build & Push
+    runs-on: [self-hosted, alertflow]
+    needs: [go-build-test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker Image
+        run: docker build . --file Dockerfile --tag harbor.justlab.xyz/alertflow/runner:latest --tag harbor.justlab.xyz/alertflow/runner:${{ github.ref_name }}
+
+      - name: Docker Login
+        uses: docker/login-action@v3.2.0
+        with:
+          registry: harbor.justlab.xyz
+          username: ${{ secrets.HARBOR_LOGIN_USERNAME }}
+          password: ${{ secrets.HARBOR_LOGIN_PASSWORD }}
+          logout: false
+      
+      - name: Push Latest Image
+        run: docker push harbor.justlab.xyz/alertflow/runner:latest
+
+      - name: Push Branch Image
+        run: docker push harbor.justlab.xyz/alertflow/runner:${{ github.ref_name }}    
