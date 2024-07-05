@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 func InitializePlugins(pluginList []string) {
