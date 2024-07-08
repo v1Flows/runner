@@ -1,0 +1,38 @@
+name: Release Version
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: [self-hosted, alertflow]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.ACTIONS_TOKEN }}
+  
+      - name: Create pull request to main
+        uses: thomaseizinger/create-pull-request@master
+        with:
+          github_token: ${{ secrets.ACTIONS_TOKEN }}
+          head: develop
+          base: main
+          title: "An automatically created PR from develop to main!"
+  
+      - name: Build Docker Image
+        run: docker build . --file Dockerfile --tag harbor.justlab.xyz/alertflow/runner:${{ github.ref_name }}
+
+      - name: Docker Login
+        uses: docker/login-action@v3.2.0
+        with:
+          registry: harbor.justlab.xyz
+          username: ${{ secrets.HARBOR_LOGIN_USERNAME }}
+          password: ${{ secrets.HARBOR_LOGIN_PASSWORD }}
+          logout: false
+
+      - name: Push Branch Image
+        run: docker push harbor.justlab.xyz/alertflow/runner:${{ github.ref_name }}   
