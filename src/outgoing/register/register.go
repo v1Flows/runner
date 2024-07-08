@@ -2,7 +2,6 @@ package register
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -11,17 +10,20 @@ import (
 )
 
 type Register struct {
-	Registered       bool            `json:"registered"`
-	AvailableActions json.RawMessage `json:"available_actions"`
-	LastHeartbeat    sql.NullTime    `json:"last_heartbeat"`
-	RunnerVersion    string          `json:"runner_version"`
+	Registered                bool            `json:"registered"`
+	AvailableActions          json.RawMessage `json:"available_actions"`
+	AvailablePayloadInjectors json.RawMessage `json:"available_payload_injectors"`
+	LastHeartbeat             time.Time       `json:"last_heartbeat"`
+	RunnerVersion             string          `json:"runner_version"`
 }
 
 func RegisterAtAPI(api_url string, api_key string, runner_id string, version string) {
 	register := Register{
-		Registered:    true,
-		LastHeartbeat: sql.NullTime{Time: time.Now(), Valid: true},
-		RunnerVersion: version,
+		Registered:                true,
+		LastHeartbeat:             time.Now(),
+		RunnerVersion:             version,
+		AvailableActions:          json.RawMessage(`[]`),
+		AvailablePayloadInjectors: json.RawMessage(`[]`),
 	}
 
 	payloadBuf := new(bytes.Buffer)

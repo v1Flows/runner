@@ -3,6 +3,8 @@ name: Build & Push Docker Image Main
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - '.github/**'
 
 jobs:
   go-build-test:
