@@ -1,8 +1,10 @@
 package register
 
 import (
+	"alertflow-runner/src/models"
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -17,14 +19,21 @@ type Register struct {
 	RunnerVersion             string          `json:"runner_version"`
 }
 
-func RegisterAtAPI(api_url string, api_key string, runner_id string, version string) {
+func RegisterAtAPI(api_url string, api_key string, runner_id string, version string, actions []models.ActionDetails) {
 	register := Register{
 		Registered:                true,
 		LastHeartbeat:             time.Now(),
 		RunnerVersion:             version,
-		AvailableActions:          json.RawMessage(`[]`),
 		AvailablePayloadInjectors: json.RawMessage(`[]`),
 	}
+
+	// Convert actions to JSON
+	actionsJSON, err := json.Marshal(actions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	register.AvailableActions = json.RawMessage(actionsJSON)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
@@ -39,8 +48,15 @@ func RegisterAtAPI(api_url string, api_key string, runner_id string, version str
 	}
 	defer resp.Body.Close()
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if resp.StatusCode != 201 {
-		log.Fatal("Failed to register at API: ", api_url+"/api/runners/"+runner_id+"/register")
+		log.Error("Failed to register at API: ", api_url+"/api/runners/"+runner_id+"/register")
+		log.Error("Response: ", string(body))
+		panic("Failed to register at API")
 	}
 	log.Info("Registered at API: ", api_url+"/api/runners/"+runner_id+"/register")
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -15,41 +16,39 @@ type AlertflowConf struct {
 	APIKey string `json:"apikey"`
 }
 
-type ReceivePayloadsConf struct {
+type PayloadsConf struct {
 	Enabled  bool     `json:",default=true"`
 	Port     int      `json:"port"`
 	Managers []string `json:"managers"`
 }
 
-type PluginConf struct {
-	Enable bool     `json:",default=false"`
-	List   []string `json:"list"`
-}
-
 type RestfulConf struct {
-	LogLevel        string `json:",default=Info"`
-	RunnerID        string
-	Alertflow       AlertflowConf
-	ReceivePayloads ReceivePayloadsConf
-	Plugins         PluginConf
+	LogLevel  string `json:",default=Info"`
+	RunnerID  string
+	Alertflow AlertflowConf
+	Payloads  PayloadsConf
 }
 
 func ReadConfig(configFile string) (*RestfulConf, error) {
-	if err := conf.Load(configFile, &Config); err != nil {
-		// check if we have os env vars
-		if os.Getenv("ALERTFLOW_URL") != "" && os.Getenv("ALERTFLOW_APIKEY") != "" && os.Getenv("RUNNER_ID") != "" {
-			Config.Alertflow.URL = os.Getenv("ALERTFLOW_URL")
-			Config.Alertflow.APIKey = os.Getenv("ALERTFLOW_APIKEY")
-			Config.RunnerID = os.Getenv("RUNNER_ID")
+	if configFile == "" {
+		Config.RunnerID = os.Getenv("RUNNER_ID")
+		Config.Alertflow.URL = os.Getenv("ALERTFLOW_URL")
+		Config.Alertflow.APIKey = os.Getenv("ALERTFLOW_APIKEY")
 
-			if os.Getenv("PLUGIN_ENABLE") != "" {
-				Config.Plugins.Enable, _ = strconv.ParseBool(os.Getenv("PLUGIN_ENABLE"))
-			}
+		Config.Payloads.Enabled, _ = strconv.ParseBool(os.Getenv("PAYLOADS_ENABLED"))
+		Config.Payloads.Port, _ = strconv.Atoi(os.Getenv("PAYLOADS_PORT"))
+		Config.Payloads.Managers = strings.Split(os.Getenv("PAYLOADS_MANAGERS"), ",")
 
-			return &Config, nil
+		if Config.RunnerID == "" || Config.Alertflow.URL == "" || Config.Alertflow.APIKey == "" {
+			log.Fatal("Missing Required Config Values")
 		}
+
+		return &Config, nil
+	}
+	if err := conf.Load(configFile, &Config); err != nil {
 		log.Fatal("Error Loading Config File: ", err)
 	}
+
 	log.Info("Loaded Config File: ", configFile)
 
 	return &Config, nil

@@ -1,11 +1,11 @@
 package main
 
 import (
+	"alertflow-runner/src/actions"
 	"alertflow-runner/src/config"
 	"alertflow-runner/src/incoming"
 	"alertflow-runner/src/outgoing/heartbeat"
 	"alertflow-runner/src/outgoing/register"
-	"alertflow-runner/src/plugin"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -64,18 +64,14 @@ func main() {
 	ApiKey = config.Alertflow.APIKey
 	RunnerID = config.RunnerID
 
-	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version)
+	actions := actions.Init()
+
+	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version, actions)
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
-	if config.ReceivePayloads.Enabled {
-		log.Info("Starting ReceivePayloads")
-		go incoming.InitPayloadRouter(config.ReceivePayloads.Port)
-	}
-
-	if config.Plugins.Enable {
-		log.Info("Starting Plugin")
-		go plugin.InitRPCServer()
-		go plugin.InitializePlugins(config.Plugins.List)
+	if config.Payloads.Enabled {
+		log.Info("Starting Payload Receivers")
+		go incoming.InitPayloadRouter(config.Payloads.Port, config.Payloads.Managers)
 	}
 
 	<-make(chan struct{})
