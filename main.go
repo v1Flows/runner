@@ -70,8 +70,8 @@ func main() {
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
 	if config.Payloads.Enabled {
-		log.Info("Starting ReceivePayloads")
-		go incoming.InitPayloadRouter(config.Payloads.Port)
+		log.Info("Starting Payload Receivers")
+		go incoming.InitPayloadRouter(config.Payloads.Port, config.Payloads.Managers)
 	}
 
 	<-make(chan struct{})
