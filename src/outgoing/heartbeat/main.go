@@ -1,6 +1,7 @@
 package heartbeat
 
 import (
+	"io"
 	"net/http"
 	"time"
 
@@ -25,9 +26,17 @@ func SendHeartbeat(api_url string, api_key string, runner_id string) {
 		if err != nil {
 			log.Fatalf("Failed to send request: %v", err)
 		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
 		resp.Body.Close()
+
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to send heartbeat to API: %s", url)
+			log.Errorf("Failed to send heartbeat to API: %s", url)
+			log.Errorf("Response: %s", body)
+			panic("Failed to send heartbeat to API")
 		}
 		log.Debugf("Heartbeat sent to API: %s", url)
 	}
