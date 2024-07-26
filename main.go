@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "1.0.0"
+const version string = "0.2.0-beta"
 
 var (
 	configFile = kingpin.Flag("config.file", "Config File").String()
