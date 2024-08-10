@@ -4,6 +4,7 @@ import (
 	"alertflow-runner/src/actions"
 	"alertflow-runner/src/config"
 	"alertflow-runner/src/incoming"
+	"alertflow-runner/src/outgoing/execution"
 	"alertflow-runner/src/outgoing/heartbeat"
 	"alertflow-runner/src/outgoing/register"
 
@@ -68,6 +69,7 @@ func main() {
 
 	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version, actions)
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
+	go execution.CheckWaitingExecutions(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
 	if config.Payloads.Enabled {
 		log.Info("Starting Payload Receivers")

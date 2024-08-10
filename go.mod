@@ -62,6 +62,7 @@ require (
 require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.6.0
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/zeromicro/go-zero v1.6.5
 	golang.org/x/sys v0.22.0 // indirect
