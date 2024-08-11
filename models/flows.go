@@ -6,6 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type IncomingFlow struct {
+	FlowData Flows `json:"flow"`
+}
+
 type Flows struct {
 	ID                  uuid.UUID `json:"id"`
 	Name                string    `json:"name"`

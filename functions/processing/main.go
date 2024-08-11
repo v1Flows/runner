@@ -27,7 +27,7 @@ func StartProcessing(execution models.Execution) {
 		StartedAt:     time.Now(),
 	})
 
-	GetFlowData(execution)
+	flow, _ := GetFlowData(execution)
 
 	SendExecutionStep(execution, models.ExecutionSteps{
 		ExecutionID:   execution.ID.String(),
@@ -44,4 +44,21 @@ func StartProcessing(execution models.Execution) {
 		ActionMessage: "Checking if Flow has any Actions",
 		StartedAt:     time.Now(),
 	})
+
+	status := CheckFlowActions(flow)
+
+	if !status {
+		SendExecutionStep(execution, models.ExecutionSteps{
+			ExecutionID:   execution.ID.String(),
+			ActionName:    "Check for Actions",
+			ActionMessage: "No Flow Actions found",
+			Finished:      true,
+			FinishedAt:    time.Now(),
+		})
+
+		execution.FinishedAt = time.Now()
+		execution.Running = false
+		EndExecution(execution)
+		return
+	}
 }
