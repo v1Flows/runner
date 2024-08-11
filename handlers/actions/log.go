@@ -1,6 +1,6 @@
 package actions
 
-import "alertflow-runner/src/models"
+import "alertflow-runner/models"
 
 func LogInit() models.ActionDetails {
 	return models.ActionDetails{

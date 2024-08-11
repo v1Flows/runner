@@ -1,8 +1,8 @@
 package execution
 
 import (
-	"alertflow-runner/src/interactions/processing"
-	"alertflow-runner/src/models"
+	"alertflow-runner/functions/processing"
+	"alertflow-runner/models"
 	"encoding/json"
 	"net/http"
 	"time"

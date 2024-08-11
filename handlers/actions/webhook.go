@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"alertflow-runner/src/models"
+	"alertflow-runner/models"
 	"encoding/json"
 )
 

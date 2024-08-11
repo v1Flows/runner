@@ -1,8 +1,8 @@
 package processing
 
 import (
-	"alertflow-runner/src/config"
-	"alertflow-runner/src/models"
+	"alertflow-runner/handlers/config"
+	"alertflow-runner/models"
 	"bytes"
 	"encoding/json"
 	"net/http"

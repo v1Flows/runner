@@ -1,7 +1,6 @@
-package incoming
+package payload
 
 import (
-	"net/http"
 	"slices"
 	"strconv"
 
@@ -23,12 +22,6 @@ func InitPayloadRouter(port int, types []string) {
 				AlertmanagerPayloadHandler(c)
 			})
 		}
-
-		payload.POST("/zabbix", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"status": "alive",
-			})
-		})
 	}
 
 	router.Run(":" + strconv.Itoa(port))

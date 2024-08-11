@@ -1,9 +1,8 @@
-package incoming
+package payload
 
 import (
-	"alertflow-runner/src/config"
-	"alertflow-runner/src/models"
-	"alertflow-runner/src/outgoing/payload"
+	"alertflow-runner/handlers/config"
+	"alertflow-runner/models"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -36,5 +35,5 @@ func AlertmanagerPayloadHandler(context *gin.Context) {
 		RunnerID: config.Config.RunnerID,
 	}
 
-	payload.SendPayload(payloadData)
+	SendPayload(payloadData)
 }

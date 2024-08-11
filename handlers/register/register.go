@@ -1,7 +1,7 @@
 package register
 
 import (
-	"alertflow-runner/src/models"
+	"alertflow-runner/models"
 	"bytes"
 	"encoding/json"
 	"io"

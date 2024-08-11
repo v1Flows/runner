@@ -1,12 +1,12 @@
 package main
 
 import (
-	"alertflow-runner/src/actions"
-	"alertflow-runner/src/config"
-	"alertflow-runner/src/incoming"
-	"alertflow-runner/src/outgoing/execution"
-	"alertflow-runner/src/outgoing/heartbeat"
-	"alertflow-runner/src/outgoing/register"
+	"alertflow-runner/handlers/actions"
+	"alertflow-runner/handlers/config"
+	execution "alertflow-runner/handlers/executions"
+	"alertflow-runner/handlers/heartbeat"
+	"alertflow-runner/handlers/payload"
+	"alertflow-runner/handlers/register"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -73,7 +73,7 @@ func main() {
 
 	if config.Payloads.Enabled {
 		log.Info("Starting Payload Receivers")
-		go incoming.InitPayloadRouter(config.Payloads.Port, config.Payloads.Managers)
+		go payload.InitPayloadRouter(config.Payloads.Port, config.Payloads.Managers)
 	}
 
 	<-make(chan struct{})
