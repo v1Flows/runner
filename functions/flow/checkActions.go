@@ -1,4 +1,4 @@
-package processing
+package flow
 
 import (
 	"alertflow-runner/models"

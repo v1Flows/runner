@@ -1,6 +1,8 @@
 package processing
 
 import (
+	"alertflow-runner/functions/executions"
+	"alertflow-runner/functions/flow"
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/models"
 	"time"
@@ -17,19 +19,19 @@ func StartProcessing(execution models.Execution) {
 	execution.ExecutedAt = time.Now()
 
 	// update execution
-	UpdateExecution(execution)
+	executions.Update(execution)
 
 	// get flow data
-	SendExecutionStep(execution, models.ExecutionSteps{
+	executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:   execution.ID.String(),
 		ActionName:    "Get Flow Data",
 		ActionMessage: "Requesting Flow Data from API",
 		StartedAt:     time.Now(),
 	})
 
-	flow, _ := GetFlowData(execution)
+	flowData, _ := flow.GetFlowData(execution)
 
-	SendExecutionStep(execution, models.ExecutionSteps{
+	executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:   execution.ID.String(),
 		ActionName:    "Get Flow Data",
 		ActionMessage: "Requesting Flow Data from API finished",
@@ -38,17 +40,17 @@ func StartProcessing(execution models.Execution) {
 	})
 
 	// check for flow actions
-	SendExecutionStep(execution, models.ExecutionSteps{
+	executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:   execution.ID.String(),
 		ActionName:    "Check for Actions",
 		ActionMessage: "Checking if Flow has any Actions",
 		StartedAt:     time.Now(),
 	})
 
-	status := CheckFlowActions(flow)
+	status := flow.CheckFlowActions(flowData)
 
 	if !status {
-		SendExecutionStep(execution, models.ExecutionSteps{
+		executions.SendStep(execution, models.ExecutionSteps{
 			ExecutionID:   execution.ID.String(),
 			ActionName:    "Check for Actions",
 			ActionMessage: "No Flow Actions found",
@@ -58,7 +60,7 @@ func StartProcessing(execution models.Execution) {
 
 		execution.FinishedAt = time.Now()
 		execution.Running = false
-		EndExecution(execution)
+		executions.End(execution)
 		return
 	}
 }

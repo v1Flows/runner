@@ -1,4 +1,4 @@
-package processing
+package executions
 
 import (
 	"alertflow-runner/handlers/config"
@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendExecutionStep(execution models.Execution, step models.ExecutionSteps) {
+func SendStep(execution models.Execution, step models.ExecutionSteps) {
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)

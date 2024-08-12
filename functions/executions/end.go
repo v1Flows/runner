@@ -1,4 +1,4 @@
-package processing
+package executions
 
 import (
 	"alertflow-runner/handlers/config"
@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateExecution(execution models.Execution) {
+func End(execution models.Execution) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
