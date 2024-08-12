@@ -7,6 +7,7 @@ import (
 	"alertflow-runner/handlers/heartbeat"
 	"alertflow-runner/handlers/payload"
 	"alertflow-runner/handlers/register"
+	"strings"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -58,7 +59,7 @@ func main() {
 }
 
 func Init() {
-	switch config.Config.Mode {
+	switch strings.ToLower(config.Config.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
