@@ -1,6 +1,7 @@
 package heartbeat
 
 import (
+	"alertflow-runner/handlers/config"
 	"io"
 	"net/http"
 	"time"
@@ -8,19 +9,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendHeartbeat(api_url string, api_key string, runner_id string) {
+func SendHeartbeat() {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
 	}
-	url := api_url + "/api/runners/" + runner_id + "/heartbeat"
+	url := config.Config.Alertflow.URL + "/api/runners/" + config.Config.RunnerID + "/heartbeat"
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", api_key)
+	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
 	for range time.Tick(time.Second * 10) {
 		resp, err := client.Do(req)
 		if err != nil {
@@ -34,10 +35,10 @@ func SendHeartbeat(api_url string, api_key string, runner_id string) {
 		resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			log.Errorf("Failed to send heartbeat to API: %s", url)
+			log.Errorf("Failed to send heartbeat to AlertFlow")
 			log.Errorf("Response: %s", body)
-			panic("Failed to send heartbeat to API")
+			panic("Failed to send heartbeat to AlertFlow")
 		}
-		log.Debugf("Heartbeat sent to API: %s", url)
+		log.Debugf("Heartbeat sent to AlertFlow")
 	}
 }

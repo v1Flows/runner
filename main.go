@@ -49,8 +49,8 @@ func main() {
 
 	actions := actions.Init()
 
-	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version, actions)
-	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
+	go register.RegisterAtAPI(version, actions)
+	go heartbeat.SendHeartbeat()
 
 	Init()
 
