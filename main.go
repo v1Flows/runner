@@ -3,7 +3,7 @@ package main
 import (
 	"alertflow-runner/handlers/actions"
 	"alertflow-runner/handlers/config"
-	execution "alertflow-runner/handlers/executions"
+	"alertflow-runner/handlers/executions"
 	"alertflow-runner/handlers/heartbeat"
 	"alertflow-runner/handlers/payload"
 	"alertflow-runner/handlers/register"
@@ -12,18 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "1.0.0"
+const version string = "0.3.0-beta"
 
 var (
 	configFile = kingpin.Flag("config.file", "Config File").String()
-
-	logLevel = kingpin.Flag("log.level", "Log Level").Default("Info").String()
-
-	runnerID        = kingpin.Flag("runner.id", "Runner ID").String()
-	alertflowURL    = kingpin.Flag("alertflow.url", "Alertflow URL").String()
-	alertflowAPIKey = kingpin.Flag("alertflow.apikey", "Alertflow API Key").String()
-
-	pluginEnable = kingpin.Flag("plugin.enable", "Plugin Enable").Bool()
 )
 
 func logging(logLevel string) {
@@ -40,12 +32,6 @@ func logging(logLevel string) {
 	}
 }
 
-var (
-	ApiURL   = ""
-	ApiKey   = ""
-	RunnerID = ""
-)
-
 func main() {
 	kingpin.Version(version)
 	kingpin.HelpFlag.Short('h')
@@ -61,20 +47,31 @@ func main() {
 
 	logging(config.LogLevel)
 
-	ApiURL = config.Alertflow.URL
-	ApiKey = config.Alertflow.APIKey
-	RunnerID = config.RunnerID
-
 	actions := actions.Init()
 
 	go register.RegisterAtAPI(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID, version, actions)
 	go heartbeat.SendHeartbeat(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
-	go execution.CheckWaitingExecutions(config.Alertflow.URL, config.Alertflow.APIKey, config.RunnerID)
 
-	if config.Payloads.Enabled {
-		log.Info("Starting Payload Receivers")
-		go payload.InitPayloadRouter(config.Payloads.Port, config.Payloads.Managers)
-	}
+	Init()
 
 	<-make(chan struct{})
+}
+
+func Init() {
+	switch config.Config.Mode {
+	case "master":
+		log.Info("Runner is in Master Mode")
+		log.Info("Starting Execution Checker")
+		go executions.StartWorker(config.Config.Alertflow.URL, config.Config.Alertflow.APIKey, config.Config.RunnerID)
+		log.Info("Starting Payload Listener")
+		go payload.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
+	case "worker":
+		log.Info("Runner is in Worker Mode")
+		log.Info("Starting Execution Checker")
+		go executions.StartWorker(config.Config.Alertflow.URL, config.Config.Alertflow.APIKey, config.Config.RunnerID)
+	case "listener":
+		log.Info("Runner is in Listener Mode")
+		log.Info("Starting Payload Listener")
+		go payload.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
+	}
 }

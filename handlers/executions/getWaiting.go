@@ -1,4 +1,4 @@
-package execution
+package executions
 
 import (
 	"alertflow-runner/functions/processing"
@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func CheckWaitingExecutions(api_url string, api_key string, runner_id string) {
+func StartWorker(api_url string, api_key string, runner_id string) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
