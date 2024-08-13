@@ -10,12 +10,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendStep(execution models.Execution, step models.ExecutionSteps) (models.ExecutionSteps, error) {
+func UpdateStep(execution models.Execution, step models.ExecutionSteps) {
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/executions/"+execution.ID.String()+"/steps", payloadBuf)
+	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/executions/"+execution.ID.String()+"/steps/"+step.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
@@ -25,16 +25,7 @@ func SendStep(execution models.Execution, step models.ExecutionSteps) (models.Ex
 		log.Error(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 201 {
+	if resp.StatusCode != 200 {
 		log.Error("Failed to send execution step at API")
 	}
-
-	var stepResponse models.ExecutionSteps
-	err = json.NewDecoder(resp.Body).Decode(&stepResponse)
-	if err != nil {
-		log.Fatal(err)
-		return models.ExecutionSteps{}, err
-	}
-
-	return stepResponse, nil
 }

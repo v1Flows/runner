@@ -22,7 +22,7 @@ func StartProcessing(execution models.Execution) {
 	executions.Update(execution)
 
 	// get flow data
-	executions.SendStep(execution, models.ExecutionSteps{
+	stepData, _ := executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:   execution.ID.String(),
 		ActionName:    "Get Flow Data",
 		ActionMessage: "Requesting Flow Data from API",
@@ -31,16 +31,16 @@ func StartProcessing(execution models.Execution) {
 
 	flowData, _ := flow.GetFlowData(execution)
 
-	executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID:   execution.ID.String(),
-		ActionName:    "Get Flow Data",
-		ActionMessage: "Requesting Flow Data from API finished",
-		Finished:      true,
-		FinishedAt:    time.Now(),
+	time.Sleep(15 * time.Second)
+
+	executions.UpdateStep(execution, models.ExecutionSteps{
+		ID:         stepData.ID,
+		Finished:   true,
+		FinishedAt: time.Now(),
 	})
 
 	// check for flow actions
-	executions.SendStep(execution, models.ExecutionSteps{
+	stepData, _ = executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:   execution.ID.String(),
 		ActionName:    "Check for Actions",
 		ActionMessage: "Checking if Flow has any Actions",
@@ -49,13 +49,13 @@ func StartProcessing(execution models.Execution) {
 
 	status := flow.CheckFlowActions(flowData)
 
+	time.Sleep(15 * time.Second)
+
 	if !status {
-		executions.SendStep(execution, models.ExecutionSteps{
-			ExecutionID:   execution.ID.String(),
-			ActionName:    "Check for Actions",
-			ActionMessage: "No Flow Actions found",
-			Finished:      true,
-			FinishedAt:    time.Now(),
+		executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:         stepData.ID,
+			Finished:   true,
+			FinishedAt: time.Now(),
 		})
 
 		execution.FinishedAt = time.Now()
