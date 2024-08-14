@@ -32,9 +32,10 @@ func StartProcessing(execution models.Execution) {
 	flowData, _ := flow.GetFlowData(execution)
 
 	executions.UpdateStep(execution, models.ExecutionSteps{
-		ID:         stepData.ID,
-		Finished:   true,
-		FinishedAt: time.Now(),
+		ID:             stepData.ID,
+		ActionMessages: []string{"Flow Data received from API"},
+		Finished:       true,
+		FinishedAt:     time.Now(),
 	})
 
 	// check for flow actions
