@@ -19,6 +19,8 @@ type Execution struct {
 	RunnerID   string    `json:"runner_id"`
 	Waiting    bool      `json:"waiting"`
 	Paused     bool      `json:"paused"`
+	Ghost      bool      `json:"ghost"`
+	TotalSteps int       `json:"total_steps"`
 }
 
 type Executions struct {
