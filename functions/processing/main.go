@@ -17,12 +17,25 @@ func StartProcessing(execution models.Execution) {
 	execution.Running = true
 	// set executed at
 	execution.ExecutedAt = time.Now()
+	execution.TotalSteps = 2
 
 	// update execution
 	executions.Update(execution)
 
-	// get flow data
+	// set runner picked up step
 	stepData, _ := executions.SendStep(execution, models.ExecutionSteps{
+		ExecutionID: execution.ID.String(),
+		ActionName:  "Runner Pick Up",
+		ActionMessages: []string{
+			"Waiting for Runner to pick up Execution",
+			"Runner picked up execution",
+		},
+		Finished:   true,
+		FinishedAt: time.Now(),
+	})
+
+	// get flow data
+	stepData, _ = executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Get Flow Data",
 		ActionMessages: []string{"Requesting Flow Data from API"},
