@@ -4,13 +4,14 @@ import (
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func GetFlowData(execution models.Execution) (models.Flows, error) {
+func GetFlowData(execution models.Execution) (models.Flows, []models.FlowActions, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -22,18 +23,19 @@ func GetFlowData(execution models.Execution) (models.Flows, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
-		return models.Flows{}, err
+		return models.Flows{}, []models.FlowActions{}, err
 	}
 	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return models.Flows{}, err
+		return models.Flows{}, []models.FlowActions{}, err
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get waiting executions from API: %s", url)
-		return models.Flows{}, err
+		log.Errorf("Failed to get flow data from API: %s", url)
+		err = fmt.Errorf("failed to get flow data from API: %s", url)
+		return models.Flows{}, []models.FlowActions{}, err
 	}
 
 	log.Debugf("Flow data received from API: %s", url)
@@ -42,8 +44,8 @@ func GetFlowData(execution models.Execution) (models.Flows, error) {
 	err = json.NewDecoder(resp.Body).Decode(&flow)
 	if err != nil {
 		log.Fatal(err)
-		return models.Flows{}, err
+		return models.Flows{}, []models.FlowActions{}, err
 	}
 
-	return flow.FlowData, nil
+	return flow.FlowData, flow.ActionData, nil
 }

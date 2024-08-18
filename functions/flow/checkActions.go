@@ -4,11 +4,11 @@ import (
 	"alertflow-runner/models"
 )
 
-func CheckFlowActions(flow models.Flows) (status bool) {
+func CheckFlowActions(actions []models.FlowActions) (status bool) {
 	// check if flow got any action
-	if len(flow.Actions) == 0 {
-		return false
+	if len(actions) > 0 {
+		return true
 	}
 
-	return true
+	return false
 }
