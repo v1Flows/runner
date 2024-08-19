@@ -18,6 +18,6 @@ ENV ALERTFLOW_API_KEY=null
 ENV PAYLOADS_ENABLED=true
 ENV PAYLOADS_PORT=8080
 
-EXPOSE ${PLUGIN_PORT}
+EXPOSE ${PAYLOADS_PORT}
 
 CMD [ "/alertflow-runner", "--config.file=config.yaml" ]
