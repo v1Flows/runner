@@ -1,0 +1,15 @@
+---
+
+LogLevel: ${LOG_LEVEL}
+RunnerID: ${RUNNER_ID}
+Mode: ${MODE}
+
+Alertflow:
+  URL: ${ALERTFLOW_URL}
+  APIKey: ${ALERTFLOW_API_KEY}
+
+Payloads:
+  Enabled: ${PAYLOADS_ENABLED}
+  Port: ${PAYLOADS_PORT}
+  Managers:
+    - alertmanager
