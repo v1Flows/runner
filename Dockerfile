@@ -10,12 +10,14 @@ COPY . ./
 # Build
 RUN CGO_ENABLED=0 GOOS=linux go build -o /alertflow-runner
 
+ENV LOG_LEVEL=Info
 ENV RUNNER_ID=null
+ENV MODE=master
 ENV ALERTFLOW_URL=null
-ENV ALERTFLOW_APIKEY=null
-ENV PLUGIN_ENABLE=false
-ENV PLUGIN_PORT=9854
+ENV ALERTFLOW_API_KEY=null
+ENV PAYLOADS_ENABLED=true
+ENV PAYLOADS_PORT=8080
 
 EXPOSE ${PLUGIN_PORT}
 
-CMD [ "/alertflow-runner" ]
+CMD [ "/alertflow-runner", "--config.file=config.yaml" ]
