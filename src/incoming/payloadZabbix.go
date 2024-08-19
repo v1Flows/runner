@@ -1,3 +1,0 @@
-package incoming
-
-func OpenZabbixPayloadReceiver() {}
