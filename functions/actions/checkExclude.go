@@ -11,7 +11,6 @@ import (
 )
 
 func checkExclude(execution models.Execution, action models.FlowActions, payload models.Payload, actionStepID string) (bool, error) {
-
 	checkActionExcludeDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Exclude Patterns",
@@ -23,6 +22,21 @@ func checkExclude(execution models.Execution, action models.FlowActions, payload
 	if err != nil {
 		log.Error("Error sending step:", err)
 		return false, err
+	}
+
+	// end if there are no patterns
+	if action.MatchPatterns[0].Key == "" {
+		err = executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             checkActionExcludeDataStep.ID,
+			ActionMessages: []string{"Check skipped. Exclude patterns are disabled."},
+			Finished:       true,
+			FinishedAt:     time.Now(),
+		})
+		if err != nil {
+			log.Error("Error updating step:", err)
+			return false, err
+		}
+		return false, nil
 	}
 
 	// convert payload to string

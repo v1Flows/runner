@@ -11,7 +11,6 @@ import (
 )
 
 func checkMatch(execution models.Execution, action models.FlowActions, payload models.Payload, actionStepID string) (bool, error) {
-
 	checkActionMatchDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Match Patterns",
@@ -23,6 +22,21 @@ func checkMatch(execution models.Execution, action models.FlowActions, payload m
 	if err != nil {
 		log.Error("Error sending step:", err)
 		return false, err
+	}
+
+	// end if there are no patterns
+	if action.MatchPatterns[0].Key == "" {
+		err = executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             checkActionMatchDataStep.ID,
+			ActionMessages: []string{"Check skipped. Match patterns are disabled."},
+			Finished:       true,
+			FinishedAt:     time.Now(),
+		})
+		if err != nil {
+			log.Error("Error updating step:", err)
+			return false, err
+		}
+		return true, nil
 	}
 
 	// convert payload to string
