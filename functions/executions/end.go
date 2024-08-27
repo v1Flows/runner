@@ -6,9 +6,40 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
+
+func EndWithError(execution models.Execution) {
+	execution.FinishedAt = time.Now()
+	execution.Running = false
+	execution.Error = true
+	End(execution)
+}
+
+func EndWithNoMatch(execution models.Execution) {
+	execution.FinishedAt = time.Now()
+	execution.Running = false
+	execution.Error = false
+	execution.NoMatch = true
+	End(execution)
+}
+
+func EndWithGhost(execution models.Execution) {
+	execution.FinishedAt = time.Now()
+	execution.Running = false
+	execution.Error = false
+	execution.Ghost = true
+	End(execution)
+}
+
+func EndSuccess(execution models.Execution) {
+	execution.FinishedAt = time.Now()
+	execution.Running = false
+	execution.Error = false
+	End(execution)
+}
 
 func End(execution models.Execution) {
 	payloadBuf := new(bytes.Buffer)
