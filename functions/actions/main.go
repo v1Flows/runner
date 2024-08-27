@@ -25,7 +25,27 @@ func StartAction(execution models.Execution, action models.FlowActions, payload 
 	if !match {
 		err = executions.UpdateStep(execution, models.ExecutionSteps{
 			ID:             actionStepData.ID,
-			ActionMessages: []string{"No match found for Action: " + action.Name},
+			ActionMessages: []string{"Match pattern not found for: " + action.Name},
+			NoPatternMatch: true,
+			Finished:       true,
+			FinishedAt:     time.Now(),
+		})
+		if err != nil {
+			return false, false, err
+		}
+
+		return false, true, nil
+	}
+
+	exclude, err := checkExclude(execution, action, payload, actionStepData.ID.String())
+	if err != nil {
+		return false, false, err
+	}
+
+	if exclude {
+		err = executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             actionStepData.ID,
+			ActionMessages: []string{"Exclude pattern found for: " + action.Name},
 			NoPatternMatch: true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
