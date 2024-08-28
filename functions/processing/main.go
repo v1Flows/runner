@@ -6,6 +6,7 @@ import (
 	"alertflow-runner/functions/flow"
 	"alertflow-runner/functions/payload"
 	"alertflow-runner/handlers/config"
+	"alertflow-runner/handlers/variables"
 	"alertflow-runner/models"
 	"time"
 
@@ -210,6 +211,11 @@ func StartProcessing(execution models.Execution) {
 		executions.EndWithError(execution)
 		return
 	}
+
+	// set global variables
+	variables.CurrentExecution = execution
+	variables.CurrentPayload = payloadData
+	variables.CurrentFlowActions = flowActionData
 
 	// start every defined flow action
 	var actionsFinished []string

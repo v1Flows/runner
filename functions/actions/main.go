@@ -3,6 +3,7 @@ package actions
 import (
 	"alertflow-runner/functions/executions"
 	handler_actions "alertflow-runner/handlers/actions"
+	"alertflow-runner/handlers/variables"
 	"alertflow-runner/models"
 	"fmt"
 	"time"
@@ -66,7 +67,56 @@ func StartAction(execution models.Execution, action models.FlowActions, payload 
 
 	// check for parallel or sequential order
 	if action.ExecParallel {
-		fmt.Println("Action: " + action.Name + " is set to run in parallel")
+		for _, subAction := range action.Actions {
+			// search for the action
+			subActionStepData, err := executions.SendStep(execution, models.ExecutionSteps{
+				ExecutionID:    execution.ID.String(),
+				ActionName:     subAction,
+				ActionMessages: []string{"Starting: " + subAction},
+				StartedAt:      time.Now(),
+				ParentID:       actionStepData.ID.String(),
+				IsHidden:       true,
+			})
+			if err != nil {
+				return false, false, false, err
+			}
+			actionDetails := handler_actions.SearchAction(subAction)
+
+			if actionDetails.Name == "" {
+				err = executions.UpdateStep(execution, models.ExecutionSteps{
+					ID:             subActionStepData.ID,
+					ActionMessages: []string{"Action: " + subAction + " not found"},
+					Error:          true,
+					Finished:       true,
+					FinishedAt:     time.Now(),
+				})
+				if err != nil {
+					return false, false, true, err
+				}
+				continue
+			} else {
+				// exec the actionDetails.Function
+				if fn, ok := actionDetails.Function.(func()); ok {
+					variables.CurrentActionStep = subActionStepData
+					variables.CurrentActionDetails = actionDetails
+					go fn()
+				} else {
+					// handle the case when actionDetails.Function is not a function
+					err = executions.UpdateStep(execution, models.ExecutionSteps{
+						ID:             subActionStepData.ID,
+						ActionMessages: []string{"Action: " + subAction + " is not a function"},
+						Error:          true,
+						Finished:       true,
+						FinishedAt:     time.Now(),
+					})
+					if err != nil {
+						log.Error(err)
+					}
+					actionErrors = append(actionErrors, subAction)
+					break
+				}
+			}
+		}
 	} else {
 		for _, subAction := range action.Actions {
 			// search for the action
@@ -98,6 +148,8 @@ func StartAction(execution models.Execution, action models.FlowActions, payload 
 			} else {
 				// exec the actionDetails.Function
 				if fn, ok := actionDetails.Function.(func()); ok {
+					variables.CurrentActionStep = subActionStepData
+					variables.CurrentActionDetails = actionDetails
 					fn()
 				} else {
 					// handle the case when actionDetails.Function is not a function
