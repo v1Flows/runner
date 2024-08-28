@@ -30,6 +30,7 @@ func LogAction() {
 	err := executions.UpdateStep(variables.CurrentExecution, models.ExecutionSteps{
 		ID:             variables.CurrentActionStep.ID,
 		ActionMessages: []string{"Log Action finished"},
+		Icon:           variables.CurrentActionDetails.Icon,
 		Finished:       true,
 		FinishedAt:     time.Now(),
 	})
