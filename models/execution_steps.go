@@ -21,4 +21,5 @@ type ExecutionSteps struct {
 	ParentID       string    `json:"parent_id"`
 	IsHidden       bool      `json:"is_hidden"`
 	NoPatternMatch bool      `json:"no_pattern_match"`
+	Icon           string    `json:"icon"`
 }

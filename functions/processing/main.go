@@ -8,6 +8,8 @@ import (
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/models"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func StartProcessing(execution models.Execution) {
@@ -28,8 +30,10 @@ func StartProcessing(execution models.Execution) {
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Runner Pick Up",
 		ActionMessages: []string{"Waiting for Runner to pick up Execution", "Runner picked up execution"},
+		StartedAt:      execution.CreatedAt,
 		Finished:       true,
 		FinishedAt:     time.Now(),
+		Icon:           "solar:rocket-2-bold-duotone",
 	})
 	if err != nil {
 		executions.EndWithError(execution)
@@ -42,6 +46,7 @@ func StartProcessing(execution models.Execution) {
 		ActionMessages: []string{"Collecting Data"},
 		ActionName:     "Collect Data",
 		StartedAt:      time.Now(),
+		Icon:           "solar:inbox-archive-linear",
 	})
 	if err != nil {
 		executions.EndWithError(execution)
@@ -56,6 +61,7 @@ func StartProcessing(execution models.Execution) {
 		StartedAt:      time.Now(),
 		ParentID:       collectDataStep.ID.String(),
 		IsHidden:       true,
+		Icon:           "solar:book-bookmark-broken",
 	})
 	if err != nil {
 		executions.EndWithError(execution)
@@ -100,6 +106,7 @@ func StartProcessing(execution models.Execution) {
 		StartedAt:      time.Now(),
 		ParentID:       collectDataStep.ID.String(),
 		IsHidden:       true,
+		Icon:           "solar:letter-opened-broken",
 	})
 	if err != nil {
 		executions.EndWithError(execution)
@@ -139,7 +146,7 @@ func StartProcessing(execution models.Execution) {
 	if flowDataErr == nil && payloadError == nil {
 		err = executions.UpdateStep(execution, models.ExecutionSteps{
 			ID:             collectDataStep.ID,
-			ActionMessages: []string{"Collecting Data finished"},
+			ActionMessages: []string{"Data collected"},
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
@@ -150,7 +157,7 @@ func StartProcessing(execution models.Execution) {
 	} else {
 		err = executions.UpdateStep(execution, models.ExecutionSteps{
 			ID:             collectDataStep.ID,
-			ActionMessages: []string{"Collecting Data finished with errors"},
+			ActionMessages: []string{"Data collection finished with errors"},
 			Error:          true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
@@ -167,6 +174,7 @@ func StartProcessing(execution models.Execution) {
 		ActionName:     "Check for Actions",
 		ActionMessages: []string{"Checking if Flow has any Actions"},
 		StartedAt:      time.Now(),
+		Icon:           "solar:minimalistic-magnifer-linear",
 	})
 	if err != nil {
 		executions.EndWithError(execution)
@@ -206,14 +214,18 @@ func StartProcessing(execution models.Execution) {
 	// start every defined flow action
 	var actionsFinished []string
 	var actionsNoMatch []string
+	var actionsErrored []string
 	for _, action := range flowActionData {
 		if action.Status {
-			success, no_match, err := actions.StartAction(execution, action, payloadData)
+			success, no_match, actionsError, err := actions.StartAction(execution, action, payloadData)
 			if err != nil {
+				log.Error(err)
 				break
 			}
 
-			if success {
+			if actionsError {
+				actionsErrored = append(actionsErrored, action.Name)
+			} else if success {
 				actionsFinished = append(actionsFinished, action.Name)
 			} else if no_match {
 				actionsNoMatch = append(actionsNoMatch, action.Name)
@@ -221,7 +233,9 @@ func StartProcessing(execution models.Execution) {
 		}
 	}
 
-	if len(actionsFinished) > 0 {
+	if len(actionsErrored) > 0 {
+		executions.EndWithError(execution)
+	} else if len(actionsFinished) > 0 {
 		executions.EndSuccess(execution)
 		return
 	} else if len(actionsFinished) == 0 && len(actionsNoMatch) > 0 {

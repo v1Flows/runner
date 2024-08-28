@@ -18,6 +18,7 @@ func checkExclude(execution models.Execution, action models.FlowActions, payload
 		StartedAt:      time.Now(),
 		ParentID:       actionStepID,
 		IsHidden:       true,
+		Icon:           "solar:list-cross-minimalistic-bold",
 	})
 	if err != nil {
 		log.Error("Error sending step:", err)

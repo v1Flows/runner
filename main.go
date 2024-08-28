@@ -1,7 +1,7 @@
 package main
 
 import (
-	"alertflow-runner/handlers/actions"
+	handler_actions "alertflow-runner/handlers/actions"
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/handlers/executions"
 	"alertflow-runner/handlers/heartbeat"
@@ -48,7 +48,7 @@ func main() {
 
 	logging(config.LogLevel)
 
-	actions := actions.Init()
+	actions := handler_actions.Init()
 
 	go register.RegisterAtAPI(version, actions)
 	go heartbeat.SendHeartbeat()

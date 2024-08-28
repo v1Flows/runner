@@ -18,6 +18,7 @@ func checkMatch(execution models.Execution, action models.FlowActions, payload m
 		StartedAt:      time.Now(),
 		ParentID:       actionStepID,
 		IsHidden:       true,
+		Icon:           "solar:list-check-minimalistic-bold",
 	})
 	if err != nil {
 		log.Error("Error sending step:", err)
