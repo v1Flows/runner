@@ -32,7 +32,7 @@ func SendStep(execution models.Execution, step models.ExecutionSteps) (models.Ex
 	var stepResponse models.ExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&stepResponse)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 		return models.ExecutionSteps{}, err
 	}
 

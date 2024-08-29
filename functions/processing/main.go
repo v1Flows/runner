@@ -1,141 +1,254 @@
 package processing
 
 import (
+	"alertflow-runner/functions/actions"
 	"alertflow-runner/functions/executions"
 	"alertflow-runner/functions/flow"
 	"alertflow-runner/functions/payload"
 	"alertflow-runner/handlers/config"
+	"alertflow-runner/handlers/variables"
 	"alertflow-runner/models"
-	"fmt"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func StartProcessing(execution models.Execution) {
-	// set own runner id
 	execution.RunnerID = config.Config.RunnerID
-	// unset waiting
 	execution.Waiting = false
-	// set running
 	execution.Running = true
-	// set executed at
 	execution.ExecutedAt = time.Now()
 	execution.TotalSteps = 2
 
-	// update execution
-	executions.Update(execution)
+	err := executions.Update(execution)
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
 
 	// set runner picked up step
-	stepData, _ := executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID: execution.ID.String(),
-		ActionName:  "Runner Pick Up",
-		ActionMessages: []string{
-			"Waiting for Runner to pick up Execution",
-			"Runner picked up execution",
-		},
-		Finished:   true,
-		FinishedAt: time.Now(),
+	stepData, err := executions.SendStep(execution, models.ExecutionSteps{
+		ExecutionID:    execution.ID.String(),
+		ActionName:     "Runner Pick Up",
+		ActionMessages: []string{"Waiting for Runner to pick up Execution", "Runner picked up execution"},
+		StartedAt:      execution.CreatedAt,
+		Finished:       true,
+		FinishedAt:     time.Now(),
+		Icon:           "solar:rocket-2-bold-duotone",
 	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
+
+	// collect data step
+	collectDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
+		ExecutionID:    execution.ID.String(),
+		ActionMessages: []string{"Collecting Data"},
+		ActionName:     "Collect Data",
+		StartedAt:      time.Now(),
+		Icon:           "solar:inbox-archive-linear",
+	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
 
 	// get flow data
-	stepData, _ = executions.SendStep(execution, models.ExecutionSteps{
+	collectFlowDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Get Flow Data",
 		ActionMessages: []string{"Requesting Flow Data from API"},
 		StartedAt:      time.Now(),
+		ParentID:       collectDataStep.ID.String(),
+		IsHidden:       true,
+		Icon:           "solar:book-bookmark-broken",
 	})
-
-	flowData, flowActionData, err := flow.GetFlowData(execution)
-
-	fmt.Println("Flow: ", flowData)
-
 	if err != nil {
-		executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             stepData.ID,
-			ActionMessages: []string{"Failed to get Flow Data from API"},
+		executions.EndWithError(execution)
+		return
+	}
+
+	_, flowActionData, flowDataErr := flow.GetFlowData(execution)
+
+	if flowDataErr != nil {
+		err := executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             collectFlowDataStep.ID,
+			ActionMessages: []string{"Failed to get Flow Data"},
 			Error:          true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
+		if err != nil {
+			executions.EndWithError(execution)
+			return
+		}
 
-		execution.FinishedAt = time.Now()
-		execution.Running = false
-		execution.Error = true
-		executions.End(execution)
+		executions.EndWithError(execution)
 		return
-	} else {
-		executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             stepData.ID,
-			ActionMessages: []string{"Flow Data received from API"},
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
+	}
+
+	err = executions.UpdateStep(execution, models.ExecutionSteps{
+		ID:             collectFlowDataStep.ID,
+		ActionMessages: []string{"Flow Data received"},
+		Finished:       true,
+		FinishedAt:     time.Now(),
+	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
 	}
 
 	// get payload data
-	stepData, _ = executions.SendStep(execution, models.ExecutionSteps{
+	collectPayloadDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Get Payload Data",
 		ActionMessages: []string{"Requesting Payload Data from API"},
 		StartedAt:      time.Now(),
+		ParentID:       collectDataStep.ID.String(),
+		IsHidden:       true,
+		Icon:           "solar:letter-opened-broken",
 	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
 
 	payloadData, payloadError := payload.GetData(execution)
 
-	fmt.Println("Payload: ", payloadData)
-
 	if payloadError != nil {
-		executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             stepData.ID,
-			ActionMessages: []string{"Failed to get Payload Data from API"},
+		err := executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             collectPayloadDataStep.ID,
+			ActionMessages: []string{"Failed to get Payload Data"},
 			Error:          true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
+		if err != nil {
+			executions.EndWithError(execution)
+			return
+		}
 
-		execution.FinishedAt = time.Now()
-		execution.Running = false
-		execution.Error = true
-		executions.End(execution)
+		executions.EndWithError(execution)
 		return
-	} else {
-		executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             stepData.ID,
-			ActionMessages: []string{"Payload Data received from API"},
+	}
+
+	err = executions.UpdateStep(execution, models.ExecutionSteps{
+		ID:             collectPayloadDataStep.ID,
+		ActionMessages: []string{"Payload Data received"},
+		Finished:       true,
+		FinishedAt:     time.Now(),
+	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
+
+	if flowDataErr == nil && payloadError == nil {
+		err = executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             collectDataStep.ID,
+			ActionMessages: []string{"Data collected"},
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
+		if err != nil {
+			executions.EndWithError(execution)
+			return
+		}
+	} else {
+		err = executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             collectDataStep.ID,
+			ActionMessages: []string{"Data collection finished with errors"},
+			Error:          true,
+			Finished:       true,
+			FinishedAt:     time.Now(),
+		})
+		if err != nil {
+			executions.EndWithError(execution)
+			return
+		}
 	}
 
 	// check for flow actions
-	stepData, _ = executions.SendStep(execution, models.ExecutionSteps{
+	stepData, err = executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Check for Actions",
 		ActionMessages: []string{"Checking if Flow has any Actions"},
 		StartedAt:      time.Now(),
+		Icon:           "solar:minimalistic-magnifer-linear",
 	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
 
 	status := flow.CheckFlowActions(flowActionData)
 
 	if !status {
-		executions.UpdateStep(execution, models.ExecutionSteps{
+		err := executions.UpdateStep(execution, models.ExecutionSteps{
 			ID:             stepData.ID,
 			ActionMessages: []string{"Flow has no Actions defined"},
 			NoResult:       true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
+		if err != nil {
+			executions.EndWithError(execution)
+			return
+		}
 
-		execution.FinishedAt = time.Now()
-		execution.Running = false
-		execution.Ghost = true
-		executions.End(execution)
+		executions.EndWithGhost(execution)
+		return
+	}
+
+	err = executions.UpdateStep(execution, models.ExecutionSteps{
+		ID:             stepData.ID,
+		ActionMessages: []string{"Actions found in Flow"},
+		Finished:       true,
+		FinishedAt:     time.Now(),
+	})
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
+
+	// set global variables
+	variables.CurrentExecution = execution
+	variables.CurrentPayload = payloadData
+	variables.CurrentFlowActions = flowActionData
+
+	// start every defined flow action
+	var actionsFinished []string
+	var actionsNoMatch []string
+	var actionsErrored []string
+	for _, action := range flowActionData {
+		if action.Status {
+			success, no_match, actionsError, err := actions.StartAction(execution, action, payloadData)
+			if err != nil {
+				log.Error(err)
+				break
+			}
+
+			if actionsError {
+				actionsErrored = append(actionsErrored, action.Name)
+			} else if success {
+				actionsFinished = append(actionsFinished, action.Name)
+			} else if no_match {
+				actionsNoMatch = append(actionsNoMatch, action.Name)
+			}
+		}
+	}
+
+	if len(actionsErrored) > 0 {
+		executions.EndWithError(execution)
+	} else if len(actionsFinished) > 0 {
+		executions.EndSuccess(execution)
+		return
+	} else if len(actionsFinished) == 0 && len(actionsNoMatch) > 0 {
+		executions.EndWithNoMatch(execution)
 		return
 	} else {
-		executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             stepData.ID,
-			ActionMessages: []string{"Flow has Actions defined"},
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
+		executions.EndWithError(execution)
+		return
 	}
 }
