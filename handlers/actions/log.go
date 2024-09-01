@@ -12,7 +12,7 @@ import (
 func LogInit() models.ActionDetails {
 	return models.ActionDetails{
 		Name:        "Log Message",
-		Description: "Prints an Log Message on Runner stdout",
+		Description: "Prints a Log Message on Runner stdout",
 		Icon:        "solar:clipboard-list-broken",
 		Type:        "log",
 		Function:    LogAction,
@@ -20,15 +20,14 @@ func LogInit() models.ActionDetails {
 	}
 }
 
-func LogAction() {
+func LogAction(step models.ExecutionSteps) {
 	log.WithFields(log.Fields{
-		"Action":    variables.CurrentActionDetails.Name,
-		"Type":      variables.CurrentActionDetails.Type,
 		"Execution": variables.CurrentExecution.ID,
+		"StepID":    step.ID,
 	}).Info("Log Action triggered")
 
 	err := executions.UpdateStep(variables.CurrentExecution, models.ExecutionSteps{
-		ID:             variables.CurrentActionStep.ID,
+		ID:             step.ID,
 		ActionMessages: []string{"Log Action finished"},
 		Icon:           variables.CurrentActionDetails.Icon,
 		Finished:       true,
