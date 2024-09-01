@@ -27,7 +27,7 @@ func StartProcessing(execution models.Execution) {
 	}
 
 	// set runner picked up step
-	stepData, err := executions.SendStep(execution, models.ExecutionSteps{
+	_, err = executions.SendStep(execution, models.ExecutionSteps{
 		ExecutionID:    execution.ID.String(),
 		ActionName:     "Runner Pick Up",
 		ActionMessages: []string{"Waiting for Runner to pick up Execution", "Runner picked up execution"},
@@ -69,7 +69,7 @@ func StartProcessing(execution models.Execution) {
 		return
 	}
 
-	_, flowActionData, flowDataErr := flow.GetFlowData(execution)
+	flowData, flowDataErr := flow.GetFlowData(execution)
 
 	if flowDataErr != nil {
 		err := executions.UpdateStep(execution, models.ExecutionSteps{
@@ -169,86 +169,72 @@ func StartProcessing(execution models.Execution) {
 		}
 	}
 
-	// check for flow actions
-	stepData, err = executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID:    execution.ID.String(),
-		ActionName:     "Check for Actions",
-		ActionMessages: []string{"Checking if Flow has any Actions"},
-		StartedAt:      time.Now(),
-		Icon:           "solar:minimalistic-magnifer-linear",
-	})
+	// check for patterns
+	match, err := flow.CheckPatterns(flowData, execution, payloadData)
 	if err != nil {
+		log.Error(err)
 		executions.EndWithError(execution)
 		return
 	}
 
-	status := flow.CheckFlowActions(flowActionData)
+	if !match {
+		return
+	}
+
+	// check for flow actions
+	status, err := flow.CheckFlowActions(flowData, execution)
+	if err != nil {
+		log.Error(err)
+		executions.EndWithError(execution)
+		return
+	}
 
 	if !status {
-		err := executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             stepData.ID,
-			ActionMessages: []string{"Flow has no Actions defined"},
-			NoResult:       true,
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
-		if err != nil {
-			executions.EndWithError(execution)
-			return
-		}
-
-		executions.EndWithGhost(execution)
-		return
-	}
-
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
-		ID:             stepData.ID,
-		ActionMessages: []string{"Actions found in Flow"},
-		Finished:       true,
-		FinishedAt:     time.Now(),
-	})
-	if err != nil {
-		executions.EndWithError(execution)
 		return
 	}
 
 	// set global variables
 	variables.CurrentExecution = execution
 	variables.CurrentPayload = payloadData
-	variables.CurrentFlowActions = flowActionData
+	variables.CurrentFlowActions = flowData.Actions
 
 	// start every defined flow action
-	var actionsFinished []string
-	var actionsNoMatch []string
-	var actionsErrored []string
-	for _, action := range flowActionData {
-		if action.Status {
-			success, no_match, actionsError, err := actions.StartAction(execution, action, payloadData)
-			if err != nil {
-				log.Error(err)
-				break
-			}
+	// var actionsErrored []string
+	if flowData.ExecParallel {
+		for _, action := range flowData.Actions {
+			if action.Active {
+				go func(action models.Actions, execution models.Execution) {
+					status, err := actions.StartAction(action, execution)
+					if err != nil {
+						log.Error(err)
+						executions.EndWithError(execution)
+						return
+					}
 
-			if actionsError {
-				actionsErrored = append(actionsErrored, action.Name)
-			} else if success {
-				actionsFinished = append(actionsFinished, action.Name)
-			} else if no_match {
-				actionsNoMatch = append(actionsNoMatch, action.Name)
+					if !status {
+						executions.EndWithError(execution)
+						return
+					}
+				}(action, execution)
+			}
+		}
+	} else {
+		for _, action := range flowData.Actions {
+			if action.Active {
+				status, err := actions.StartAction(action, execution)
+				if err != nil {
+					log.Error(err)
+					executions.EndWithError(execution)
+					return
+				}
+
+				if !status {
+					executions.EndWithError(execution)
+					return
+				}
 			}
 		}
 	}
 
-	if len(actionsErrored) > 0 {
-		executions.EndWithError(execution)
-	} else if len(actionsFinished) > 0 {
-		executions.EndSuccess(execution)
-		return
-	} else if len(actionsFinished) == 0 && len(actionsNoMatch) > 0 {
-		executions.EndWithNoMatch(execution)
-		return
-	} else {
-		executions.EndWithError(execution)
-		return
-	}
+	executions.EndSuccess(execution)
 }

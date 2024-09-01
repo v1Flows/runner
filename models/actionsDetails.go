@@ -1,6 +1,8 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type ActionDetails struct {
 	Name        string          `json:"name"`

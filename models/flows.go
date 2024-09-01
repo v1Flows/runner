@@ -7,8 +7,7 @@ import (
 )
 
 type IncomingFlow struct {
-	FlowData   Flows         `json:"flow"`
-	ActionData []FlowActions `json:"actions"`
+	FlowData Flows `json:"flow"`
 }
 
 type Flows struct {
@@ -23,22 +22,26 @@ type Flows struct {
 	UpdatedAt           time.Time `json:"updated_at"`
 	MaintenanceRequired bool      `json:"maintenance_required"`
 	MaintenanceMessage  string    `json:"maintenance_message"`
+	ExecParallel        bool      `json:"exec_parallel"`
+	Actions             []Actions `json:"actions"`
+	Patterns            []Pattern `json:"patterns"`
 }
 
-type FlowActions struct {
-	ID              uuid.UUID `json:"id"`
-	Name            string    `json:"name"`
-	Description     string    `json:"description"`
-	FlowID          string    `json:"flow_id"`
-	Status          bool      `json:"status"`
-	Actions         []string  `json:"actions"`
-	ExecParallel    bool      `json:"exec_parallel"`
-	MatchPatterns   []Pattern `json:"match_patterns"`
-	ExcludePatterns []Pattern `json:"exclude_patterns"`
-	CreatedAt       string    `json:"created_at"`
+type Actions struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Icon        string    `json:"icon"`
+	Type        string    `json:"type"`
+	Active      bool      `json:"active"`
+	Params      []struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	} `json:"params"`
 }
 
 type Pattern struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+	Type  string `json:"type"`
 }
