@@ -12,4 +12,4 @@ Payloads:
   Enabled: ${PAYLOADS_ENABLED}
   Port: ${PAYLOADS_PORT}
   Managers:
-    - alertmanager
+    - Alertmanager

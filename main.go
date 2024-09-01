@@ -1,7 +1,7 @@
 package main
 
 import (
-	"alertflow-runner/handlers/actions"
+	handler_actions "alertflow-runner/handlers/actions"
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/handlers/executions"
 	"alertflow-runner/handlers/heartbeat"
@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.3.0-beta"
+const version string = "0.5.0-beta"
 
 var (
 	configFile = kingpin.Flag("config.file", "Config File").String()
@@ -48,7 +48,7 @@ func main() {
 
 	logging(config.LogLevel)
 
-	actions := actions.Init()
+	actions := handler_actions.Init()
 
 	go register.RegisterAtAPI(version, actions)
 	go heartbeat.SendHeartbeat()

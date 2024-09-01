@@ -1,11 +1,15 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type ActionDetails struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
+	Icon        string          `json:"icon"`
 	Type        string          `json:"type"`
+	Function    interface{}     `json:"-"`
 	Params      json.RawMessage `json:"params"`
 }
 

@@ -1,4 +1,4 @@
-package actions
+package handler_actions
 
 import (
 	"alertflow-runner/models"
