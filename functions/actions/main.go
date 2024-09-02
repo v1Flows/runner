@@ -39,8 +39,23 @@ func StartAction(action models.Actions, execution models.Execution) (status bool
 		return false, nil
 	} else {
 		// exec the actionDetails.Function
-		if fn, ok := actionDetails.Function.(func(step models.ExecutionSteps)); ok {
-			fn(actionStepData)
+		if fn, ok := actionDetails.Function.(func(step models.ExecutionSteps, action models.Actions) bool); ok {
+			status := fn(actionStepData, action)
+
+			if !status {
+				err = executions.UpdateStep(execution, models.ExecutionSteps{
+					ID:             actionStepData.ID,
+					ActionMessages: []string{"Action: " + action.Name + " failed"},
+					Error:          true,
+					Finished:       true,
+					FinishedAt:     time.Now(),
+				})
+				if err != nil {
+					log.Error(err)
+					return false, err
+				}
+				return false, nil
+			}
 		} else {
 			// handle the case when actionDetails.Function is not a function
 			err = executions.UpdateStep(execution, models.ExecutionSteps{
