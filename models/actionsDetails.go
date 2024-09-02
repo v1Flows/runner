@@ -14,8 +14,9 @@ type ActionDetails struct {
 }
 
 type Param struct {
-	Key      string `json:"key"`
-	Type     string `json:"type"`
-	Required bool   `json:"required"`
-	Default  any    `json:"default"`
+	Key         string `json:"key"`
+	Type        string `json:"type"`
+	Required    bool   `json:"required"`
+	Default     any    `json:"default"`
+	Description string `json:"description"`
 }

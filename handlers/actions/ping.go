@@ -15,16 +15,18 @@ import (
 func PingInit() models.ActionDetails {
 	params := []models.Param{
 		{
-			Key:      "Target",
-			Type:     "text",
-			Default:  "www.alertflow.org",
-			Required: true,
+			Key:         "Target",
+			Type:        "text",
+			Default:     "www.alertflow.org",
+			Required:    true,
+			Description: "The target to ping",
 		},
 		{
-			Key:      "Count",
-			Type:     "number",
-			Default:  3,
-			Required: false,
+			Key:         "Count",
+			Type:        "number",
+			Default:     3,
+			Required:    false,
+			Description: "Number of packets to send",
 		},
 	}
 
