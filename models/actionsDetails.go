@@ -17,5 +17,5 @@ type Param struct {
 	Key      string `json:"key"`
 	Type     string `json:"type"`
 	Required bool   `json:"required"`
-	Default  string `json:"default"`
+	Default  any    `json:"default"`
 }
