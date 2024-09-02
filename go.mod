@@ -4,6 +4,7 @@ go 1.22.3
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
+	github.com/go-ping/ping v1.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/tidwall/gjson v1.17.3
 )
@@ -41,6 +42,7 @@ require (
 	golang.org/x/arch v0.9.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

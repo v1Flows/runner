@@ -6,9 +6,10 @@ func Init() []models.ActionDetails {
 	var actions []models.ActionDetails
 
 	logAction := LogInit()
-	// WebhookAction := WebhookInit()
+	webhookAction := WebhookInit()
+	WaitAction := WaitInit()
+	PingAction := PingInit()
 
-	// actions = append(actions, logAction, WebhookAction)
-	actions = append(actions, logAction)
+	actions = append(actions, logAction, webhookAction, WaitAction, PingAction)
 	return actions
 }
