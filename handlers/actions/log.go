@@ -20,7 +20,7 @@ func LogInit() models.ActionDetails {
 	}
 }
 
-func LogAction(step models.ExecutionSteps) {
+func LogAction(step models.ExecutionSteps, action models.Actions) bool {
 	log.WithFields(log.Fields{
 		"Execution": variables.CurrentExecution.ID,
 		"StepID":    step.ID,
@@ -36,4 +36,6 @@ func LogAction(step models.ExecutionSteps) {
 	if err != nil {
 		log.Error("Error updating step: ", err)
 	}
+
+	return true
 }
