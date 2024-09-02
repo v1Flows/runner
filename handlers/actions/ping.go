@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-ping/ping"
+	probing "github.com/prometheus-community/pro-bing"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -63,7 +63,7 @@ func PingAction(step models.ExecutionSteps, action models.Actions) bool {
 		log.Error("Error updating step:", err)
 	}
 
-	pinger, err := ping.NewPinger(target)
+	pinger, err := probing.NewPinger(target)
 	if err != nil {
 		log.Error("Error creating pinger: ", err)
 		err = executions.UpdateStep(variables.CurrentExecution, models.ExecutionSteps{

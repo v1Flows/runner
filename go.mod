@@ -4,7 +4,6 @@ go 1.22.3
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/go-ping/ping v1.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/tidwall/gjson v1.17.3
 )
@@ -54,6 +53,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20240626203959-61d1e3462e30 // indirect
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
+	github.com/prometheus-community/pro-bing v0.4.1
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/zeromicro/go-zero v1.7.0
 	golang.org/x/sys v0.24.0 // indirect
