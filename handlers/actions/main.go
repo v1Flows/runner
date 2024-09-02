@@ -9,7 +9,8 @@ func Init() []models.ActionDetails {
 	webhookAction := WebhookInit()
 	WaitAction := WaitInit()
 	PingAction := PingInit()
+	PortAction := PortInit()
 
-	actions = append(actions, logAction, webhookAction, WaitAction, PingAction)
+	actions = append(actions, logAction, webhookAction, WaitAction, PingAction, PortAction)
 	return actions
 }
