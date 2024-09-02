@@ -15,22 +15,25 @@ import (
 func PortInit() models.ActionDetails {
 	params := []models.Param{
 		{
-			Key:      "Host",
-			Type:     "text",
-			Default:  "myhost",
-			Required: true,
+			Key:         "Host",
+			Type:        "text",
+			Default:     "myhost",
+			Required:    true,
+			Description: "The host to check for the port",
 		},
 		{
-			Key:      "Port",
-			Type:     "number",
-			Default:  22,
-			Required: true,
+			Key:         "Port",
+			Type:        "number",
+			Default:     22,
+			Required:    true,
+			Description: "The port to check",
 		},
 		{
-			Key:      "Timeout",
-			Type:     "number",
-			Default:  3,
-			Required: false,
+			Key:         "Timeout",
+			Type:        "number",
+			Default:     3,
+			Required:    false,
+			Description: "Timeout in seconds",
 		},
 	}
 

@@ -14,10 +14,11 @@ import (
 func WaitInit() models.ActionDetails {
 	params := []models.Param{
 		{
-			Key:      "WaitTime",
-			Type:     "number",
-			Default:  10,
-			Required: true,
+			Key:         "WaitTime",
+			Type:        "number",
+			Default:     10,
+			Required:    true,
+			Description: "The time to wait in seconds",
 		},
 	}
 

@@ -13,31 +13,36 @@ import (
 func WebhookInit() models.ActionDetails {
 	params := []models.Param{
 		{
-			Key:      "Url",
-			Type:     "text",
-			Required: true,
+			Key:         "Url",
+			Type:        "text",
+			Required:    true,
+			Description: "The URL to send the Webhook",
 		},
 		{
-			Key:      "Method",
-			Type:     "text",
-			Default:  "POST",
-			Required: true,
+			Key:         "Method",
+			Type:        "text",
+			Default:     "POST",
+			Required:    true,
+			Description: "The HTTP Method to use",
 		},
 		{
-			Key:      "Headers",
-			Type:     "textarea",
-			Required: false,
+			Key:         "Headers",
+			Type:        "textarea",
+			Required:    false,
+			Description: "The headers to send",
 		},
 		{
-			Key:      "Body",
-			Type:     "textarea",
-			Required: false,
+			Key:         "Body",
+			Type:        "textarea",
+			Required:    false,
+			Description: "The body to send",
 		},
 		{
-			Key:      "Timeout",
-			Type:     "number",
-			Default:  10,
-			Required: true,
+			Key:         "Timeout",
+			Type:        "number",
+			Default:     10,
+			Required:    true,
+			Description: "The timeout in seconds",
 		},
 	}
 
