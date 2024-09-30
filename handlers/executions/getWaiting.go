@@ -23,7 +23,9 @@ func StartWorker(api_url string, api_key string, runner_id string) {
 		log.Fatalf("Failed to create request: %v", err)
 	}
 	req.Header.Set("Authorization", api_key)
-	for range time.Tick(time.Second * 10) {
+	ticker := time.NewTicker(time.Second * 10)
+	defer ticker.Stop()
+	for range ticker.C {
 		resp, err := client.Do(req)
 		if err != nil {
 			log.Fatalf("Failed to send request: %v", err)
@@ -43,7 +45,7 @@ func StartWorker(api_url string, api_key string, runner_id string) {
 		}
 
 		for _, execution := range executions.Executions {
-			processing.StartProcessing(execution)
+			go processing.StartProcessing(execution)
 		}
 	}
 }
