@@ -1,6 +1,7 @@
 package executions
 
 import (
+	"alertflow-runner/handlers/busy"
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/models"
 	"bytes"
@@ -42,6 +43,8 @@ func EndSuccess(execution models.Execution) {
 }
 
 func End(execution models.Execution) {
+	busy.Busy(false)
+
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

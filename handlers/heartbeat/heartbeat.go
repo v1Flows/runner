@@ -17,12 +17,14 @@ func SendHeartbeat() {
 		},
 	}
 	url := config.Config.Alertflow.URL + "/api/runners/" + config.Config.RunnerID + "/heartbeat"
-	req, err := http.NewRequest("POST", url, nil)
+	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
 	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
-	for range time.Tick(time.Second * 10) {
+	ticker := time.NewTicker(time.Second * 10)
+	defer ticker.Stop()
+	for range ticker.C {
 		resp, err := client.Do(req)
 		if err != nil {
 			log.Fatalf("Failed to send request: %v", err)
@@ -37,7 +39,6 @@ func SendHeartbeat() {
 		if resp.StatusCode != 200 {
 			log.Errorf("Failed to send heartbeat to AlertFlow")
 			log.Errorf("Response: %s", body)
-			panic("Failed to send heartbeat to AlertFlow")
 		}
 		log.Debugf("Heartbeat sent to AlertFlow")
 	}
