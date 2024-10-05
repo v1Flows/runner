@@ -5,6 +5,7 @@ import (
 	"alertflow-runner/functions/executions"
 	"alertflow-runner/functions/flow"
 	"alertflow-runner/functions/payload"
+	"alertflow-runner/handlers/busy"
 	"alertflow-runner/handlers/config"
 	"alertflow-runner/handlers/variables"
 	"alertflow-runner/models"
@@ -14,6 +15,12 @@ import (
 )
 
 func StartProcessing(execution models.Execution) {
+	// ensure that runnerID is empty or equal to the current runnerID
+	if execution.RunnerID != "" && execution.RunnerID != config.Config.RunnerID {
+		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
+		return
+	}
+
 	execution.RunnerID = config.Config.RunnerID
 	execution.Waiting = false
 	execution.Running = true
@@ -25,6 +32,9 @@ func StartProcessing(execution models.Execution) {
 		executions.EndWithError(execution)
 		return
 	}
+
+	// set runner to busy
+	busy.Busy(true)
 
 	// set runner picked up step
 	_, err = executions.SendStep(execution, models.ExecutionSteps{
