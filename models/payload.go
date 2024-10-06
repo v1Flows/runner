@@ -10,4 +10,5 @@ type Payload struct {
 	Payload  json.RawMessage `json:"payload"`
 	FlowID   string          `json:"flow_id"`
 	RunnerID string          `json:"runner_id"`
+	Endpoint string          `json:"endpoint"`
 }

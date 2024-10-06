@@ -33,6 +33,7 @@ func AlertmanagerPayloadHandler(context *gin.Context) {
 		Payload:  incPayload,
 		FlowID:   receiver.Receiver,
 		RunnerID: config.Config.RunnerID,
+		Endpoint: "alertmanager",
 	}
 
 	SendPayload(payloadData)
