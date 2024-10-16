@@ -19,7 +19,7 @@ func GetData(execution models.Execution) (models.Payload, error) {
 		},
 	}
 
-	url := config.Config.Alertflow.URL + "/api/payloads/" + execution.PayloadID
+	url := config.Config.Alertflow.URL + "/api/v1/payloads/" + execution.PayloadID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)

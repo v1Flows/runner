@@ -15,7 +15,7 @@ func SendStep(execution models.Execution, step models.ExecutionSteps) (models.Ex
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/executions/"+execution.ID.String()+"/steps", payloadBuf)
+	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String()+"/steps", payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
