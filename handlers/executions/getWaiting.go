@@ -17,7 +17,7 @@ func StartWorker(api_url string, api_key string, runner_id string) {
 			DisableKeepAlives: true,
 		},
 	}
-	url := api_url + "/api/executions/" + runner_id + "/waiting"
+	url := api_url + "/api/v1/executions/" + runner_id + "/waiting"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
