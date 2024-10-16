@@ -14,7 +14,7 @@ func Update(execution models.Execution) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/executions/"+execution.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 		return err

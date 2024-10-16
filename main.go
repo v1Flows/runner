@@ -13,20 +13,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.7.0-beta"
+const version string = "0.8.0-beta"
 
 var (
-	configFile = kingpin.Flag("config.file", "Config File").String()
+	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
 )
 
 func logging(logLevel string) {
-	if logLevel == "Info" {
+	logLevel = strings.ToLower(logLevel)
+
+	if logLevel == "info" {
 		log.SetLevel(log.InfoLevel)
-	} else if logLevel == "Warn" {
+	} else if logLevel == "warn" {
 		log.SetLevel(log.WarnLevel)
-	} else if logLevel == "Error" {
+	} else if logLevel == "error" {
 		log.SetLevel(log.ErrorLevel)
-	} else if logLevel == "Debug" {
+	} else if logLevel == "debug" {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.InfoLevel)
