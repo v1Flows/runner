@@ -31,7 +31,7 @@ func RegisterAtAPI(version string, actions []models.ActionDetails) {
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/runners/"+config.Config.RunnerID+"/register", payloadBuf)
+	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/"+config.Config.RunnerID+"/register", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}

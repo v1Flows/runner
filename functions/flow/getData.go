@@ -19,7 +19,7 @@ func GetFlowData(execution models.Execution) (models.Flows, error) {
 		},
 	}
 
-	url := config.Config.Alertflow.URL + "/api/flows/" + execution.FlowID
+	url := config.Config.Alertflow.URL + "/api/v1/flows/" + execution.FlowID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)

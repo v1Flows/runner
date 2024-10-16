@@ -20,7 +20,7 @@ func SendPayload(payload models.Payload) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/v1/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
