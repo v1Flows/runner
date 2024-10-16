@@ -1,0 +1,15 @@
+---
+
+LogLevel: info
+RunnerID: null
+Mode: master
+
+Alertflow:
+  URL: https://alertflow.org
+  APIKey: null
+
+Payloads:
+  Enabled: true
+  Port: 8081
+  Managers:
+    - Alertmanager
