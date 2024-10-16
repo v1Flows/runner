@@ -15,7 +15,7 @@ func UpdateStep(execution models.Execution, step models.ExecutionSteps) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/executions/"+execution.ID.String()+"/steps/"+step.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String()+"/steps/"+step.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 		return err
