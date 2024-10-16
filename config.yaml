@@ -1,12 +1,12 @@
 ---
 
 LogLevel: info
-RunnerID: ffa1a024-5e8f-4b91-b3d3-b0b7a9d94363
-Mode: master
+RunnerID: fc367864-c7ed-4193-9916-cce5357c4069
+Mode: worker
 
 Alertflow:
   URL: http://localhost:8080
-  APIKey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0X2lkIjoiYzBmMjkyNmQtMWM0MS00MWQxLWJjM2UtMjI2YzJiM2ZlOTUzIiwiaWQiOiI3NTg0ZmE4OS04NTcyLTRhNGYtYjA3My0xMGFhMTc4NzI3MmEiLCJ0eXBlIjoicnVubmVyIiwiZXhwIjozMzA1MDAzNzM4fQ.Q3dCXAyHwm98y79juRze1iIuv0Xaa-S-QzSbRgq6xcM
+  APIKey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0X2lkIjoiZjhmNzg1YmUtMjg3ZS00YTkxLWFhMTItOTJiNjI1OWJmN2YzIiwiaWQiOiIzNTdkYzhhOS03OTUzLTQ5MmUtOWQxMC0wNjAyNzliNzMzNzUiLCJ0eXBlIjoicnVubmVyIiwiZXhwIjozMzA1ODcwNjYyfQ.9TFb3qBSz_Rd4FpTwd8on6yVFJZQkqkDJkMKwtaspYE
 
 Payloads:
   Enabled: true
