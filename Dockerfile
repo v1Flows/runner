@@ -8,7 +8,7 @@ RUN go mod download
 COPY . ./
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux go build -o /alertflow-runner
+RUN CGO_ENABLED=0 GOOS=linux go build ./cmd/alertflow-runner
 
 FROM alpine:3.12 as runner
 
