@@ -5,7 +5,7 @@ name: Go Build & Test
 
 on:
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "develop", "release/**" ]
 
 jobs:
   build:
