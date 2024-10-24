@@ -104,6 +104,17 @@ func CheckPatterns(flow models.Flows, execution models.Execution, payload models
 	}
 
 	if patternMissMatched > 0 {
+		err = executions.UpdateStep(execution, models.ExecutionSteps{
+			ID:             checkPatternsStep.ID,
+			ActionMessages: []string{"Some patterns did not match. Skipping execution"},
+			NoPatternMatch: true,
+			Finished:       true,
+			FinishedAt:     time.Now(),
+		})
+		if err != nil {
+			log.Error("Error updating step:", err)
+			return false, err
+		}
 		executions.EndWithNoMatch(execution)
 		return false, nil
 	} else {
