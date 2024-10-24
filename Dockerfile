@@ -16,7 +16,7 @@ COPY --from=builder /alertflow-runner /alertflow-runner
 
 RUN mkdir /runner
 RUN mkdir /runner/config
-COPY handlers/config/config.yaml /runner/config/config.yaml
+COPY config/config.yaml /runner/config/config.yaml
 
 VOLUME [ "/runner" ]
 
