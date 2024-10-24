@@ -1,6 +1,7 @@
 name: Build & Push Docker Image Develop
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "develop" ]
     paths-ignore:
