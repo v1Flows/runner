@@ -25,5 +25,5 @@ serviceAccountKey.json
 
 .envrc
 alertflow-runner
-config_local.yml
+config*.yaml
 plugins/*
