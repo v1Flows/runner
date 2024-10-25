@@ -42,6 +42,14 @@ func EndSuccess(execution models.Execution) {
 	End(execution)
 }
 
+func EndCancelled(execution models.Execution) {
+	execution.FinishedAt = time.Now()
+	execution.Running = false
+	execution.Error = false
+	execution.Cancelled = true
+	End(execution)
+}
+
 func End(execution models.Execution) {
 	runner.Busy(false)
 
