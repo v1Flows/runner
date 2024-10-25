@@ -261,7 +261,7 @@ func startProcessing(execution models.Execution) {
 					return
 				} else if canceled {
 					actionsRunCancelled = append(actionsRunCancelled, action.Name)
-					executions.SetToCancelled(execution)
+					executions.EndCancelled(execution)
 					return
 				} else if finished {
 					actionsRunFinished = append(actionsRunFinished, action.Name)
@@ -273,7 +273,7 @@ func startProcessing(execution models.Execution) {
 	if len(actionsRunFailed) > 0 {
 		executions.EndWithError(execution)
 	} else if len(actionsRunCancelled) > 0 {
-		executions.SetToCancelled(execution)
+		executions.EndCancelled(execution)
 	} else {
 		executions.EndSuccess(execution)
 	}
