@@ -46,6 +46,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 
 	err := executions.UpdateStep(execution, models.ExecutionSteps{
 		ID:             step.ID,
+		ActionID:       action.ID.String(),
 		ActionMessages: []string{`Waiting for user interaction`},
 		Interactive:    true,
 	})
@@ -106,8 +107,11 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 				"Interaction rejected",
 				"Execution canceled",
 			},
-			Finished:   true,
-			FinishedAt: time.Now(),
+			Finished:            true,
+			FinishedAt:          time.Now(),
+			Interacted:          true,
+			InteractionRejected: true,
+			InteractionApproved: false,
 		})
 		if err != nil {
 			log.Error("Error updating step: ", err)
@@ -115,10 +119,13 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 		return false, true, false
 	} else if stepData.InteractionApproved {
 		err = executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             step.ID,
-			ActionMessages: []string{"Interaction approved"},
-			Finished:       true,
-			FinishedAt:     time.Now(),
+			ID:                  step.ID,
+			ActionMessages:      []string{"Interaction approved"},
+			Finished:            true,
+			FinishedAt:          time.Now(),
+			Interacted:          true,
+			InteractionRejected: false,
+			InteractionApproved: true,
 		})
 		if err != nil {
 			log.Error("Error updating step: ", err)

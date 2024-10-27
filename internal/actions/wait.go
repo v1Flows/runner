@@ -47,6 +47,7 @@ func WaitAction(execution models.Execution, step models.ExecutionSteps, action m
 
 	err := executions.UpdateStep(execution, models.ExecutionSteps{
 		ID:             step.ID,
+		ActionID:       action.ID.String(),
 		ActionMessages: []string{`Waiting for: ` + strconv.Itoa(waitTime) + ` seconds`},
 	})
 	if err != nil {

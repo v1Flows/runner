@@ -63,6 +63,7 @@ func WebhookInit() models.ActionDetails {
 func WebhookAction(execution models.Execution, step models.ExecutionSteps, action models.Actions) (finished bool, canceled bool, failed bool) {
 	err := executions.UpdateStep(execution, models.ExecutionSteps{
 		ID:             step.ID,
+		ActionID:       action.ID.String(),
 		ActionMessages: []string{"Webhook Action finished"},
 		Finished:       true,
 		FinishedAt:     time.Now(),
