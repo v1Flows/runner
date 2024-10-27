@@ -27,6 +27,7 @@ func LogAction(execution models.Execution, step models.ExecutionSteps, action mo
 
 	err := executions.UpdateStep(execution, models.ExecutionSteps{
 		ID:             step.ID,
+		ActionID:       action.ID.String(),
 		ActionMessages: []string{"Log Action finished"},
 		Finished:       true,
 		FinishedAt:     time.Now(),

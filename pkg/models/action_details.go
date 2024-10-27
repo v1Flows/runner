@@ -5,12 +5,14 @@ import (
 )
 
 type ActionDetails struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Icon        string          `json:"icon"`
-	Type        string          `json:"type"`
-	Function    interface{}     `json:"-"`
-	Params      json.RawMessage `json:"params"`
+	Name              string          `json:"name"`
+	Description       string          `json:"description"`
+	Icon              string          `json:"icon"`
+	Type              string          `json:"type"`
+	Function          interface{}     `json:"-"`
+	Params            json.RawMessage `json:"params"`
+	CustomName        string          `json:"custom_name"`
+	CustomDescription string          `json:"custom_description"`
 }
 
 type Param struct {
