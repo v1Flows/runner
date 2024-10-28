@@ -42,6 +42,7 @@ func PortInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
+		ID:          "port_check",
 		Name:        "Port Check",
 		Description: "Checks if a port is open",
 		Icon:        "solar:wi-fi-router-broken",
@@ -67,7 +68,7 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 		}
 	}
 
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{"Checking port " + strconv.Itoa(port) + " on " + host},
@@ -79,7 +80,7 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 	address := net.JoinHostPort(host, strconv.Itoa(port))
 	conn, err := net.DialTimeout("tcp", address, time.Duration(timeout)*time.Second)
 	if err != nil {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             step.ID,
 			ActionMessages: []string{"Port is closed"},
 			Error:          true,
@@ -92,7 +93,7 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 		return false, false, true
 	} else {
 		if conn != nil {
-			err = executions.UpdateStep(execution, models.ExecutionSteps{
+			err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID:             step.ID,
 				ActionMessages: []string{"Port is open"},
 				Finished:       true,
@@ -103,7 +104,7 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 			}
 			defer conn.Close()
 		} else {
-			err = executions.UpdateStep(execution, models.ExecutionSteps{
+			err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID:             step.ID,
 				ActionMessages: []string{"Port is closed"},
 				Error:          true,
@@ -117,7 +118,7 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 		}
 	}
 
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
+	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionMessages: []string{"Port check finished"},
 		Finished:       true,

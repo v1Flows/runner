@@ -35,6 +35,7 @@ func PingInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
+		ID:          "ping",
 		Name:        "Ping",
 		Description: "Pings a target",
 		Icon:        "solar:wi-fi-router-minimalistic-broken",
@@ -56,7 +57,7 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 		}
 	}
 
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{`Pinging: ` + target},
@@ -68,7 +69,7 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 	pinger, err := probing.NewPinger(target)
 	if err != nil {
 		log.Error("Error creating pinger: ", err)
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             step.ID,
 			ActionMessages: []string{"Error creating pinger: " + err.Error()},
 			Error:          true,
@@ -84,7 +85,7 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 	err = pinger.Run() // Blocks until finished.
 	if err != nil {
 		log.Error("Error running pinger: ", err)
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             step.ID,
 			ActionMessages: []string{"Error running pinger: " + err.Error()},
 			Error:          true,
@@ -98,7 +99,7 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 	}
 
 	stats := pinger.Statistics() // get send/receive/duplicate/rtt stats
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
+	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID: step.ID,
 		ActionMessages: []string{
 			"Sent: " + strconv.Itoa(stats.PacketsSent),
@@ -115,7 +116,7 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 		log.Error("Error updating step: ", err)
 	}
 
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
+	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionMessages: []string{"Ping finished"},
 		Finished:       true,

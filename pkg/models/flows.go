@@ -11,20 +11,20 @@ type IncomingFlow struct {
 }
 
 type Flows struct {
-	ID                  uuid.UUID `json:"id"`
-	Name                string    `json:"name"`
-	Description         string    `json:"description"`
-	ProjectID           string    `json:"project_id"`
-	RunnerID            string    `json:"runner_id"`
-	Disabled            bool      `json:"disabled"`
-	DisabledReason      string    `json:"disabled_reason"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
-	MaintenanceRequired bool      `json:"maintenance_required"`
-	MaintenanceMessage  string    `json:"maintenance_message"`
-	ExecParallel        bool      `json:"exec_parallel"`
-	Actions             []Actions `json:"actions"`
-	Patterns            []Pattern `json:"patterns"`
+	ID                 uuid.UUID `json:"id"`
+	Name               string    `json:"name"`
+	Description        string    `json:"description"`
+	ProjectID          string    `json:"project_id"`
+	RunnerID           string    `json:"runner_id"`
+	ExecParallel       bool      `json:"exec_parallel"`
+	Actions            []Actions `json:"actions"`
+	Patterns           []Pattern `json:"patterns"`
+	Maintenance        bool      `json:"maintenance"`
+	MaintenanceMessage string    `json:"maintenance_message"`
+	Disabled           bool      `json:"disabled"`
+	DisabledReason     string    `json:"disabled_reason"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
 }
 
 type Actions struct {
@@ -38,6 +38,8 @@ type Actions struct {
 		Key   string `json:"key"`
 		Value string `json:"value"`
 	} `json:"params"`
+	CustomName        string `json:"custom_name"`
+	CustomDescription string `json:"custom_description"`
 }
 
 type Pattern struct {

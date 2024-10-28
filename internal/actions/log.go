@@ -10,6 +10,7 @@ import (
 
 func LogInit() models.ActionDetails {
 	return models.ActionDetails{
+		ID:          "log",
 		Name:        "Log Message",
 		Description: "Prints a Log Message on Runner stdout",
 		Icon:        "solar:clipboard-list-broken",
@@ -25,7 +26,7 @@ func LogAction(execution models.Execution, step models.ExecutionSteps, action mo
 		"StepID":    step.ID,
 	}).Info("Log Action triggered")
 
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{"Log Action finished"},

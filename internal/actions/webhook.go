@@ -51,6 +51,7 @@ func WebhookInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
+		ID:          "webhook",
 		Name:        "Webhook",
 		Description: "Sends an HTTP Webhook",
 		Icon:        "solar:global-broken",
@@ -61,7 +62,7 @@ func WebhookInit() models.ActionDetails {
 }
 
 func WebhookAction(execution models.Execution, step models.ExecutionSteps, action models.Actions) (finished bool, canceled bool, failed bool) {
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{"Webhook Action finished"},

@@ -1,4 +1,4 @@
-package flow
+package flows
 
 import (
 	"alertflow-runner/internal/executions"
@@ -32,7 +32,7 @@ func CheckFlowActions(flow models.Flows, execution models.Execution) (status boo
 		}
 
 		if count == 0 {
-			err := executions.UpdateStep(execution, models.ExecutionSteps{
+			err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID:             stepData.ID,
 				ActionMessages: []string{"Flow has no active Actions defined"},
 				NoResult:       true,
@@ -47,7 +47,7 @@ func CheckFlowActions(flow models.Flows, execution models.Execution) (status boo
 			executions.EndWithGhost(execution)
 			return false, nil
 		} else {
-			err := executions.UpdateStep(execution, models.ExecutionSteps{
+			err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID:             stepData.ID,
 				ActionMessages: []string{"Flow has Actions defined"},
 				Finished:       true,
@@ -61,7 +61,7 @@ func CheckFlowActions(flow models.Flows, execution models.Execution) (status boo
 			return true, nil
 		}
 	} else {
-		err := executions.UpdateStep(execution, models.ExecutionSteps{
+		err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             stepData.ID,
 			ActionMessages: []string{"Flow has no Actions defined"},
 			NoResult:       true,

@@ -27,6 +27,7 @@ func InteractionInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
+		ID:          "interaction",
 		Name:        "Interaction",
 		Description: "Wait for user interaction to continue",
 		Icon:        "solar:hand-shake-linear",
@@ -44,7 +45,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 		}
 	}
 
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{`Waiting for user interaction`},
@@ -76,7 +77,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 
 		if timeout > 0 && time.Since(startTime).Seconds() >= float64(timeout) {
 			log.Debug("Timeout reached while waiting for user interaction")
-			err = executions.UpdateStep(execution, models.ExecutionSteps{
+			err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID: step.ID,
 				ActionMessages: []string{
 					"Interaction timed out",
@@ -101,7 +102,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 	executions.SetToRunning(execution)
 
 	if stepData.InteractionRejected {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID: step.ID,
 			ActionMessages: []string{
 				"Interaction rejected",
@@ -118,7 +119,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 		}
 		return false, true, false
 	} else if stepData.InteractionApproved {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:                  step.ID,
 			ActionMessages:      []string{"Interaction approved"},
 			Finished:            true,
@@ -133,7 +134,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 		return true, false, false
 	}
 
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
+	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionMessages: []string{"Interaction finished"},
 		Finished:       true,

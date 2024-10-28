@@ -2,7 +2,7 @@ package actions
 
 import "alertflow-runner/pkg/models"
 
-func searchAction(actionName string) models.ActionDetails {
+func SearchAction(actionID string) (action models.ActionDetails, found bool) {
 	// Search for action
 	// If action found, return action details
 	// If action not found, return nil
@@ -11,10 +11,10 @@ func searchAction(actionName string) models.ActionDetails {
 	actions := Init()
 
 	for _, action := range actions {
-		if action.Name == actionName {
-			return action
+		if action.ID == actionID {
+			return action, true
 		}
 	}
 
-	return models.ActionDetails{}
+	return models.ActionDetails{}, false
 }

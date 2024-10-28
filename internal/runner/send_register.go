@@ -16,9 +16,9 @@ func RegisterAtAPI(version string, actions []models.ActionDetails) {
 	register := models.Register{
 		Registered:                true,
 		LastHeartbeat:             time.Now(),
-		RunnerVersion:             version,
-		AvailablePayloadInjectors: json.RawMessage(`[]`),
+		Version:                   version,
 		Mode:                      config.Config.Mode,
+		AvailablePayloadInjectors: json.RawMessage(`[]`),
 	}
 
 	// Convert actions to JSON

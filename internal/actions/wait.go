@@ -27,6 +27,7 @@ func WaitInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
+		ID:          "wait",
 		Name:        "Wait",
 		Description: "Waits for a specified amount of time",
 		Icon:        "solar:clock-circle-broken",
@@ -45,7 +46,7 @@ func WaitAction(execution models.Execution, step models.ExecutionSteps, action m
 		}
 	}
 
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{`Waiting for: ` + strconv.Itoa(waitTime) + ` seconds`},
@@ -60,7 +61,7 @@ func WaitAction(execution models.Execution, step models.ExecutionSteps, action m
 
 	executions.SetToRunning(execution)
 
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
+	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionMessages: []string{"Wait Action finished"},
 		Finished:       true,
