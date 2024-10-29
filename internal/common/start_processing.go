@@ -43,7 +43,7 @@ func startProcessing(execution models.Execution) {
 	var payload models.Payload
 	for _, step := range initialSteps {
 		if step.Pending {
-			data, _, canceled, failed, err := processStep(flow, payload, initialSteps, step, execution)
+			data, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, initialSteps, step, execution)
 			if err != nil {
 				executions.EndWithError(execution)
 				return
@@ -64,6 +64,10 @@ func startProcessing(execution models.Execution) {
 			} else if canceled {
 				executions.CancelRemainingSteps(execution.ID.String())
 				executions.EndCanceled(execution)
+				return
+			} else if no_pattern_match {
+				executions.CancelRemainingSteps(execution.ID.String())
+				executions.EndNoPatternMatch(execution)
 				return
 			}
 		}

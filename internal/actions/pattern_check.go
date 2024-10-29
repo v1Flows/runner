@@ -24,7 +24,7 @@ func PatternCheckInit() models.ActionDetails {
 	}
 }
 
-func PatternCheckAction(execution models.Execution, flow models.Flows, payload models.Payload, allSteps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, failed bool) {
+func PatternCheckAction(execution models.Execution, flow models.Flows, payload models.Payload, allSteps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
@@ -34,7 +34,7 @@ func PatternCheckAction(execution models.Execution, flow models.Flows, payload m
 		StartedAt:      time.Now(),
 	})
 	if err != nil {
-		return nil, false, false, true
+		return nil, false, false, false, true
 	}
 
 	// end if there are no patterns
@@ -47,16 +47,16 @@ func PatternCheckAction(execution models.Execution, flow models.Flows, payload m
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			return nil, false, false, true
+			return nil, false, false, false, true
 		}
-		return nil, true, false, false
+		return nil, true, false, false, false
 	}
 
 	// convert payload to string
 	payloadBytes, err := json.Marshal(payload.Payload)
 	if err != nil {
 		log.Error("Error converting payload to JSON:", err)
-		return nil, false, false, true
+		return nil, false, false, false, true
 	}
 	payloadString := string(payloadBytes)
 
@@ -72,19 +72,19 @@ func PatternCheckAction(execution models.Execution, flow models.Flows, payload m
 					ActionMessages: []string{`Pattern: ` + pattern.Key + ` == ` + pattern.Value + ` matched. Continue to next step`},
 				})
 				if err != nil {
-					return nil, false, false, true
+					return nil, false, false, false, true
 				}
 			} else {
 				err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 					ID:             step.ID,
-					ActionMessages: []string{`Pattern: ` + pattern.Key + ` == ` + pattern.Value + ` not found. Cancel execution`},
+					ActionMessages: []string{`Pattern: ` + pattern.Key + ` == ` + pattern.Value + ` not found.`},
 					Running:        false,
-					NoPatternMatch: true,
+					Canceled:       true,
 					Finished:       true,
 					FinishedAt:     time.Now(),
 				})
 				if err != nil {
-					return nil, false, false, true
+					return nil, false, false, false, true
 				}
 				patternMissMatched++
 			}
@@ -95,19 +95,19 @@ func PatternCheckAction(execution models.Execution, flow models.Flows, payload m
 					ActionMessages: []string{`Pattern: ` + pattern.Key + ` != ` + pattern.Value + ` not found. Continue to next step`},
 				})
 				if err != nil {
-					return nil, false, false, true
+					return nil, false, false, false, true
 				}
 			} else {
 				err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 					ID:             step.ID,
-					ActionMessages: []string{`Pattern: ` + pattern.Key + ` != ` + pattern.Value + ` matched. Cancel execution`},
+					ActionMessages: []string{`Pattern: ` + pattern.Key + ` != ` + pattern.Value + ` matched.`},
 					Running:        false,
-					NoPatternMatch: true,
+					Canceled:       true,
 					Finished:       true,
 					FinishedAt:     time.Now(),
 				})
 				if err != nil {
-					return nil, false, false, true
+					return nil, false, false, false, true
 				}
 				patternMissMatched++
 			}
@@ -119,14 +119,15 @@ func PatternCheckAction(execution models.Execution, flow models.Flows, payload m
 			ID:             step.ID,
 			ActionMessages: []string{"Some patterns did not match. Cancel execution"},
 			Running:        false,
+			Canceled:       false,
 			NoPatternMatch: true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			return nil, false, false, true
+			return nil, false, false, false, true
 		}
-		return nil, false, true, false
+		return nil, false, false, true, false
 	} else {
 		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             step.ID,
@@ -136,8 +137,8 @@ func PatternCheckAction(execution models.Execution, flow models.Flows, payload m
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			return nil, false, false, true
+			return nil, false, false, false, true
 		}
-		return nil, true, false, false
+		return nil, true, false, false, false
 	}
 }

@@ -38,7 +38,7 @@ func CollectPayloadDataInit() models.ActionDetails {
 	}
 }
 
-func CollectPayloadDataAction(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, failed bool) {
+func CollectPayloadDataAction(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	payloadID := ""
 
 	if action.Params == nil {
@@ -77,7 +77,7 @@ func CollectPayloadDataAction(execution models.Execution, flow models.Flows, pay
 			log.Error("Error updating step: ", err)
 		}
 
-		return nil, false, false, true
+		return nil, false, false, false, true
 	}
 
 	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
@@ -91,5 +91,5 @@ func CollectPayloadDataAction(execution models.Execution, flow models.Flows, pay
 		log.Error("Error updating step: ", err)
 	}
 
-	return map[string]interface{}{"payload": payload}, true, false, false
+	return map[string]interface{}{"payload": payload}, true, false, false, false
 }

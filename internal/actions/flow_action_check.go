@@ -19,7 +19,7 @@ func FlowActionsCheckInit() models.ActionDetails {
 	}
 }
 
-func FlowActionsCheckAction(execution models.Execution, flow models.Flows, payload models.Payload, allSteps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, failed bool) {
+func FlowActionsCheckAction(execution models.Execution, flow models.Flows, payload models.Payload, allSteps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
@@ -29,7 +29,7 @@ func FlowActionsCheckAction(execution models.Execution, flow models.Flows, paylo
 		StartedAt:      time.Now(),
 	})
 	if err != nil {
-		return nil, false, false, true
+		return nil, false, false, false, true
 	}
 
 	// check if flow got any action
@@ -53,9 +53,9 @@ func FlowActionsCheckAction(execution models.Execution, flow models.Flows, paylo
 				FinishedAt:     time.Now(),
 			})
 			if err != nil {
-				return nil, false, false, true
+				return nil, false, false, false, true
 			}
-			return nil, false, true, false
+			return nil, false, true, false, false
 		} else {
 			err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID:             step.ID,
@@ -65,9 +65,9 @@ func FlowActionsCheckAction(execution models.Execution, flow models.Flows, paylo
 				FinishedAt:     time.Now(),
 			})
 			if err != nil {
-				return nil, false, false, true
+				return nil, false, false, false, true
 			}
-			return nil, true, false, false
+			return nil, true, false, false, false
 		}
 	} else {
 		err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
@@ -80,8 +80,8 @@ func FlowActionsCheckAction(execution models.Execution, flow models.Flows, paylo
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			return nil, false, false, true
+			return nil, false, false, false, true
 		}
-		return nil, false, true, false
+		return nil, false, true, false, false
 	}
 }

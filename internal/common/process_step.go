@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func processStep(flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, failed bool, err error) {
+func processStep(flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
 	step.Pending = false
 	step.Running = true
@@ -18,7 +18,7 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 
 	if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
 		log.Error(err)
-		return nil, false, false, false, err
+		return nil, false, false, false, false, err
 	}
 
 	action, found := actions.SearchAction(step.ActionID)
@@ -34,23 +34,25 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 
 		if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
 			log.Error(err)
-			return nil, false, false, false, err
+			return nil, false, false, false, false, err
 		}
 
-		return nil, false, false, true, nil
+		return nil, false, false, false, true, nil
 	}
 
-	if fn, ok := action.Function.(func(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, failed bool)); ok {
-		data, finished, canceled, failed := fn(execution, flow, payload, steps, step, models.Actions{})
+	if fn, ok := action.Function.(func(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool)); ok {
+		data, finished, canceled, no_pattern_match, failed := fn(execution, flow, payload, steps, step, models.Actions{})
 
 		if failed {
-			return nil, false, false, true, nil
+			return nil, false, false, false, true, nil
 		} else if canceled {
-			return nil, false, true, false, nil
+			return nil, false, true, false, false, nil
+		} else if no_pattern_match {
+			return nil, false, false, true, false, nil
 		} else if finished {
-			return data, true, false, false, nil
+			return data, true, false, false, false, nil
 		}
 	}
 
-	return data, true, false, false, nil
+	return data, true, false, false, false, nil
 }

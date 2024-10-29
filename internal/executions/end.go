@@ -12,14 +12,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func EndWithError(execution models.Execution) {
+func EndCanceled(execution models.Execution) {
 	execution.FinishedAt = time.Now()
 	execution.Running = false
-	execution.Error = true
+	execution.Error = false
+	execution.Canceled = true
 	End(execution)
 }
 
-func EndWithNoMatch(execution models.Execution) {
+func EndNoPatternMatch(execution models.Execution) {
 	execution.FinishedAt = time.Now()
 	execution.Running = false
 	execution.Error = false
@@ -27,10 +28,10 @@ func EndWithNoMatch(execution models.Execution) {
 	End(execution)
 }
 
-func EndWithGhost(execution models.Execution) {
+func EndWithError(execution models.Execution) {
 	execution.FinishedAt = time.Now()
 	execution.Running = false
-	execution.Error = false
+	execution.Error = true
 	End(execution)
 }
 
@@ -39,14 +40,6 @@ func EndSuccess(execution models.Execution) {
 	execution.Error = false
 	execution.Finished = true
 	execution.FinishedAt = time.Now()
-	End(execution)
-}
-
-func EndCanceled(execution models.Execution) {
-	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = false
-	execution.Canceled = true
 	End(execution)
 }
 
