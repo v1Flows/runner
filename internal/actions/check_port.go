@@ -46,6 +46,7 @@ func PortInit() models.ActionDetails {
 		Description: "Checks if a port is open",
 		Icon:        "solar:wi-fi-router-broken",
 		Type:        "port_check",
+		Category:    "Network",
 		Function:    PortAction,
 		Params:      json.RawMessage(paramsJSON),
 	}

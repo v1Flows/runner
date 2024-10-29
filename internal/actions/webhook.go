@@ -56,6 +56,7 @@ func WebhookInit() models.ActionDetails {
 		Description: "Sends an HTTP Webhook",
 		Icon:        "solar:global-broken",
 		Type:        "webhook",
+		Category:    "Network",
 		Function:    WebhookAction,
 		Params:      json.RawMessage(paramsJSON),
 	}

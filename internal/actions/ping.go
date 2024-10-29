@@ -40,6 +40,7 @@ func PingInit() models.ActionDetails {
 		Description: "Pings a target",
 		Icon:        "solar:wi-fi-router-minimalistic-broken",
 		Type:        "ping",
+		Category:    "Network",
 		Function:    PingAction,
 		Params:      json.RawMessage(paramsJSON),
 	}

@@ -32,6 +32,7 @@ func InteractionInit() models.ActionDetails {
 		Description: "Wait for user interaction to continue",
 		Icon:        "solar:hand-shake-linear",
 		Type:        "interaction",
+		Category:    "General",
 		Function:    InteractionAction,
 		Params:      json.RawMessage(paramsJSON),
 	}
@@ -115,6 +116,7 @@ func InteractionAction(execution models.Execution, flow models.Flows, payload mo
 				"Execution canceled",
 			},
 			Running:             false,
+			Canceled:            true,
 			Finished:            true,
 			FinishedAt:          time.Now(),
 			Interacted:          true,

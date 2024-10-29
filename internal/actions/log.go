@@ -15,6 +15,7 @@ func LogInit() models.ActionDetails {
 		Description: "Prints a Log Message on Runner stdout",
 		Icon:        "solar:clipboard-list-broken",
 		Type:        "log",
+		Category:    "Utility",
 		Function:    LogAction,
 		Params:      nil,
 	}

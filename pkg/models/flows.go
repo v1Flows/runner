@@ -33,6 +33,7 @@ type Actions struct {
 	Description string    `json:"description"`
 	Icon        string    `json:"icon"`
 	Type        string    `json:"type"`
+	Category    string    `json:"category"`
 	Active      bool      `json:"active"`
 	Params      []struct {
 		Key   string `json:"key"`

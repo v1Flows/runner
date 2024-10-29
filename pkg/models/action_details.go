@@ -10,6 +10,7 @@ type ActionDetails struct {
 	Description       string          `json:"description"`
 	Icon              string          `json:"icon"`
 	Type              string          `json:"type"`
+	Category          string          `json:"category"`
 	Function          interface{}     `json:"-"`
 	IsHidden          bool            `json:"is_hidden"`
 	Params            json.RawMessage `json:"params"`

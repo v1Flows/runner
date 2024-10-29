@@ -17,6 +17,7 @@ func PatternCheckInit() models.ActionDetails {
 		Description: "Check flow patterns",
 		Icon:        "solar:list-check-minimalistic-bold",
 		Type:        "pattern_check",
+		Category:    "Utility",
 		Function:    PatternCheckAction,
 		IsHidden:    true,
 		Params:      nil,

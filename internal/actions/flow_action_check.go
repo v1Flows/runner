@@ -12,6 +12,7 @@ func FlowActionsCheckInit() models.ActionDetails {
 		Description: "Check flow for actions",
 		Icon:        "solar:minimalistic-magnifer-linear",
 		Type:        "flow_actions_check",
+		Category:    "Flow",
 		Function:    FlowActionsCheckAction,
 		IsHidden:    true,
 		Params:      nil,

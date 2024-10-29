@@ -31,6 +31,7 @@ func CollectFlowDataInit() models.ActionDetails {
 		Description: "Collects Flow data from AlertFlow",
 		Icon:        "solar:book-bookmark-broken",
 		Type:        "collect_flow_data",
+		Category:    "Data",
 		Function:    CollectFlowDataAction,
 		IsHidden:    true,
 		Params:      json.RawMessage(paramsJSON),

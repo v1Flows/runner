@@ -31,6 +31,7 @@ func WaitInit() models.ActionDetails {
 		Description: "Waits for a specified amount of time",
 		Icon:        "solar:clock-circle-broken",
 		Type:        "wait",
+		Category:    "General",
 		Function:    WaitAction,
 		Params:      json.RawMessage(paramsJSON),
 	}

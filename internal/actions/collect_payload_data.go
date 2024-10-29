@@ -31,6 +31,7 @@ func CollectPayloadDataInit() models.ActionDetails {
 		Description: "Collects Payload data from AlertFlow",
 		Icon:        "solar:letter-opened-broken",
 		Type:        "collect_payload_data",
+		Category:    "Data",
 		Function:    CollectPayloadDataAction,
 		IsHidden:    true,
 		Params:      json.RawMessage(paramsJSON),
