@@ -21,10 +21,10 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 		return nil, false, false, false, false, err
 	}
 
-	action, found := actions.SearchAction(step.ActionID)
+	action, found := actions.SearchAction(step.ActionType)
 
 	if !found {
-		log.Warnf("Action %s not found", step.ActionID)
+		log.Warnf("Action %s not found", step.ActionType)
 
 		step.ActionMessages = append(step.ActionMessages, "Action not found")
 		step.Running = false
@@ -40,8 +40,17 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 		return nil, false, false, false, true, nil
 	}
 
+	var flow_action models.Actions
+	if len(flow.Actions) > 0 {
+		for _, flowAction := range flow.Actions {
+			if flowAction.ID.String() == step.ActionID {
+				flow_action = flowAction
+			}
+		}
+	}
+
 	if fn, ok := action.Function.(func(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool)); ok {
-		data, finished, canceled, no_pattern_match, failed := fn(execution, flow, payload, steps, step, models.Actions{})
+		data, finished, canceled, no_pattern_match, failed := fn(execution, flow, payload, steps, step, flow_action)
 
 		if failed {
 			return nil, false, false, false, true, nil

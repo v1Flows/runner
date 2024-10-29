@@ -42,17 +42,16 @@ func PortInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
-		ID:          "port_check",
 		Name:        "Port Check",
 		Description: "Checks if a port is open",
 		Icon:        "solar:wi-fi-router-broken",
-		Type:        "port",
+		Type:        "port_check",
 		Function:    PortAction,
 		Params:      json.RawMessage(paramsJSON),
 	}
 }
 
-func PortAction(execution models.Execution, step models.ExecutionSteps, action models.Actions) (finished bool, canceled bool, failed bool) {
+func PortAction(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	host := "myhost"
 	port := 22
 	timeout := 3
@@ -69,12 +68,18 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 	}
 
 	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
-		ID:             step.ID,
-		ActionID:       action.ID.String(),
-		ActionMessages: []string{"Checking port " + strconv.Itoa(port) + " on " + host},
+		ID:       step.ID,
+		ActionID: action.ID.String(),
+		ActionMessages: []string{
+			"Checking port " + strconv.Itoa(port) + " on " + host,
+			"Timeout: " + strconv.Itoa(timeout) + " seconds",
+		},
+		Pending:   false,
+		Running:   true,
+		StartedAt: time.Now(),
 	})
 	if err != nil {
-		log.Error("Error updating step:", err)
+		return nil, false, false, false, true
 	}
 
 	address := net.JoinHostPort(host, strconv.Itoa(port))
@@ -84,23 +89,25 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 			ID:             step.ID,
 			ActionMessages: []string{"Port is closed"},
 			Error:          true,
+			Running:        false,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			log.Error("Error updating step: ", err)
+			return nil, false, false, false, true
 		}
-		return false, false, true
+		return nil, false, false, false, true
 	} else {
 		if conn != nil {
 			err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID:             step.ID,
 				ActionMessages: []string{"Port is open"},
+				Running:        false,
 				Finished:       true,
 				FinishedAt:     time.Now(),
 			})
 			if err != nil {
-				log.Error("Error updating step: ", err)
+				return nil, false, false, false, true
 			}
 			defer conn.Close()
 		} else {
@@ -108,13 +115,14 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 				ID:             step.ID,
 				ActionMessages: []string{"Port is closed"},
 				Error:          true,
+				Running:        false,
 				Finished:       true,
 				FinishedAt:     time.Now(),
 			})
 			if err != nil {
-				log.Error("Error updating step: ", err)
+				return nil, false, false, false, true
 			}
-			return false, false, true
+			return nil, false, false, false, true
 		}
 	}
 
@@ -125,8 +133,8 @@ func PortAction(execution models.Execution, step models.ExecutionSteps, action m
 		FinishedAt:     time.Now(),
 	})
 	if err != nil {
-		log.Error("Error updating step: ", err)
+		return nil, false, false, false, true
 	}
 
-	return true, false, false
+	return nil, true, false, false, false
 }

@@ -1,0 +1,35 @@
+package executions
+
+import (
+	"alertflow-runner/pkg/models"
+	"time"
+)
+
+// SendFlowActionSteps sends all active flow actions to alertflow
+func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWithIDs []models.ExecutionSteps, err error) {
+	for _, action := range flow.Actions {
+		step := models.ExecutionSteps{
+			ActionID:    action.ID.String(),
+			ActionType:  action.Type,
+			ActionName:  action.Name,
+			Icon:        action.Icon,
+			ExecutionID: execution.ID.String(),
+			Pending:     true,
+			CreatedAt:   time.Now(),
+		}
+
+		// handle custom name
+		if action.CustomName != "" {
+			step.ActionName = action.CustomName
+		}
+
+		stepID, err := SendStep(execution, step)
+		if err != nil {
+			return nil, err
+		}
+		step.ID = stepID.ID
+		stepsWithIDs = append(stepsWithIDs, step)
+	}
+
+	return stepsWithIDs, nil
+}

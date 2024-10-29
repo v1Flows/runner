@@ -13,7 +13,6 @@ import (
 
 func PatternCheckInit() models.ActionDetails {
 	return models.ActionDetails{
-		ID:          "pattern_check",
 		Name:        "Pattern Check",
 		Description: "Check flow patterns",
 		Icon:        "solar:list-check-minimalistic-bold",

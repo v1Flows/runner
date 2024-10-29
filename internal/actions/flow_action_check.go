@@ -8,7 +8,6 @@ import (
 
 func FlowActionsCheckInit() models.ActionDetails {
 	return models.ActionDetails{
-		ID:          "flow_actions_check",
 		Name:        "Flow Action Check",
 		Description: "Check flow for actions",
 		Icon:        "solar:minimalistic-magnifer-linear",

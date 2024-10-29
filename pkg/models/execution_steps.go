@@ -42,6 +42,7 @@ type ExecutionSteps struct {
 	Skipped             bool      `json:"skipped"`
 	Error               bool      `json:"error"`
 	Finished            bool      `json:"finished"`
+	CreatedAt           time.Time `json:"created_at"`
 	StartedAt           time.Time `json:"started_at"`
 	FinishedAt          time.Time `json:"finished_at"`
 }

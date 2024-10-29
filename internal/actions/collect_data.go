@@ -35,11 +35,10 @@ func CollectDataInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
-		ID:          "collect_data",
 		Name:        "Collect Data",
 		Description: "Collects Flow and Payload data from AlertFlow",
 		Icon:        "solar:inbox-archive-linear",
-		Type:        "collect",
+		Type:        "collect_data",
 		Function:    CollectDataAction,
 		IsHidden:    true,
 		Params:      json.RawMessage(paramsJSON),

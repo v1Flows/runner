@@ -27,7 +27,6 @@ func CollectFlowDataInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
-		ID:          "collect_flow_data",
 		Name:        "Collect Flow Data",
 		Description: "Collects Flow data from AlertFlow",
 		Icon:        "solar:book-bookmark-broken",

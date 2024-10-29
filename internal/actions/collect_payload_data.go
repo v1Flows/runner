@@ -27,7 +27,6 @@ func CollectPayloadDataInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
-		ID:          "collect_payload_data",
 		Name:        "Collect Payload Data",
 		Description: "Collects Payload data from AlertFlow",
 		Icon:        "solar:letter-opened-broken",

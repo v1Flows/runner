@@ -27,7 +27,6 @@ func WaitInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
-		ID:          "wait",
 		Name:        "Wait",
 		Description: "Waits for a specified amount of time",
 		Icon:        "solar:clock-circle-broken",
@@ -37,7 +36,7 @@ func WaitInit() models.ActionDetails {
 	}
 }
 
-func WaitAction(execution models.Execution, step models.ExecutionSteps, action models.Actions) (finished bool, canceled bool, failed bool) {
+func WaitAction(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	// get the waittime from the action params
 	waitTime := 10
 	for _, param := range action.Params {
@@ -49,10 +48,13 @@ func WaitAction(execution models.Execution, step models.ExecutionSteps, action m
 	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
-		ActionMessages: []string{`Waiting for: ` + strconv.Itoa(waitTime) + ` seconds`},
+		ActionMessages: []string{`Waiting for ` + strconv.Itoa(waitTime) + ` seconds`},
+		Pending:        false,
+		Paused:         true,
+		StartedAt:      time.Now(),
 	})
 	if err != nil {
-		log.Error("Error updating step:", err)
+		return nil, false, false, false, true
 	}
 
 	executions.SetToPaused(execution)
@@ -64,12 +66,13 @@ func WaitAction(execution models.Execution, step models.ExecutionSteps, action m
 	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionMessages: []string{"Wait Action finished"},
+		Paused:         false,
 		Finished:       true,
 		FinishedAt:     time.Now(),
 	})
 	if err != nil {
-		log.Error("Error updating step: ", err)
+		return nil, false, false, false, true
 	}
 
-	return true, false, false
+	return nil, true, false, false, false
 }

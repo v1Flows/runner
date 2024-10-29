@@ -45,7 +45,7 @@ func PingInit() models.ActionDetails {
 	}
 }
 
-func PingAction(execution models.Execution, step models.ExecutionSteps, action models.Actions) (finished bool, canceled bool, failed bool) {
+func PingAction(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	target := "www.alertflow.org"
 	count := 3
 	for _, param := range action.Params {
@@ -61,9 +61,12 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 		ID:             step.ID,
 		ActionID:       action.ID.String(),
 		ActionMessages: []string{`Pinging: ` + target},
+		Pending:        false,
+		StartedAt:      time.Now(),
+		Running:        true,
 	})
 	if err != nil {
-		log.Error("Error updating step:", err)
+		return nil, false, false, false, true
 	}
 
 	pinger, err := probing.NewPinger(target)
@@ -72,14 +75,15 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             step.ID,
 			ActionMessages: []string{"Error creating pinger: " + err.Error()},
+			Running:        false,
 			Error:          true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			log.Error("Error updating step: ", err)
+			return nil, false, false, false, true
 		}
-		return false, false, true
+		return nil, false, false, false, true
 	}
 	pinger.Count = count
 	err = pinger.Run() // Blocks until finished.
@@ -88,14 +92,15 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:             step.ID,
 			ActionMessages: []string{"Error running pinger: " + err.Error()},
+			Running:        false,
 			Error:          true,
 			Finished:       true,
 			FinishedAt:     time.Now(),
 		})
 		if err != nil {
-			log.Error("Error updating step: ", err)
+			return nil, false, false, false, true
 		}
-		return false, false, true
+		return nil, false, false, false, true
 	}
 
 	stats := pinger.Statistics() // get send/receive/duplicate/rtt stats
@@ -108,23 +113,15 @@ func PingAction(execution models.Execution, step models.ExecutionSteps, action m
 			"RTT min: " + stats.MinRtt.String(),
 			"RTT max: " + stats.MaxRtt.String(),
 			"RTT avg: " + stats.AvgRtt.String(),
+			"Ping finished",
 		},
+		Running:    false,
 		Finished:   true,
 		FinishedAt: time.Now(),
 	})
 	if err != nil {
-		log.Error("Error updating step: ", err)
+		return nil, false, false, false, true
 	}
 
-	err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
-		ID:             step.ID,
-		ActionMessages: []string{"Ping finished"},
-		Finished:       true,
-		FinishedAt:     time.Now(),
-	})
-	if err != nil {
-		log.Error("Error updating step: ", err)
-	}
-
-	return true, false, false
+	return nil, true, false, false, false
 }
