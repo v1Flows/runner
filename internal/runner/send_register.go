@@ -12,13 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func RegisterAtAPI(version string, actions []models.ActionDetails) {
+func RegisterAtAPI(version string, actions []models.ActionDetails, payloadInjectors []models.PayloadInjector) {
 	register := models.Register{
-		Registered:                true,
-		LastHeartbeat:             time.Now(),
-		Version:                   version,
-		Mode:                      config.Config.Mode,
-		AvailablePayloadInjectors: json.RawMessage(`[]`),
+		Registered:    true,
+		LastHeartbeat: time.Now(),
+		Version:       version,
+		Mode:          config.Config.Mode,
 	}
 
 	// Convert actions to JSON
@@ -26,8 +25,14 @@ func RegisterAtAPI(version string, actions []models.ActionDetails) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	register.AvailableActions = json.RawMessage(actionsJSON)
+
+	// Convert payloadInjectors to JSON
+	payloadInjectorsJSON, err := json.Marshal(payloadInjectors)
+	if err != nil {
+		log.Fatal(err)
+	}
+	register.AvailablePayloadInjectors = json.RawMessage(payloadInjectorsJSON)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
