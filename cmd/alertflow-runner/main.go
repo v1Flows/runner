@@ -50,8 +50,9 @@ func main() {
 	logging(config.LogLevel)
 
 	actions := actions.Init()
+	payloadInjectors := payloadhandler.Init()
 
-	go runner.RegisterAtAPI(version, actions)
+	go runner.RegisterAtAPI(version, actions, payloadInjectors)
 	go runner.SendHeartbeat()
 
 	Init()

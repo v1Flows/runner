@@ -16,6 +16,14 @@ type Receiver struct {
 	Receiver string `json:"receiver"`
 }
 
+func AlertmanagerPayloadHandlerInit() models.PayloadInjector {
+	return models.PayloadInjector{
+		Name:     "Alertmanager",
+		Type:     "alertmanager",
+		Endpoint: "/alertmanager",
+	}
+}
+
 func AlertmanagerPayloadHandler(context *gin.Context) {
 	log.Info("Received Alertmanager Payload")
 	incPayload, err := io.ReadAll(context.Request.Body)
