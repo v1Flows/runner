@@ -2,7 +2,6 @@ package executions
 
 import (
 	"alertflow-runner/pkg/models"
-	"time"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
@@ -15,7 +14,6 @@ func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWi
 			Icon:        action.Icon,
 			ExecutionID: execution.ID.String(),
 			Pending:     true,
-			CreatedAt:   time.Now(),
 		}
 
 		// handle custom name

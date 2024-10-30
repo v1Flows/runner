@@ -6,20 +6,20 @@ import (
 	"time"
 )
 
-func FlowActionsCheckInit() models.ActionDetails {
+func ActionsCheckInit() models.ActionDetails {
 	return models.ActionDetails{
-		Name:        "Flow Action Check",
-		Description: "Check flow for actions",
-		Icon:        "solar:minimalistic-magnifer-linear",
-		Type:        "flow_actions_check",
+		Name:        "Actions Check",
+		Description: "Check if there are any actions defined in the flow",
+		Icon:        "solar:bolt-linear",
+		Type:        "actions_check",
 		Category:    "Flow",
-		Function:    FlowActionsCheckAction,
+		Function:    ActionsCheckAction,
 		IsHidden:    true,
 		Params:      nil,
 	}
 }
 
-func FlowActionsCheckAction(execution models.Execution, flow models.Flows, payload models.Payload, allSteps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
+func ActionsCheckAction(execution models.Execution, flow models.Flows, payload models.Payload, allSteps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 		ID:             step.ID,
 		ActionID:       action.ID.String(),

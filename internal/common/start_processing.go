@@ -80,28 +80,78 @@ func startProcessing(execution models.Execution) {
 		return
 	}
 
-	// process each flow action step where pending is true
-	for _, step := range flowActionStepsWithIDs {
-		if step.Pending {
-			_, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
-			if err != nil {
-				executions.EndWithError(execution)
-				return
-			}
+	if !flow.ExecParallel {
+		// process each flow action step in sequential order where pending is true
+		for _, step := range flowActionStepsWithIDs {
+			if step.Pending {
+				_, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+				if err != nil {
+					executions.EndWithError(execution)
+					return
+				}
 
-			if failed {
-				executions.CancelRemainingSteps(execution.ID.String())
-				executions.EndWithError(execution)
-				return
-			} else if canceled {
-				executions.CancelRemainingSteps(execution.ID.String())
-				executions.EndCanceled(execution)
-				return
-			} else if no_pattern_match {
-				executions.CancelRemainingSteps(execution.ID.String())
-				executions.EndNoPatternMatch(execution)
-				return
+				if failed {
+					executions.CancelRemainingSteps(execution.ID.String())
+					executions.EndWithError(execution)
+					return
+				} else if canceled {
+					executions.CancelRemainingSteps(execution.ID.String())
+					executions.EndCanceled(execution)
+					return
+				} else if no_pattern_match {
+					executions.CancelRemainingSteps(execution.ID.String())
+					executions.EndNoPatternMatch(execution)
+					return
+				}
 			}
+		}
+	} else {
+		var executedSteps int
+		var failedSteps int
+		var canceledSteps int
+		var noPatternMatchSteps int
+		var successSteps int
+		// process each flow action step in parallel where pending is true
+		for _, step := range flowActionStepsWithIDs {
+			if step.Pending {
+				go func() {
+					_, finished, cancleded, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+					if err != nil {
+						executions.EndWithError(execution)
+						return
+					}
+
+					executedSteps++
+
+					if failed {
+						failedSteps++
+					} else if cancleded {
+						canceledSteps++
+					} else if no_pattern_match {
+						noPatternMatchSteps++
+					} else if finished {
+						successSteps++
+					}
+				}()
+			}
+		}
+
+		// wait for all steps to finish
+		for executedSteps < len(flowActionStepsWithIDs) {
+			if executedSteps == len(flowActionStepsWithIDs) {
+				break
+			}
+		}
+
+		if failedSteps > 0 {
+			executions.EndWithError(execution)
+			return
+		} else if canceledSteps > 0 {
+			executions.EndCanceled(execution)
+			return
+		} else if noPatternMatchSteps > 0 {
+			executions.EndNoPatternMatch(execution)
+			return
 		}
 	}
 

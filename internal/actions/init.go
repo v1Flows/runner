@@ -9,7 +9,7 @@ func Init() []models.ActionDetails {
 	CollectFlowDataAction := CollectFlowDataInit()
 	CollectPayloadDataAction := CollectPayloadDataInit()
 	PatternCheckAction := PatternCheckInit()
-	FlowActionsCheckAction := FlowActionsCheckInit()
+	FlowActionsCheckAction := ActionsCheckInit()
 	logAction := LogInit()
 	webhookAction := WebhookInit()
 	WaitAction := WaitInit()

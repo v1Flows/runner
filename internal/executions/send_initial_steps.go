@@ -15,7 +15,6 @@ var initialSteps = []models.ExecutionSteps{
 		RunnerID:       config.Config.RunnerID,
 		Pending:        false,
 		Finished:       true,
-		CreatedAt:      time.Now(),
 		StartedAt:      time.Now(),
 		FinishedAt:     time.Now(),
 	},
@@ -28,7 +27,6 @@ var initialSteps = []models.ExecutionSteps{
 		StartedAt:      time.Now(),
 		Pending:        false,
 		Finished:       true,
-		CreatedAt:      time.Now(),
 		FinishedAt:     time.Now(),
 	},
 	{
@@ -36,21 +34,18 @@ var initialSteps = []models.ExecutionSteps{
 		ActionName: "Collect Data",
 		Icon:       "solar:inbox-archive-linear",
 		Pending:    true,
-		CreatedAt:  time.Now(),
 	},
 	{
 		ActionType: "pattern_check",
 		ActionName: "Pattern Check",
 		Icon:       "solar:list-check-minimalistic-bold",
 		Pending:    true,
-		CreatedAt:  time.Now(),
 	},
 	{
-		ActionType: "flow_actions_check",
-		ActionName: "Flow Actions Check",
-		Icon:       "solar:minimalistic-magnifer-linear",
+		ActionType: "actions_check",
+		ActionName: "Actions Check",
+		Icon:       "solar:bolt-linear",
 		Pending:    true,
-		CreatedAt:  time.Now(),
 	},
 }
 
