@@ -5,6 +5,11 @@ import "alertflow-runner/pkg/models"
 func Init() []models.ActionDetails {
 	var actions []models.ActionDetails
 
+	CollectDataAction := CollectDataInit()
+	CollectFlowDataAction := CollectFlowDataInit()
+	CollectPayloadDataAction := CollectPayloadDataInit()
+	PatternCheckAction := PatternCheckInit()
+	FlowActionsCheckAction := ActionsCheckInit()
 	logAction := LogInit()
 	webhookAction := WebhookInit()
 	WaitAction := WaitInit()
@@ -12,6 +17,19 @@ func Init() []models.ActionDetails {
 	PortAction := PortInit()
 	InteractionAction := InteractionInit()
 
-	actions = append(actions, logAction, webhookAction, WaitAction, PingAction, PortAction, InteractionAction)
+	actions = append(
+		actions,
+		CollectDataAction,
+		CollectFlowDataAction,
+		CollectPayloadDataAction,
+		PatternCheckAction,
+		FlowActionsCheckAction,
+		logAction,
+		webhookAction,
+		WaitAction,
+		PingAction,
+		PortAction,
+		InteractionAction,
+	)
 	return actions
 }

@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.9.1-beta"
+const version string = "0.10.0-beta"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
@@ -50,8 +50,9 @@ func main() {
 	logging(config.LogLevel)
 
 	actions := actions.Init()
+	payloadInjectors := payloadhandler.Init()
 
-	go runner.RegisterAtAPI(version, actions)
+	go runner.RegisterAtAPI(version, actions, payloadInjectors)
 	go runner.SendHeartbeat()
 
 	Init()
