@@ -2,7 +2,7 @@ package payloadhandler
 
 import (
 	"alertflow-runner/config"
-	"alertflow-runner/internal/payload"
+	"alertflow-runner/internal/payloads"
 	"alertflow-runner/pkg/models"
 	"encoding/json"
 	"io"
@@ -14,6 +14,14 @@ import (
 
 type Receiver struct {
 	Receiver string `json:"receiver"`
+}
+
+func AlertmanagerPayloadHandlerInit() models.PayloadInjector {
+	return models.PayloadInjector{
+		Name:     "Alertmanager",
+		Type:     "alertmanager",
+		Endpoint: "/alertmanager",
+	}
 }
 
 func AlertmanagerPayloadHandler(context *gin.Context) {
@@ -37,5 +45,5 @@ func AlertmanagerPayloadHandler(context *gin.Context) {
 		Endpoint: "alertmanager",
 	}
 
-	payload.SendPayload(payloadData)
+	payloads.SendPayload(payloadData)
 }

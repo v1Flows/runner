@@ -13,8 +13,8 @@ import (
 func SetToInteractionRequired(execution models.Execution) {
 	execution.Running = false
 	execution.Paused = false
-	execution.Waiting = false
-	execution.Cancelled = false
+	execution.Pending = false
+	execution.Canceled = false
 	execution.InteractionRequired = true
 	InteractionRequired(execution)
 }

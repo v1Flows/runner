@@ -2,10 +2,7 @@ package common
 
 import (
 	"alertflow-runner/config"
-	"alertflow-runner/internal/actions"
 	"alertflow-runner/internal/executions"
-	"alertflow-runner/internal/flow"
-	"alertflow-runner/internal/payload"
 	"alertflow-runner/internal/runner"
 	"alertflow-runner/pkg/models"
 	"time"
@@ -21,10 +18,9 @@ func startProcessing(execution models.Execution) {
 	}
 
 	execution.RunnerID = config.Config.RunnerID
-	execution.Waiting = false
+	execution.Pending = false
 	execution.Running = true
 	execution.ExecutedAt = time.Now()
-	execution.TotalSteps = 2
 
 	err := executions.Update(execution)
 	if err != nil {
@@ -35,246 +31,131 @@ func startProcessing(execution models.Execution) {
 	// set runner to busy
 	runner.Busy(true)
 
-	// set runner picked up step
-	_, err = executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID:    execution.ID.String(),
-		ActionName:     "Runner Pick Up",
-		ActionMessages: []string{"Waiting for Runner to pick up Execution", "Runner picked up execution"},
-		StartedAt:      execution.CreatedAt,
-		Finished:       true,
-		FinishedAt:     time.Now(),
-		Icon:           "solar:rocket-2-bold-duotone",
-	})
+	// send initial step to alertflow
+	initialSteps, err := executions.SendInitialSteps(execution)
 	if err != nil {
 		executions.EndWithError(execution)
 		return
 	}
 
-	// collect data step
-	collectDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID:    execution.ID.String(),
-		ActionMessages: []string{"Collecting Data"},
-		ActionName:     "Collect Data",
-		StartedAt:      time.Now(),
-		Icon:           "solar:inbox-archive-linear",
-	})
-	if err != nil {
-		executions.EndWithError(execution)
-		return
-	}
-
-	// get flow data
-	collectFlowDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID:    execution.ID.String(),
-		ActionName:     "Get Flow Data",
-		ActionMessages: []string{"Requesting Flow Data from API"},
-		StartedAt:      time.Now(),
-		ParentID:       collectDataStep.ID.String(),
-		IsHidden:       true,
-		Icon:           "solar:book-bookmark-broken",
-	})
-	if err != nil {
-		executions.EndWithError(execution)
-		return
-	}
-
-	flowData, flowDataErr := flow.GetFlowData(execution)
-
-	if flowDataErr != nil {
-		err := executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             collectFlowDataStep.ID,
-			ActionMessages: []string{"Failed to get Flow Data"},
-			Error:          true,
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
-		if err != nil {
-			executions.EndWithError(execution)
-			return
-		}
-
-		executions.EndWithError(execution)
-		return
-	}
-
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
-		ID:             collectFlowDataStep.ID,
-		ActionMessages: []string{"Flow Data received"},
-		Finished:       true,
-		FinishedAt:     time.Now(),
-	})
-	if err != nil {
-		executions.EndWithError(execution)
-		return
-	}
-
-	// get payload data
-	collectPayloadDataStep, err := executions.SendStep(execution, models.ExecutionSteps{
-		ExecutionID:    execution.ID.String(),
-		ActionName:     "Get Payload Data",
-		ActionMessages: []string{"Requesting Payload Data from API"},
-		StartedAt:      time.Now(),
-		ParentID:       collectDataStep.ID.String(),
-		IsHidden:       true,
-		Icon:           "solar:letter-opened-broken",
-	})
-	if err != nil {
-		executions.EndWithError(execution)
-		return
-	}
-
-	payloadData, payloadError := payload.GetData(execution)
-
-	if payloadError != nil {
-		err := executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             collectPayloadDataStep.ID,
-			ActionMessages: []string{"Failed to get Payload Data"},
-			Error:          true,
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
-		if err != nil {
-			executions.EndWithError(execution)
-			return
-		}
-
-		executions.EndWithError(execution)
-		return
-	}
-
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
-		ID:             collectPayloadDataStep.ID,
-		ActionMessages: []string{"Payload Data received"},
-		Finished:       true,
-		FinishedAt:     time.Now(),
-	})
-	if err != nil {
-		executions.EndWithError(execution)
-		return
-	}
-
-	if flowDataErr == nil && payloadError == nil {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             collectDataStep.ID,
-			ActionMessages: []string{"Data collected"},
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
-		if err != nil {
-			executions.EndWithError(execution)
-			return
-		}
-	} else {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
-			ID:             collectDataStep.ID,
-			ActionMessages: []string{"Data collection finished with errors"},
-			Error:          true,
-			Finished:       true,
-			FinishedAt:     time.Now(),
-		})
-		if err != nil {
-			executions.EndWithError(execution)
-			return
-		}
-	}
-
-	// check for patterns
-	match, err := flow.CheckPatterns(flowData, execution, payloadData)
-	if err != nil {
-		log.Error(err)
-		executions.EndWithError(execution)
-		return
-	}
-
-	if !match {
-		return
-	}
-
-	// check for flow actions
-	status, err := flow.CheckFlowActions(flowData, execution)
-	if err != nil {
-		log.Error(err)
-		executions.EndWithError(execution)
-		return
-	}
-
-	if !status {
-		return
-	}
-
-	var actionsToRun []string
-	var actionsRunStarted []string
-	var actionsRunFinished []string
-	var actionsRunCancelled []string
-	var actionsRunFailed []string
-
-	// start every defined flow action
-	if flowData.ExecParallel {
-		for _, action := range flowData.Actions {
-			if action.Active {
-				actionsToRun = append(actionsToRun, action.Name)
-
-				go func(action models.Actions, execution models.Execution) {
-					finished, canceled, failed, err := actions.StartAction(action, execution)
-					if err != nil {
-						log.Error(err)
-						executions.EndWithError(execution)
-						return
-					}
-
-					actionsRunStarted = append(actionsRunStarted, action.Name)
-
-					if failed {
-						actionsRunFailed = append(actionsRunFailed, action.Name)
-						return
-					} else if canceled {
-						actionsRunCancelled = append(actionsRunCancelled, action.Name)
-						return
-					} else if finished {
-						actionsRunFinished = append(actionsRunFinished, action.Name)
-					}
-				}(action, execution)
-			}
-		}
-
-		// wait for all actions to finish
-		for {
-			if len(actionsToRun) == len(actionsRunStarted) {
-				break
+	// process each initial step where pending is true
+	var flow models.Flows
+	var payload models.Payload
+	for _, step := range initialSteps {
+		if step.Pending {
+			data, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, initialSteps, step, execution)
+			if err != nil {
+				executions.EndWithError(execution)
+				return
 			}
 
-			time.Sleep(1 * time.Second)
+			if data["flow"] != nil {
+				flow = data["flow"].(models.Flows)
+			}
+
+			if data["payload"] != nil {
+				payload = data["payload"].(models.Payload)
+			}
+
+			if failed {
+				executions.CancelRemainingSteps(execution.ID.String())
+				executions.EndWithError(execution)
+				return
+			} else if canceled {
+				executions.CancelRemainingSteps(execution.ID.String())
+				executions.EndCanceled(execution)
+				return
+			} else if no_pattern_match {
+				executions.CancelRemainingSteps(execution.ID.String())
+				executions.EndNoPatternMatch(execution)
+				return
+			}
 		}
-	} else {
-		for _, action := range flowData.Actions {
-			if action.Active {
-				finished, canceled, failed, err := actions.StartAction(action, execution)
+	}
+
+	// send flow actions as steps to alertflow
+	flowActionStepsWithIDs, err := executions.SendFlowActionSteps(execution, flow)
+	if err != nil {
+		executions.EndWithError(execution)
+		return
+	}
+
+	if !flow.ExecParallel {
+		// process each flow action step in sequential order where pending is true
+		for _, step := range flowActionStepsWithIDs {
+			if step.Pending {
+				_, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
 				if err != nil {
-					log.Error(err)
 					executions.EndWithError(execution)
 					return
 				}
 
 				if failed {
-					actionsRunFailed = append(actionsRunFailed, action.Name)
+					executions.CancelRemainingSteps(execution.ID.String())
 					executions.EndWithError(execution)
 					return
 				} else if canceled {
-					actionsRunCancelled = append(actionsRunCancelled, action.Name)
-					executions.EndCancelled(execution)
+					executions.CancelRemainingSteps(execution.ID.String())
+					executions.EndCanceled(execution)
 					return
-				} else if finished {
-					actionsRunFinished = append(actionsRunFinished, action.Name)
+				} else if no_pattern_match {
+					executions.CancelRemainingSteps(execution.ID.String())
+					executions.EndNoPatternMatch(execution)
+					return
 				}
 			}
 		}
+	} else {
+		var executedSteps int
+		var failedSteps int
+		var canceledSteps int
+		var noPatternMatchSteps int
+		var successSteps int
+		// process each flow action step in parallel where pending is true
+		for _, step := range flowActionStepsWithIDs {
+			if step.Pending {
+				go func() {
+					_, finished, cancleded, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+					if err != nil {
+						executions.EndWithError(execution)
+						return
+					}
+
+					executedSteps++
+
+					if failed {
+						failedSteps++
+					} else if cancleded {
+						canceledSteps++
+					} else if no_pattern_match {
+						noPatternMatchSteps++
+					} else if finished {
+						successSteps++
+					}
+				}()
+			}
+		}
+
+		// wait for all steps to finish
+		for executedSteps < len(flowActionStepsWithIDs) {
+			if executedSteps == len(flowActionStepsWithIDs) {
+				break
+			}
+		}
+
+		if failedSteps > 0 {
+			executions.EndWithError(execution)
+			return
+		} else if canceledSteps > 0 {
+			executions.EndCanceled(execution)
+			return
+		} else if noPatternMatchSteps > 0 {
+			executions.EndNoPatternMatch(execution)
+			return
+		}
 	}
 
-	if len(actionsRunFailed) > 0 {
-		executions.EndWithError(execution)
-	} else if len(actionsRunCancelled) > 0 {
-		executions.EndCancelled(execution)
-	} else {
-		executions.EndSuccess(execution)
-	}
+	executions.EndSuccess(execution)
+
+	runner.Busy(false)
 }
