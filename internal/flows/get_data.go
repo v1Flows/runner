@@ -1,4 +1,4 @@
-package payload
+package flows
 
 import (
 	"alertflow-runner/config"
@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetData(execution models.Execution) (models.Payload, error) {
+func GetFlowData(flowID string) (models.Flows, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -19,33 +19,33 @@ func GetData(execution models.Execution) (models.Payload, error) {
 		},
 	}
 
-	url := config.Config.Alertflow.URL + "/api/v1/payloads/" + execution.PayloadID
+	url := config.Config.Alertflow.URL + "/api/v1/flows/" + flowID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
-		return models.Payload{}, err
+		return models.Flows{}, err
 	}
 	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return models.Payload{}, err
+		return models.Flows{}, err
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get payload from API: %s", url)
-		err = fmt.Errorf("failed to get payload from API: %s", url)
-		return models.Payload{}, err
+		log.Errorf("Failed to get flow data from API: %s", url)
+		err = fmt.Errorf("failed to get flow data from API: %s", url)
+		return models.Flows{}, err
 	}
 
-	log.Debugf("Payload data received from API: %s", url)
+	log.Debugf("Flow data received from API: %s", url)
 
-	var payload models.IncomingPayload
-	err = json.NewDecoder(resp.Body).Decode(&payload)
+	var flow models.IncomingFlow
+	err = json.NewDecoder(resp.Body).Decode(&flow)
 	if err != nil {
 		log.Fatal(err)
-		return models.Payload{}, err
+		return models.Flows{}, err
 	}
 
-	return payload.PayloadData, nil
+	return flow.FlowData, nil
 }

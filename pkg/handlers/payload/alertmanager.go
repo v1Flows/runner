@@ -2,7 +2,7 @@ package payloadhandler
 
 import (
 	"alertflow-runner/config"
-	"alertflow-runner/internal/payload"
+	"alertflow-runner/internal/payloads"
 	"alertflow-runner/pkg/models"
 	"encoding/json"
 	"io"
@@ -37,5 +37,5 @@ func AlertmanagerPayloadHandler(context *gin.Context) {
 		Endpoint: "alertmanager",
 	}
 
-	payload.SendPayload(payloadData)
+	payloads.SendPayload(payloadData)
 }

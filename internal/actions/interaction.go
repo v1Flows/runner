@@ -27,16 +27,18 @@ func InteractionInit() models.ActionDetails {
 	}
 
 	return models.ActionDetails{
+		ID:          "interaction",
 		Name:        "Interaction",
 		Description: "Wait for user interaction to continue",
 		Icon:        "solar:hand-shake-linear",
 		Type:        "interaction",
+		Category:    "General",
 		Function:    InteractionAction,
 		Params:      json.RawMessage(paramsJSON),
 	}
 }
 
-func InteractionAction(execution models.Execution, step models.ExecutionSteps, action models.Actions) (finished bool, canceled bool, failed bool) {
+func InteractionAction(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool) {
 	timeout := 0
 	for _, param := range action.Params {
 		if param.Key == "Timeout" {
@@ -44,14 +46,20 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 		}
 	}
 
-	err := executions.UpdateStep(execution, models.ExecutionSteps{
-		ID:             step.ID,
-		ActionID:       action.ID.String(),
-		ActionMessages: []string{`Waiting for user interaction`},
-		Interactive:    true,
+	err := executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
+		ID:       step.ID,
+		ActionID: action.ID.String(),
+		ActionMessages: []string{
+			`Waiting for user interaction`,
+			`Timeout: ` + strconv.Itoa(timeout) + ` seconds`,
+		},
+		Pending:     false,
+		Interactive: true,
+		Running:     true,
+		StartedAt:   time.Now(),
 	})
 	if err != nil {
-		log.Error("Error updating step:", err)
+		return nil, false, false, false, true
 	}
 
 	executions.SetToInteractionRequired(execution)
@@ -71,12 +79,12 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 
 		if err != nil {
 			log.Error("Error getting step data: ", err)
-			return false, false, true
+			return nil, false, false, false, true
 		}
 
 		if timeout > 0 && time.Since(startTime).Seconds() >= float64(timeout) {
 			log.Debug("Timeout reached while waiting for user interaction")
-			err = executions.UpdateStep(execution, models.ExecutionSteps{
+			err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 				ID: step.ID,
 				ActionMessages: []string{
 					"Interaction timed out",
@@ -89,7 +97,7 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 				InteractionRejected: false,
 			})
 			if err != nil {
-				log.Error("Error updating step: ", err)
+				return nil, false, false, false, true
 			}
 
 			stepData.Interacted = true
@@ -101,12 +109,14 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 	executions.SetToRunning(execution)
 
 	if stepData.InteractionRejected {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID: step.ID,
 			ActionMessages: []string{
 				"Interaction rejected",
 				"Execution canceled",
 			},
+			Running:             false,
+			Canceled:            true,
 			Finished:            true,
 			FinishedAt:          time.Now(),
 			Interacted:          true,
@@ -114,13 +124,14 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 			InteractionApproved: false,
 		})
 		if err != nil {
-			log.Error("Error updating step: ", err)
+			return nil, false, false, false, true
 		}
-		return false, true, false
+		return nil, false, true, false, false
 	} else if stepData.InteractionApproved {
-		err = executions.UpdateStep(execution, models.ExecutionSteps{
+		err = executions.UpdateStep(execution.ID.String(), models.ExecutionSteps{
 			ID:                  step.ID,
 			ActionMessages:      []string{"Interaction approved"},
+			Running:             false,
 			Finished:            true,
 			FinishedAt:          time.Now(),
 			Interacted:          true,
@@ -128,20 +139,10 @@ func InteractionAction(execution models.Execution, step models.ExecutionSteps, a
 			InteractionApproved: true,
 		})
 		if err != nil {
-			log.Error("Error updating step: ", err)
+			return nil, false, false, false, true
 		}
-		return true, false, false
+		return nil, true, false, false, false
 	}
 
-	err = executions.UpdateStep(execution, models.ExecutionSteps{
-		ID:             step.ID,
-		ActionMessages: []string{"Interaction finished"},
-		Finished:       true,
-		FinishedAt:     time.Now(),
-	})
-	if err != nil {
-		log.Error("Error updating step: ", err)
-	}
-
-	return true, false, false
+	return nil, true, false, false, false
 }
