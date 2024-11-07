@@ -1,6 +1,7 @@
-package executions
+package internal_executions
 
 import (
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
@@ -21,7 +22,7 @@ func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWi
 			step.ActionName = action.CustomName
 		}
 
-		stepID, err := SendStep(execution, step)
+		stepID, err := executions.SendStep(execution, step)
 		if err != nil {
 			return nil, err
 		}

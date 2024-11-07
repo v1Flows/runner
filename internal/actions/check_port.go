@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
