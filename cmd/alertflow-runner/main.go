@@ -1,13 +1,18 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/actions"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/common"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/plugins"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
 	payloadhandler "gitlab.justlab.xyz/alertflow-public/runner/pkg/handlers/payload"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -35,6 +40,26 @@ func logging(logLevel string) {
 	}
 }
 
+func cloneAndBuildPlugin(repoURL, pluginDir string, pluginRawRepos string, pluginName string) error {
+	// Clone the repository
+	cmd := exec.Command("git", "clone", "https://"+repoURL, pluginRawRepos)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to clone repository: %w", err)
+	}
+
+	// Build the plugin
+	cmd = exec.Command("go", "build", "-buildmode=plugin", "-o", filepath.Join(pluginDir, pluginName+".so"), pluginRawRepos+"/"+pluginName+".go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to build plugin: %w", err)
+	}
+
+	return nil
+}
+
 func main() {
 	kingpin.Version(version)
 	kingpin.HelpFlag.Short('h')
@@ -50,7 +75,41 @@ func main() {
 
 	logging(config.LogLevel)
 
-	actions := actions.Init()
+	pluginReposDir := "./temp/rawPlugins"
+	pluginDir := "./plugins"
+	os.MkdirAll(pluginReposDir, os.ModePerm)
+	os.MkdirAll(pluginDir, os.ModePerm)
+
+	for _, plugin := range config.Plugins {
+		pluginPath := filepath.Join(pluginReposDir, plugin.Name)
+		if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
+			log.Infof("Cloning and building plugin: %s", plugin.Name)
+			err := cloneAndBuildPlugin(plugin.URL, pluginDir, pluginPath, plugin.Name)
+			if err != nil {
+				log.Fatalf("Failed to clone and build plugin %s: %v", plugin.Name, err)
+			}
+		}
+	}
+
+	// cleanup the temp directory
+	err = os.RemoveAll(pluginReposDir)
+	if err != nil {
+		log.Errorf("Failed to remove temp directory: %v", err)
+	}
+
+	actionPlugins, err := plugins.LoadPlugins(pluginDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// actions := actions.Init()
+	var actions []models.ActionDetails
+	for _, plugin := range actionPlugins {
+		action := plugin.Init()
+		actions = append(actions, action)
+		log.Infof("Loaded plugin: %s", action.Name)
+	}
+
 	payloadInjectors := payloadhandler.Init()
 
 	go runner.RegisterAtAPI(version, actions, payloadInjectors)

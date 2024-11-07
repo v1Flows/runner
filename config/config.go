@@ -8,20 +8,26 @@ import (
 var Config RestfulConf
 
 type AlertflowConf struct {
-	URL    string `json:",env=ALERTFLOW_URL"`
-	APIKey string `json:",env=ALERTFLOW_API_KEY"`
+	URL    string `json:""`
+	APIKey string `json:""`
 }
 
 type PayloadsConf struct {
-	Enabled  bool     `json:",env=PAYLOADS_ENABLED,default=true"`
-	Port     int      `json:",env=PAYLOADS_PORT,default=8080"`
-	Managers []string `json:",env=PAYLOADS_MANAGERS,default=['alertmanager']"`
+	Enabled  bool     `json:""`
+	Port     int      `json:""`
+	Managers []string `json:""`
+}
+
+type PluginConf struct {
+	Name string `json:""`
+	URL  string `json:""`
 }
 
 type RestfulConf struct {
-	LogLevel  string `json:",env=LOG_LEVEL"`
-	RunnerID  string `json:",env=RUNNER_ID"`
-	Mode      string `json:",env=MODE"`
+	LogLevel  string `json:""`
+	RunnerID  string `json:""`
+	Mode      string `json:""`
+	Plugins   []PluginConf
 	Alertflow AlertflowConf
 	Payloads  PayloadsConf
 }
