@@ -1,12 +1,13 @@
 package payloadhandler
 
 import (
-	"alertflow-runner/config"
-	"alertflow-runner/internal/payloads"
-	"alertflow-runner/pkg/models"
 	"encoding/json"
 	"io"
 	"net/http"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/payloads"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"

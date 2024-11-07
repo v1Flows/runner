@@ -1,7 +1,7 @@
 package executions
 
 import (
-	"alertflow-runner/pkg/models"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow

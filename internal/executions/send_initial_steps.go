@@ -1,9 +1,10 @@
 package executions
 
 import (
-	"alertflow-runner/config"
-	"alertflow-runner/pkg/models"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
 var initialSteps = []models.ExecutionSteps{
