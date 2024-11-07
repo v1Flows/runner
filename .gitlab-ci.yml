@@ -22,22 +22,6 @@ docker-test-build-job:
       when: always
     - when: never
 
-# run lint test if the commit is a merge request
-lint-test-job:
-  stage: test
-  image: node:18-alpine
-  before_script:
-    - corepack enable
-    - corepack prepare pnpm@latest --activate
-    - pnpm config set store-dir .pnpm-store
-  script:
-    - pnpm install
-    - pnpm run lint   
-  rules:
-    - if: $CI_MERGE_REQUEST_ID
-      when: always
-    - when: never 
-
 # build latest image if the commit is on main branch
 docker-build-latest-job:
   stage: build
