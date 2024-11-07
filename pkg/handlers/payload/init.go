@@ -1,7 +1,7 @@
 package payloadhandler
 
 import (
-	"alertflow-runner/pkg/models"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
 func Init() []models.PayloadInjector {

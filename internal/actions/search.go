@@ -1,6 +1,6 @@
 package actions
 
-import "alertflow-runner/pkg/models"
+import "gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 func SearchAction(actionType string) (action models.ActionDetails, found bool) {
 	// Search for action

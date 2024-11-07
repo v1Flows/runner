@@ -1,10 +1,11 @@
 package runner
 
 import (
-	"alertflow-runner/config"
 	"io"
 	"net/http"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
 
 	log "github.com/sirupsen/logrus"
 )

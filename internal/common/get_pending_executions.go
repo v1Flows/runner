@@ -1,10 +1,11 @@
 package common
 
 import (
-	"alertflow-runner/pkg/models"
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )

@@ -1,11 +1,12 @@
 package actions
 
 import (
-	"alertflow-runner/internal/executions"
-	"alertflow-runner/pkg/models"
 	"encoding/json"
 	"strconv"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
