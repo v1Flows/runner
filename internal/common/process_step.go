@@ -1,10 +1,11 @@
 package common
 
 import (
-	"alertflow-runner/internal/actions"
-	"alertflow-runner/internal/executions"
-	"alertflow-runner/pkg/models"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/actions"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )

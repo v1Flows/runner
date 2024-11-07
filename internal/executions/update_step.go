@@ -1,11 +1,12 @@
 package executions
 
 import (
-	"alertflow-runner/config"
-	"alertflow-runner/pkg/models"
 	"bytes"
 	"encoding/json"
 	"net/http"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )

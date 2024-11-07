@@ -1,18 +1,19 @@
 package main
 
 import (
-	"alertflow-runner/config"
-	"alertflow-runner/internal/actions"
-	"alertflow-runner/internal/common"
-	"alertflow-runner/internal/runner"
-	payloadhandler "alertflow-runner/pkg/handlers/payload"
 	"strings"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/actions"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/common"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
+	payloadhandler "gitlab.justlab.xyz/alertflow-public/runner/pkg/handlers/payload"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.10.0-beta"
+const version string = "0.11.0-beta"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()

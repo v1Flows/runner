@@ -1,0 +1,76 @@
+stages:
+  - build
+  - test
+  - release
+
+# build test image if the commit is a merge request
+docker-test-build-job:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: "1"
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  script:
+    - docker build . -f Dockerfile -t registry.justlab.xyz/alertflow-public/runner:test
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: always
+    - when: never
+
+# build latest image if the commit is on main branch
+docker-build-latest-job:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: "1"
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - docker build . -f Dockerfile -t registry.justlab.xyz/alertflow-public/runner:latest
+    - docker push registry.justlab.xyz/alertflow-public/runner:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# build versioned image and push to registry
+docker-build-job:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: "1"
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  script:
+    - docker build . -f Dockerfile -t registry.justlab.xyz/alertflow-public/runner:$CI_COMMIT_TAG
+    - echo "$CI_REGISTRY_PASSWORD" | docker login registry.justlab.xyz -u $CI_REGISTRY_USER --password-stdin
+    - docker push registry.justlab.xyz/alertflow-public/runner:$CI_COMMIT_TAG
+  rules:
+    - if: $CI_COMMIT_TAG
+
+# if the commit is tagged with a version number and the branch is main, then release the version
+release-version-job:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+/
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - echo "Releasing version $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: "Release $CI_COMMIT_TAG"
+    name: $CI_COMMIT_TAG
+    ref: $CI_COMMIT_REF_NAME

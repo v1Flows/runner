@@ -1,6 +1,6 @@
 package actions
 
-import "alertflow-runner/pkg/models"
+import "gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 func Init() []models.ActionDetails {
 	var actions []models.ActionDetails
