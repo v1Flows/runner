@@ -84,6 +84,9 @@ func main() {
 		pluginPath := filepath.Join(pluginReposDir, plugin.Name)
 		if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 			log.Infof("Cloning and building plugin: %s", plugin.Name)
+			if plugin.Version == "" {
+				plugin.Version = "main"
+			}
 			err := plugins.CloneAndBuildPlugin(plugin.Url, pluginDir, pluginPath, plugin.Name, plugin.Version)
 			if err != nil {
 				log.Fatalf("Failed to clone and build plugin %s: %v", plugin.Name, err)

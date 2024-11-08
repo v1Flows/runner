@@ -1,8 +1,8 @@
-actions-check master
-collect-data master
-collect-flow-data master
-collect-payload-data master
-pattern-check master
-log master
-wait master
-ping master
+actions-check v1.0.0
+collect-data v1.0.0
+collect-flow-data v1.0.0
+collect-payload-data v1.0.0
+pattern-check v1.0.0
+log v1.0.0
+wait v1.0.0
+ping v1.0.0

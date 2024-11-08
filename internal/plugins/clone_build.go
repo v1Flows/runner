@@ -19,7 +19,7 @@ func CloneAndBuildPlugin(repoURL, pluginDir string, pluginRawRepos string, plugi
 	}
 
 	// Clone the repository
-	cmd := exec.Command("git", "clone", "https://"+repoURL, pluginRawRepos)
+	cmd := exec.Command("git", "clone", "https://"+repoURL, "--branch", pluginVersion, pluginRawRepos)
 	if err := cmd.Run(); err != nil {
 		log.Error("failed to clone repository: " + err.Error())
 		return fmt.Errorf("failed to clone repository: %w", err)
@@ -72,12 +72,52 @@ func isPluginUpToDate(pluginName, pluginVersion string) bool {
 }
 
 func updatePluginVersion(pluginName, pluginVersion string) error {
-	file, err := os.OpenFile(".versions", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// Read the existing .versions file
+	file, err := os.Open(".versions")
+	if err != nil {
+		if os.IsNotExist(err) {
+			file, err = os.Create(".versions")
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Fields(line)
+		if len(parts) != 2 {
+			continue
+		}
+		if parts[0] != pluginName {
+			lines = append(lines, line)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	// Write the updated content back to the .versions file
+	file, err = os.OpenFile(".versions", os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
+	for _, line := range lines {
+		_, err := file.WriteString(line + "\n")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Append the new version entry
 	_, err = file.WriteString(fmt.Sprintf("%s %s\n", pluginName, pluginVersion))
 	return err
 }
