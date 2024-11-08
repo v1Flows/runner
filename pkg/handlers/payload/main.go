@@ -1,7 +1,6 @@
 package payloadhandler
 
 import (
-	"slices"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -14,15 +13,12 @@ func InitPayloadRouter(port int, types []string) {
 	router := gin.Default()
 	log.Info("Open Payload Port: ", port)
 
-	payload := router.Group("/payloads")
-	{
-		if slices.Contains(types, "Alertmanager") {
-			log.Info("Open Alertmanager Endpoint: /alertmanager")
-			payload.POST("/alertmanager", func(c *gin.Context) {
-				AlertmanagerPayloadHandler(c)
-			})
-		}
-	}
+	// payload := router.Group("/payloads")
+	// {
+	// 	if slices.Contains(types, "Alertmanager") {
+	// 		log.Info("Open Alertmanager Endpoint: /alertmanager")
+	// 	}
+	// }
 
 	router.Run(":" + strconv.Itoa(port))
 }
