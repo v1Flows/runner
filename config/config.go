@@ -20,16 +20,16 @@ type PayloadsConf struct {
 
 type PluginConf struct {
 	Name string `json:""`
-	URL  string `json:""`
+	Url  string `json:""`
 }
 
 type RestfulConf struct {
 	LogLevel  string `json:""`
 	RunnerID  string `json:""`
 	Mode      string `json:""`
-	Plugins   []PluginConf
 	Alertflow AlertflowConf
 	Payloads  PayloadsConf
+	Plugins   []PluginConf
 }
 
 func ReadConfig(configFile string) (*RestfulConf, error) {

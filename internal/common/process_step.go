@@ -3,12 +3,17 @@ package common
 import (
 	"time"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/actions"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
+
+var actions map[string]models.ActionDetails
+
+func RegisterActions(loadedActions map[string]models.ActionDetails) {
+	actions = loadedActions
+}
 
 func processStep(flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
@@ -22,7 +27,17 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 		return nil, false, false, false, false, err
 	}
 
-	action, found := actions.SearchAction(step.ActionType)
+	var found bool
+	var action models.ActionDetails
+	for _, a := range actions {
+		if a.Type == step.ActionType {
+			found = true
+			action = a
+			break
+		} else {
+			found = false
+		}
+	}
 
 	if !found {
 		log.Warnf("Action %s not found", step.ActionType)

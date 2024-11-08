@@ -84,7 +84,7 @@ func main() {
 		pluginPath := filepath.Join(pluginReposDir, plugin.Name)
 		if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 			log.Infof("Cloning and building plugin: %s", plugin.Name)
-			err := cloneAndBuildPlugin(plugin.URL, pluginDir, pluginPath, plugin.Name)
+			err := plugins.CloneAndBuildPlugin(plugin.Url, pluginDir, pluginPath, plugin.Name)
 			if err != nil {
 				log.Fatalf("Failed to clone and build plugin %s: %v", plugin.Name, err)
 			}
@@ -102,17 +102,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// actions := actions.Init()
-	var actions []models.ActionDetails
+	actionsMap := make(map[string]models.ActionDetails)
 	for _, plugin := range actionPlugins {
 		action := plugin.Init()
-		actions = append(actions, action)
+		actionsMap[action.Type] = action
 		log.Infof("Loaded plugin: %s", action.Name)
 	}
 
+	common.RegisterActions(actionsMap)
+
 	payloadInjectors := payloadhandler.Init()
 
-	go runner.RegisterAtAPI(version, actions, payloadInjectors)
+	actionsSlice := make([]models.ActionDetails, 0, len(actionsMap))
+	for _, action := range actionsMap {
+		actionsSlice = append(actionsSlice, action)
+	}
+	go runner.RegisterAtAPI(version, actionsSlice, payloadInjectors)
 	go runner.SendHeartbeat()
 
 	Init()
