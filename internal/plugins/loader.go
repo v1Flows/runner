@@ -16,7 +16,7 @@ type ActionPlugin interface {
 func LoadPlugins(pluginDir string) ([]ActionPlugin, error) {
 	var plugins []ActionPlugin
 
-	log.Info("Loading plugins from", pluginDir)
+	log.Info("Loading plugins from ", pluginDir)
 
 	files, err := filepath.Glob(filepath.Join(pluginDir, "*.so"))
 	if err != nil {
