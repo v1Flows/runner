@@ -19,8 +19,9 @@ type PayloadsConf struct {
 }
 
 type PluginConf struct {
-	Name string `json:""`
-	Url  string `json:""`
+	Name    string `json:""`
+	Url     string `json:""`
+	Version string `json:""`
 }
 
 type RestfulConf struct {
