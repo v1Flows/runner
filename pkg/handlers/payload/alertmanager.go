@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/payloads"
+	internal_payloads "gitlab.justlab.xyz/alertflow-public/runner/internal/payloads"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	"github.com/gin-gonic/gin"
@@ -46,5 +46,5 @@ func AlertmanagerPayloadHandler(context *gin.Context) {
 		Endpoint: "alertmanager",
 	}
 
-	payloads.SendPayload(payloadData)
+	internal_payloads.SendPayload(payloadData)
 }
