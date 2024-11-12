@@ -6,3 +6,8 @@ type Plugin struct {
 	Version string `json:"version"`
 	Creator string `json:"creator"`
 }
+
+type PluginDetails struct {
+	Payload PayloadInjector
+	Action  ActionDetails
+}
