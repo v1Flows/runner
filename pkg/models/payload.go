@@ -13,7 +13,7 @@ type Payload struct {
 	Endpoint string          `json:"endpoint"`
 }
 
-type PayloadInjector struct {
+type PayloadEndpoint struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Endpoint string `json:"endpoint"`
