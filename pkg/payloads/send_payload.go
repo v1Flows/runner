@@ -1,4 +1,4 @@
-package internal_payloads
+package payloads
 
 import (
 	"bytes"
