@@ -8,8 +8,9 @@ Alertflow:
   URL: https://alertflow.org
   APIKey: null
 
-Payloads:
-  Enabled: true
+Plugins:
+  - name: log
+    url: gitlab.justlab.xyz/alertflow-public/runner-plugins/log
+
+PayloadEndpoints:
   Port: 8081
-  Managers:
-    - Alertmanager

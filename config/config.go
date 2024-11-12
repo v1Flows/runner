@@ -8,22 +8,27 @@ import (
 var Config RestfulConf
 
 type AlertflowConf struct {
-	URL    string `json:",env=ALERTFLOW_URL"`
-	APIKey string `json:",env=ALERTFLOW_API_KEY"`
+	URL    string `json:""`
+	APIKey string `json:""`
 }
 
-type PayloadsConf struct {
-	Enabled  bool     `json:",env=PAYLOADS_ENABLED,default=true"`
-	Port     int      `json:",env=PAYLOADS_PORT,default=8080"`
-	Managers []string `json:",env=PAYLOADS_MANAGERS,default=['alertmanager']"`
+type PayloadEndpointsConf struct {
+	Port int `json:""`
+}
+
+type PluginConf struct {
+	Name    string `json:""`
+	Url     string `json:""`
+	Version string `json:""`
 }
 
 type RestfulConf struct {
-	LogLevel  string `json:",env=LOG_LEVEL"`
-	RunnerID  string `json:",env=RUNNER_ID"`
-	Mode      string `json:",env=MODE"`
-	Alertflow AlertflowConf
-	Payloads  PayloadsConf
+	LogLevel         string `json:""`
+	RunnerID         string `json:""`
+	Mode             string `json:""`
+	Alertflow        AlertflowConf
+	PayloadEndpoints PayloadEndpointsConf
+	Plugins          []PluginConf
 }
 
 func ReadConfig(configFile string) (*RestfulConf, error) {

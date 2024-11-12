@@ -6,10 +6,11 @@ import (
 )
 
 type Register struct {
-	Registered                bool            `json:"registered"`
-	AvailableActions          json.RawMessage `json:"available_actions"`
-	AvailablePayloadInjectors json.RawMessage `json:"available_payload_injectors"`
-	LastHeartbeat             time.Time       `json:"last_heartbeat"`
-	Version                   string          `json:"version"`
-	Mode                      string          `json:"mode"`
+	Registered       bool            `json:"registered"`
+	LastHeartbeat    time.Time       `json:"last_heartbeat"`
+	Version          string          `json:"version"`
+	Mode             string          `json:"mode"`
+	Plugins          json.RawMessage `json:"plugins"`
+	Actions          json.RawMessage `json:"actions"`
+	PayloadEndpoints json.RawMessage `json:"payload_endpoints"`
 }

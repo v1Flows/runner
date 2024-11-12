@@ -8,6 +8,6 @@ type Plugin struct {
 }
 
 type PluginDetails struct {
-	Payload PayloadInjector
+	Payload PayloadEndpoint
 	Action  ActionDetails
 }
