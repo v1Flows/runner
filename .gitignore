@@ -28,3 +28,4 @@ serviceAccountKey.json
 /config*.yaml
 /plugins
 /temp
+.versions

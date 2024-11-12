@@ -7,8 +7,11 @@ import (
 func Init() []models.PayloadInjector {
 	var payloadInjects []models.PayloadInjector
 
+	// Alertmanager := AlertmanagerPayloadHandlerInit()
+
 	payloadInjects = append(
 		payloadInjects,
+		// Alertmanager,
 	)
 	return payloadInjects
 }

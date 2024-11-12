@@ -17,6 +17,9 @@ func InitPayloadRouter(port int, types []string) {
 	// {
 	// 	if slices.Contains(types, "Alertmanager") {
 	// 		log.Info("Open Alertmanager Endpoint: /alertmanager")
+	// 		// payload.POST("/alertmanager", func(c *gin.Context) {
+	// 		// 	AlertmanagerPayloadHandler(c)
+	// 		// })
 	// 	}
 	// }
 
