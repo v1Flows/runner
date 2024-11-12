@@ -41,7 +41,7 @@ func LoadPlugins(pluginDir string) ([]Plugin, error) {
 
 		Plugin, ok := sym.(Plugin)
 		if !ok {
-			log.Println("Invalid plugin type")
+			log.Println("Invalid plugin type in", file)
 			continue
 		}
 

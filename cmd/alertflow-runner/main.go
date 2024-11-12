@@ -104,9 +104,7 @@ func main() {
 	}
 
 	common.RegisterActions(actionsSlice)
-	payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpointsSlice)
-
-	// payloadInjectors := payloadhandler.Init()
+	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpointsSlice)
 
 	go runner.RegisterAtAPI(version, pluginsMap, actionsSlice, payloadEndpointsSlice)
 	go runner.SendHeartbeat()
