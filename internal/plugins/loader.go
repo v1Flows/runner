@@ -4,17 +4,20 @@ import (
 	"path/filepath"
 	"plugin"
 
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
-type ActionPlugin interface {
-	Init() models.ActionDetails
+type Plugin interface {
+	Init() models.Plugin
+	Details() models.PluginDetails
 	Execute(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool)
+	Handle(context *gin.Context)
 }
 
-func LoadPlugins(pluginDir string) ([]ActionPlugin, error) {
-	var plugins []ActionPlugin
+func LoadPlugins(pluginDir string) ([]Plugin, error) {
+	var plugins []Plugin
 
 	log.Info("Loading plugins from ", pluginDir)
 
@@ -36,13 +39,13 @@ func LoadPlugins(pluginDir string) ([]ActionPlugin, error) {
 			continue
 		}
 
-		actionPlugin, ok := sym.(ActionPlugin)
+		Plugin, ok := sym.(Plugin)
 		if !ok {
 			log.Println("Invalid plugin type")
 			continue
 		}
 
-		plugins = append(plugins, actionPlugin)
+		plugins = append(plugins, Plugin)
 	}
 
 	return plugins, nil

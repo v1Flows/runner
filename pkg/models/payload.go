@@ -24,6 +24,6 @@ type PayloadEndpoint struct {
 }
 
 type PayloadHandler interface {
-	Init() PayloadInjector
+	Init() PayloadEndpoint
 	Handle(context *gin.Context)
 }

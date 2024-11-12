@@ -4,8 +4,8 @@ import (
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
-func Init() []models.PayloadInjector {
-	var payloadInjects []models.PayloadInjector
+func Init() []models.PayloadEndpoint {
+	var payloadInjects []models.PayloadEndpoint
 
 	// Alertmanager := AlertmanagerPayloadHandlerInit()
 

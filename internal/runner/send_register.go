@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func RegisterAtAPI(version string, actions []models.ActionDetails, payloadInjectors []models.PayloadInjector) {
+func RegisterAtAPI(version string, actions []models.ActionDetails, payloadInjectors []models.PayloadEndpoint) {
 	register := models.Register{
 		Registered:    true,
 		LastHeartbeat: time.Now(),

@@ -100,16 +100,26 @@ func main() {
 		log.Errorf("Failed to remove temp directory: %v", err)
 	}
 
-	actionPlugins, err := plugins.LoadPlugins(pluginDir)
+	plugins, err := plugins.LoadPlugins(pluginDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	actionsMap := make(map[string]models.ActionDetails)
-	for _, plugin := range actionPlugins {
-		action := plugin.Details()
-		actionsMap[action.Type] = action
-		log.Infof("Loaded plugin: %s", action.Name)
+	payloadEndpointsMap := make(map[string]models.PayloadEndpoint)
+	for _, plugin := range plugins {
+		p := plugin.Init()
+
+		if p.Type == "action" {
+			action := plugin.Details()
+			actionsMap[action.Action.Type] = action.Action
+			log.Infof("Loaded action plugin: %s", action.Action.Name)
+		}
+		if p.Type == "payload_endpoint" {
+			payloadEndpoint := plugin.Details()
+			payloadEndpointsMap[payloadEndpoint.Payload.Name] = payloadEndpoint.Payload
+			log.Infof("Loaded payload endpoint plugin: %s", payloadEndpoint.Payload.Name)
+		}
 	}
 
 	common.RegisterActions(actionsMap)
