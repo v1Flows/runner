@@ -7,6 +7,7 @@ import (
 
 	"gitlab.justlab.xyz/alertflow-public/runner/config"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/common"
+	payloadendpoints "gitlab.justlab.xyz/alertflow-public/runner/internal/payload_endpoints"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/plugins"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
@@ -103,6 +104,7 @@ func main() {
 	}
 
 	common.RegisterActions(actionsSlice)
+	payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpointsSlice)
 
 	// payloadInjectors := payloadhandler.Init()
 

@@ -12,10 +12,8 @@ type AlertflowConf struct {
 	APIKey string `json:""`
 }
 
-type PayloadsConf struct {
-	Enabled  bool     `json:""`
-	Port     int      `json:""`
-	Managers []string `json:""`
+type PayloadEndpointsConf struct {
+	Port int `json:""`
 }
 
 type PluginConf struct {
@@ -25,12 +23,12 @@ type PluginConf struct {
 }
 
 type RestfulConf struct {
-	LogLevel  string `json:""`
-	RunnerID  string `json:""`
-	Mode      string `json:""`
-	Alertflow AlertflowConf
-	Payloads  PayloadsConf
-	Plugins   []PluginConf
+	LogLevel         string `json:""`
+	RunnerID         string `json:""`
+	Mode             string `json:""`
+	Alertflow        AlertflowConf
+	PayloadEndpoints PayloadEndpointsConf
+	Plugins          []PluginConf
 }
 
 func ReadConfig(configFile string) (*RestfulConf, error) {
