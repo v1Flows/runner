@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -11,7 +9,6 @@ import (
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/common"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/plugins"
 	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
-	payloadhandler "gitlab.justlab.xyz/alertflow-public/runner/pkg/handlers/payload"
 	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -38,26 +35,6 @@ func logging(logLevel string) {
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
-}
-
-func cloneAndBuildPlugin(repoURL, pluginDir string, pluginRawRepos string, pluginName string) error {
-	// Clone the repository
-	cmd := exec.Command("git", "clone", "https://"+repoURL, pluginRawRepos)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to clone repository: %w", err)
-	}
-
-	// Build the plugin
-	cmd = exec.Command("go", "build", "-buildmode=plugin", "-o", filepath.Join(pluginDir, pluginName+".so"), pluginRawRepos+"/"+pluginName+".go")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to build plugin: %w", err)
-	}
-
-	return nil
 }
 
 func main() {
@@ -105,32 +82,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	actionsMap := make(map[string]models.ActionDetails)
-	payloadEndpointsMap := make(map[string]models.PayloadEndpoint)
+	pluginsMap := []models.Plugin{}
+	actionsSlice := make([]models.ActionDetails, 0)
+	payloadEndpointsSlice := make([]models.PayloadEndpoint, 0)
 	for _, plugin := range plugins {
 		p := plugin.Init()
 
+		pluginsMap = append(pluginsMap, p)
+
 		if p.Type == "action" {
 			action := plugin.Details()
-			actionsMap[action.Action.Type] = action.Action
+			actionsSlice = append(actionsSlice, action.Action)
 			log.Infof("Loaded action plugin: %s", action.Action.Name)
 		}
 		if p.Type == "payload_endpoint" {
 			payloadEndpoint := plugin.Details()
-			payloadEndpointsMap[payloadEndpoint.Payload.Name] = payloadEndpoint.Payload
+			payloadEndpointsSlice = append(payloadEndpointsSlice, payloadEndpoint.Payload)
 			log.Infof("Loaded payload endpoint plugin: %s", payloadEndpoint.Payload.Name)
 		}
 	}
 
-	common.RegisterActions(actionsMap)
+	common.RegisterActions(actionsSlice)
 
-	payloadInjectors := payloadhandler.Init()
+	// payloadInjectors := payloadhandler.Init()
 
-	actionsSlice := make([]models.ActionDetails, 0, len(actionsMap))
-	for _, action := range actionsMap {
-		actionsSlice = append(actionsSlice, action)
-	}
-	go runner.RegisterAtAPI(version, actionsSlice, payloadInjectors)
+	go runner.RegisterAtAPI(version, pluginsMap, actionsSlice, payloadEndpointsSlice)
 	go runner.SendHeartbeat()
 
 	Init()
@@ -145,7 +121,7 @@ func Init() {
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(config.Config.Alertflow.URL, config.Config.Alertflow.APIKey, config.Config.RunnerID)
 		log.Info("Starting Payload Listener")
-		go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
+		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
@@ -153,6 +129,6 @@ func Init() {
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")
-		go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
+		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	}
 }

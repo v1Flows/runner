@@ -9,9 +9,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var actions map[string]models.ActionDetails
+var actions []models.ActionDetails
 
-func RegisterActions(loadedActions map[string]models.ActionDetails) {
+func RegisterActions(loadedActions []models.ActionDetails) {
 	actions = loadedActions
 }
 
