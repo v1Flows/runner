@@ -107,7 +107,7 @@ func main() {
 
 	actionsMap := make(map[string]models.ActionDetails)
 	for _, plugin := range actionPlugins {
-		action := plugin.Init()
+		action := plugin.Details()
 		actionsMap[action.Type] = action
 		log.Infof("Loaded plugin: %s", action.Name)
 	}
