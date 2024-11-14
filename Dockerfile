@@ -2,7 +2,8 @@ FROM golang:1.22-alpine as builder
 
 WORKDIR /runner
 
-RUN apk add --no-cache git
+# Update the package list and install git and gcc
+RUN apk update && apk add --no-cache git gcc
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -11,10 +12,6 @@ COPY . ./
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux go build -o /alertflow-runner ./cmd/alertflow-runner
-
-FROM alpine:3.12 as runner
-
-COPY --from=builder /alertflow-runner /alertflow-runner
 
 RUN mkdir -p /runner/config
 COPY config/config.yaml /runner/config/config.yaml

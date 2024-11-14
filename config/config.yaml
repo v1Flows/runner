@@ -11,6 +11,7 @@ Alertflow:
 Plugins:
   - name: log
     url: gitlab.justlab.xyz/alertflow-public/runner-plugins/log
+    version: v1.0.2
 
 PayloadEndpoints:
   Port: 8081
