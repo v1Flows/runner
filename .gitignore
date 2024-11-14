@@ -24,8 +24,8 @@ go.work
 serviceAccountKey.json
 
 .envrc
-/alertflow-runner
-/config*.yaml
-/plugins
-/temp
+alertflow-runner
+config*.yaml
+plugins/
+temp/
 .versions
