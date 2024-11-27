@@ -45,7 +45,8 @@ func StartWorker(api_url string, api_key string, runner_id string) {
 		}
 
 		for _, execution := range executions.Executions {
-			go startProcessing(execution)
+			// Process one execution at a time
+			startProcessing(execution)
 		}
 	}
 }
