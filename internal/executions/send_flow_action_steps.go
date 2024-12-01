@@ -8,6 +8,10 @@ import (
 // SendFlowActionSteps sends all active flow actions to alertflow
 func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWithIDs []models.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
+		if !action.Active {
+			continue
+		}
+
 		step := models.ExecutionSteps{
 			ActionID:    action.ID.String(),
 			ActionType:  action.Type,

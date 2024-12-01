@@ -22,7 +22,8 @@ func CancelRemainingSteps(executionID string) error {
 			step.Canceled = true
 			step.CanceledBy = "Runner"
 			step.CanceledAt = time.Now()
-			step.ActionMessages = []string{"Canceled by runner due to previous step failure"}
+			step.ActionMessages = []string{"Canceled by runner due to previous step failure/interaction/timeout"}
+			step.StartedAt = time.Now()
 			step.FinishedAt = time.Now()
 
 			err := executions.UpdateStep(executionID, step)
