@@ -26,7 +26,7 @@ func CloneAndBuildPlugin(repoURL, pluginDir string, pluginRawRepos string, plugi
 	}
 
 	// Build the plugin
-	cmd = exec.Command("go", "build", "-buildmode=plugin", "-o", filepath.Join(pluginDir, pluginName+".so"), pluginRawRepos+"/plugin.go")
+	cmd = exec.Command("go", "build", "-mod=mod", "-buildmode=plugin", "-o", filepath.Join(pluginDir, pluginName+".so"), pluginRawRepos+"/plugin.go")
 	if err := cmd.Run(); err != nil {
 		log.Error("failed to build plugin: " + err.Error())
 		return fmt.Errorf("failed to build plugin: %w", err)
