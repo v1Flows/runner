@@ -14,12 +14,12 @@ import (
 
 func startProcessing(execution models.Execution) {
 	// ensure that runnerID is empty or equal to the current runnerID
-	if execution.RunnerID != "" && execution.RunnerID != config.Config.RunnerID {
+	if execution.RunnerID != "" && execution.RunnerID != config.Config.Alertflow.RunnerID {
 		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
 		return
 	}
 
-	execution.RunnerID = config.Config.RunnerID
+	execution.RunnerID = config.Config.Alertflow.RunnerID
 	execution.Pending = false
 	execution.Running = true
 	execution.ExecutedAt = time.Now()

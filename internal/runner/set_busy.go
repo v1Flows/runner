@@ -19,7 +19,7 @@ func Busy(busy bool) {
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(payload)
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/"+config.Config.RunnerID+"/busy", payloadBuf)
+	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/"+config.GetRunnerID()+"/busy", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
