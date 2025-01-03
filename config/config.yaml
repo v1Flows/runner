@@ -1,17 +1,17 @@
 ---
 
-LogLevel: info
-RunnerID: null
-Mode: master
+logLevel: info
+mode: master
 
-Alertflow:
-  URL: https://alertflow.org
-  APIKey: null
+alertflow:
+  url: https://alertflow.org
+  runnerID: null
+  apiKey: null
 
-Plugins:
+plugins:
   - name: log
     url: gitlab.justlab.xyz/alertflow-public/runner-plugins/log
     version: v1.0.2
 
-PayloadEndpoints:
-  Port: 8081
+payload_endpoints:
+  port: 8081

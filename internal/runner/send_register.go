@@ -15,6 +15,7 @@ import (
 
 func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.ActionDetails, payloadInjectors []models.PayloadEndpoint) {
 	register := models.Register{
+		ID:            config.Config.Alertflow.RunnerID,
 		Registered:    true,
 		LastHeartbeat: time.Now(),
 		Version:       version,
@@ -44,7 +45,7 @@ func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Act
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/"+config.Config.RunnerID+"/register", payloadBuf)
+	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,5 +66,15 @@ func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Act
 		log.Error("Response: ", string(body))
 		panic("Failed to register at AlertFlow")
 	}
-	log.Info("Runner registered at AlertFlow")
+
+	var response struct {
+		RunnerID string `json:"runner_id"`
+	}
+	if err := json.Unmarshal(body, &response); err != nil {
+		log.Fatal(err)
+	}
+
+	config.UpdateRunnerID(response.RunnerID)
+
+	log.Info("Runner registered at AlertFlow. ID: ", config.GetRunnerID())
 }

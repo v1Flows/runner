@@ -6,6 +6,7 @@ import (
 )
 
 type Register struct {
+	ID               string          `json:"id"`
 	Registered       bool            `json:"registered"`
 	LastHeartbeat    time.Time       `json:"last_heartbeat"`
 	Version          string          `json:"version"`

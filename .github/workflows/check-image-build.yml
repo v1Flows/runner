@@ -1,0 +1,19 @@
+name: Check Image Build
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+    branches: [ "release/**", "develop" ]
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  runner:
+    name: Check Runner Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Runner Docker Image
+        run: docker build . --file Dockerfile --tag justnz/alertflow:runner-test
