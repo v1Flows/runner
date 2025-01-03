@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.16.0-beta"
+const version string = "0.17.0-beta"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
@@ -103,7 +103,7 @@ func main() {
 	common.RegisterActions(actionsSlice)
 	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpointsSlice)
 
-	go runner.RegisterAtAPI(version, pluginsMap, actionsSlice, payloadEndpointsSlice)
+	runner.RegisterAtAPI(version, pluginsMap, actionsSlice, payloadEndpointsSlice)
 	go runner.SendHeartbeat()
 
 	Init()
@@ -116,13 +116,13 @@ func Init() {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(config.Config.Alertflow.URL, config.Config.Alertflow.APIKey, config.Config.RunnerID)
+		go common.StartWorker()
 		log.Info("Starting Payload Listener")
 		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(config.Config.Alertflow.URL, config.Config.Alertflow.APIKey, config.Config.RunnerID)
+		go common.StartWorker()
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")

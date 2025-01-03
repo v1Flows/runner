@@ -29,19 +29,19 @@ func LoadPlugins(pluginDir string) ([]Plugin, error) {
 	for _, file := range files {
 		p, err := plugin.Open(file)
 		if err != nil {
-			log.Println("Error loading plugin:", err)
+			log.Errorln("Error loading plugin:", err)
 			continue
 		}
 
 		sym, err := p.Lookup("Plugin")
 		if err != nil {
-			log.Println("Error looking up symbol:", err)
+			log.Errorln("Error looking up symbol:", err)
 			continue
 		}
 
 		Plugin, ok := sym.(Plugin)
 		if !ok {
-			log.Println("Invalid plugin type in", file)
+			log.Errorln("Invalid plugin type in", file)
 			continue
 		}
 
