@@ -38,17 +38,6 @@ jobs:
       - name: Build go binary
         run: go build -o alertflow-runner
 
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.sha }}
-          release_name: Release ${{ github.sha }}
-          draft: false
-          prerelease: false
-
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1
