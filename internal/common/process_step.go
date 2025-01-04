@@ -1,13 +1,19 @@
 package common
 
 import (
-	"alertflow-runner/internal/actions"
-	"alertflow-runner/internal/executions"
-	"alertflow-runner/pkg/models"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
+
+var actions []models.ActionDetails
+
+func RegisterActions(loadedActions []models.ActionDetails) {
+	actions = loadedActions
+}
 
 func processStep(flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
@@ -21,7 +27,17 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 		return nil, false, false, false, false, err
 	}
 
-	action, found := actions.SearchAction(step.ActionType)
+	var found bool
+	var action models.ActionDetails
+	for _, a := range actions {
+		if a.Type == step.ActionType {
+			found = true
+			action = a
+			break
+		} else {
+			found = false
+		}
+	}
 
 	if !found {
 		log.Warnf("Action %s not found", step.ActionType)

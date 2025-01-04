@@ -1,14 +1,15 @@
-package executions
+package internal_executions
 
 import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
 )
 
 func CancelRemainingSteps(executionID string) error {
 	// get all steps where pending is true
-	steps, err := GetSteps(executionID)
+	steps, err := executions.GetSteps(executionID)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -21,10 +22,11 @@ func CancelRemainingSteps(executionID string) error {
 			step.Canceled = true
 			step.CanceledBy = "Runner"
 			step.CanceledAt = time.Now()
-			step.ActionMessages = []string{"Canceled by runner due to previous step failure"}
+			step.ActionMessages = []string{"Canceled by runner due to previous step failure/interaction/timeout"}
+			step.StartedAt = time.Now()
 			step.FinishedAt = time.Now()
 
-			err := UpdateStep(executionID, step)
+			err := executions.UpdateStep(executionID, step)
 			if err != nil {
 				log.Error(err)
 				return err

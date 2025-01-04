@@ -1,10 +1,11 @@
 package runner
 
 import (
-	"alertflow-runner/config"
 	"io"
 	"net/http"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -16,7 +17,7 @@ func SendHeartbeat() {
 			DisableKeepAlives: true,
 		},
 	}
-	url := config.Config.Alertflow.URL + "/api/v1/runners/" + config.Config.RunnerID + "/heartbeat"
+	url := config.Config.Alertflow.URL + "/api/v1/runners/" + config.GetRunnerID() + "/heartbeat"
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)

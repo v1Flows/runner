@@ -1,12 +1,17 @@
-package executions
+package internal_executions
 
 import (
-	"alertflow-runner/pkg/models"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
 func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWithIDs []models.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
+		if !action.Active {
+			continue
+		}
+
 		step := models.ExecutionSteps{
 			ActionID:    action.ID.String(),
 			ActionType:  action.Type,
@@ -21,7 +26,7 @@ func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWi
 			step.ActionName = action.CustomName
 		}
 
-		stepID, err := SendStep(execution, step)
+		stepID, err := executions.SendStep(execution, step)
 		if err != nil {
 			return nil, err
 		}

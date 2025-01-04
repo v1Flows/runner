@@ -1,9 +1,11 @@
-package executions
+package internal_executions
 
 import (
-	"alertflow-runner/config"
-	"alertflow-runner/pkg/models"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
 var initialSteps = []models.ExecutionSteps{
@@ -12,7 +14,7 @@ var initialSteps = []models.ExecutionSteps{
 		ActionName:     "Runner Pick Up",
 		ActionMessages: []string{"Runner Picked Up Execution"},
 		Icon:           "solar:rocket-2-bold-duotone",
-		RunnerID:       config.Config.RunnerID,
+		RunnerID:       config.Config.Alertflow.RunnerID,
 		Pending:        false,
 		Finished:       true,
 		StartedAt:      time.Now(),
@@ -23,7 +25,7 @@ var initialSteps = []models.ExecutionSteps{
 		ActionName:     "Execution Start",
 		ActionMessages: []string{"Execution Started"},
 		Icon:           "solar:rocket-2-bold-duotone",
-		RunnerID:       config.Config.RunnerID,
+		RunnerID:       config.Config.Alertflow.RunnerID,
 		StartedAt:      time.Now(),
 		Pending:        false,
 		Finished:       true,
@@ -53,7 +55,7 @@ var initialSteps = []models.ExecutionSteps{
 func SendInitialSteps(execution models.Execution) (stepsWithIDs []models.ExecutionSteps, err error) {
 	for i, step := range initialSteps {
 		step.ExecutionID = execution.ID.String()
-		stepID, err := SendStep(execution, step)
+		stepID, err := executions.SendStep(execution, step)
 		if err != nil {
 			return nil, err
 		}

@@ -1,23 +1,25 @@
 package common
 
 import (
-	"alertflow-runner/config"
-	"alertflow-runner/internal/executions"
-	"alertflow-runner/internal/runner"
-	"alertflow-runner/pkg/models"
 	"time"
+
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	internal_executions "gitlab.justlab.xyz/alertflow-public/runner/internal/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func startProcessing(execution models.Execution) {
 	// ensure that runnerID is empty or equal to the current runnerID
-	if execution.RunnerID != "" && execution.RunnerID != config.Config.RunnerID {
+	if execution.RunnerID != "" && execution.RunnerID != config.Config.Alertflow.RunnerID {
 		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
 		return
 	}
 
-	execution.RunnerID = config.Config.RunnerID
+	execution.RunnerID = config.Config.Alertflow.RunnerID
 	execution.Pending = false
 	execution.Running = true
 	execution.ExecutedAt = time.Now()
@@ -32,7 +34,7 @@ func startProcessing(execution models.Execution) {
 	runner.Busy(true)
 
 	// send initial step to alertflow
-	initialSteps, err := executions.SendInitialSteps(execution)
+	initialSteps, err := internal_executions.SendInitialSteps(execution)
 	if err != nil {
 		executions.EndWithError(execution)
 		return
@@ -58,15 +60,15 @@ func startProcessing(execution models.Execution) {
 			}
 
 			if failed {
-				executions.CancelRemainingSteps(execution.ID.String())
+				internal_executions.CancelRemainingSteps(execution.ID.String())
 				executions.EndWithError(execution)
 				return
 			} else if canceled {
-				executions.CancelRemainingSteps(execution.ID.String())
+				internal_executions.CancelRemainingSteps(execution.ID.String())
 				executions.EndCanceled(execution)
 				return
 			} else if no_pattern_match {
-				executions.CancelRemainingSteps(execution.ID.String())
+				internal_executions.CancelRemainingSteps(execution.ID.String())
 				executions.EndNoPatternMatch(execution)
 				return
 			}
@@ -74,7 +76,7 @@ func startProcessing(execution models.Execution) {
 	}
 
 	// send flow actions as steps to alertflow
-	flowActionStepsWithIDs, err := executions.SendFlowActionSteps(execution, flow)
+	flowActionStepsWithIDs, err := internal_executions.SendFlowActionSteps(execution, flow)
 	if err != nil {
 		executions.EndWithError(execution)
 		return
@@ -91,15 +93,15 @@ func startProcessing(execution models.Execution) {
 				}
 
 				if failed {
-					executions.CancelRemainingSteps(execution.ID.String())
+					internal_executions.CancelRemainingSteps(execution.ID.String())
 					executions.EndWithError(execution)
 					return
 				} else if canceled {
-					executions.CancelRemainingSteps(execution.ID.String())
+					internal_executions.CancelRemainingSteps(execution.ID.String())
 					executions.EndCanceled(execution)
 					return
 				} else if no_pattern_match {
-					executions.CancelRemainingSteps(execution.ID.String())
+					internal_executions.CancelRemainingSteps(execution.ID.String())
 					executions.EndNoPatternMatch(execution)
 					return
 				}

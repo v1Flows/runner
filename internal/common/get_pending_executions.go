@@ -1,27 +1,29 @@
 package common
 
 import (
-	"alertflow-runner/pkg/models"
 	"encoding/json"
 	"net/http"
 	"time"
 
+	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+
 	log "github.com/sirupsen/logrus"
 )
 
-func StartWorker(api_url string, api_key string, runner_id string) {
+func StartWorker() {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
 	}
-	url := api_url + "/api/v1/executions/" + runner_id + "/pending"
+	url := config.Config.Alertflow.URL + "/api/v1/runners/" + config.GetRunnerID() + "/executions/pending"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", api_key)
+	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {
@@ -44,7 +46,8 @@ func StartWorker(api_url string, api_key string, runner_id string) {
 		}
 
 		for _, execution := range executions.Executions {
-			go startProcessing(execution)
+			// Process one execution at a time
+			startProcessing(execution)
 		}
 	}
 }

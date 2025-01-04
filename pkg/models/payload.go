@@ -1,6 +1,10 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/gin-gonic/gin"
+)
 
 type IncomingPayload struct {
 	PayloadData Payload `json:"payload"`
@@ -13,8 +17,13 @@ type Payload struct {
 	Endpoint string          `json:"endpoint"`
 }
 
-type PayloadInjector struct {
+type PayloadEndpoint struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Endpoint string `json:"endpoint"`
+}
+
+type PayloadHandler interface {
+	Init() PayloadEndpoint
+	Handle(context *gin.Context)
 }
