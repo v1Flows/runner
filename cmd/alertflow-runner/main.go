@@ -5,18 +5,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/common"
-	payloadendpoints "gitlab.justlab.xyz/alertflow-public/runner/internal/payload_endpoints"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/plugins"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/internal/common"
+	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
+	"github.com/AlertFlow/runner/internal/plugins"
+	"github.com/AlertFlow/runner/internal/runner"
+	"github.com/AlertFlow/runner/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.17.0-beta"
+const version string = "0.18.0-beta"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()

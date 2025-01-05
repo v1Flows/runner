@@ -1,4 +1,4 @@
-module gitlab.justlab.xyz/alertflow-public/runner
+module github.com/AlertFlow/runner
 
 go 1.23
 
