@@ -42,3 +42,4 @@ jobs:
           artifacts: alertflow-runner
           skipIfReleaseExists: true
           generateReleaseNotes: true
+          token: ${{ secrets.ACCESS_TOKEN }}
