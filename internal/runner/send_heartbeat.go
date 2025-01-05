@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
+	"github.com/AlertFlow/runner/config"
 
 	log "github.com/sirupsen/logrus"
 )

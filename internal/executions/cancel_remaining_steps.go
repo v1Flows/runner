@@ -3,8 +3,8 @@ package internal_executions
 import (
 	"time"
 
+	"github.com/AlertFlow/runner/pkg/executions"
 	log "github.com/sirupsen/logrus"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
 )
 
 func CancelRemainingSteps(executionID string) error {

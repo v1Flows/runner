@@ -3,11 +3,11 @@ package common
 import (
 	"time"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	internal_executions "gitlab.justlab.xyz/alertflow-public/runner/internal/executions"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/config"
+	internal_executions "github.com/AlertFlow/runner/internal/executions"
+	"github.com/AlertFlow/runner/internal/runner"
+	"github.com/AlertFlow/runner/pkg/executions"
+	"github.com/AlertFlow/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )

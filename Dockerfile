@@ -1,6 +1,6 @@
 FROM golang:1.23 as builder
 
-WORKDIR /runner
+WORKDIR /app
 
 # Update the package list and install git and gcc
 RUN apt-get update && apt-get install -y git gcc
@@ -14,11 +14,11 @@ COPY . ./
 RUN CGO_ENABLED=1 GOOS=linux go build -o /alertflow-runner ./cmd/alertflow-runner
 
 # Copy configuration files
-RUN mkdir -p /runner/config
-COPY config/config.yaml /runner/config/config.yaml
+RUN mkdir -p /app/config
+COPY config/config.yaml /app/config/config.yaml
 
-VOLUME [ "/runner" ]
+VOLUME [ "/runner/config" ]
 
 EXPOSE 8081
 
-CMD [ "/alertflow-runner", "-c", "/runner/config/config.yaml" ]
+CMD [ "/alertflow-runner", "-c", "/app/config/config.yaml" ]
