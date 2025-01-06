@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )

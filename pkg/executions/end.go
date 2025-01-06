@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/internal/runner"
+	"github.com/AlertFlow/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )

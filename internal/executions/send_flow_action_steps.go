@@ -1,8 +1,8 @@
 package internal_executions
 
 import (
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/pkg/executions"
+	"github.com/AlertFlow/runner/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow

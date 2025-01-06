@@ -3,9 +3,9 @@ package internal_executions
 import (
 	"time"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/executions"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/pkg/executions"
+	"github.com/AlertFlow/runner/pkg/models"
 )
 
 var initialSteps = []models.ExecutionSteps{

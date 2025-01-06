@@ -1,22 +1,19 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 
-	"gitlab.justlab.xyz/alertflow-public/runner/config"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/common"
-	payloadendpoints "gitlab.justlab.xyz/alertflow-public/runner/internal/payload_endpoints"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/plugins"
-	"gitlab.justlab.xyz/alertflow-public/runner/internal/runner"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
+	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/internal/common"
+	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
+	"github.com/AlertFlow/runner/internal/plugins"
+	"github.com/AlertFlow/runner/internal/runner"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.17.0-beta"
+const version string = "0.19.0-beta"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
@@ -53,57 +50,12 @@ func main() {
 
 	logging(config.LogLevel)
 
-	pluginReposDir := "./temp/rawPlugins"
-	pluginDir := "./plugins"
-	os.MkdirAll(pluginReposDir, os.ModePerm)
-	os.MkdirAll(pluginDir, os.ModePerm)
+	plugins, pluginsMap, actions, payloadEndpoints := plugins.Init()
 
-	for _, plugin := range config.Plugins {
-		pluginPath := filepath.Join(pluginReposDir, plugin.Name)
-		if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
-			log.Infof("Cloning and building plugin: %s", plugin.Name)
-			err := plugins.CloneAndBuildPlugin(plugin.Url, pluginDir, pluginPath, plugin.Name, plugin.Version)
-			if err != nil {
-				log.Fatalf("Failed to clone and build plugin %s: %v", plugin.Name, err)
-			}
-		}
-	}
+	common.RegisterActions(actions)
+	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpoints)
 
-	// cleanup the temp directory
-	err = os.RemoveAll(pluginReposDir)
-	if err != nil {
-		log.Errorf("Failed to remove temp directory: %v", err)
-	}
-
-	plugins, err := plugins.LoadPlugins(pluginDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pluginsMap := []models.Plugin{}
-	actionsSlice := make([]models.ActionDetails, 0)
-	payloadEndpointsSlice := make([]models.PayloadEndpoint, 0)
-	for _, plugin := range plugins {
-		p := plugin.Init()
-
-		pluginsMap = append(pluginsMap, p)
-
-		if p.Type == "action" {
-			action := plugin.Details()
-			actionsSlice = append(actionsSlice, action.Action)
-			log.Infof("Loaded action plugin: %s", action.Action.Name)
-		}
-		if p.Type == "payload_endpoint" {
-			payloadEndpoint := plugin.Details()
-			payloadEndpointsSlice = append(payloadEndpointsSlice, payloadEndpoint.Payload)
-			log.Infof("Loaded payload endpoint plugin: %s", payloadEndpoint.Payload.Name)
-		}
-	}
-
-	common.RegisterActions(actionsSlice)
-	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpointsSlice)
-
-	runner.RegisterAtAPI(version, pluginsMap, actionsSlice, payloadEndpointsSlice)
+	runner.RegisterAtAPI(version, pluginsMap, actions, payloadEndpoints)
 	go runner.SendHeartbeat()
 
 	Init()

@@ -12,7 +12,7 @@ import (
 const (
 	defaultLogLevel = "info"
 	defaultMode     = "master"
-	defaultPort     = 8080
+	defaultPort     = 8081
 	defaultRunnerID = ""
 	defaultAPIKey   = ""
 )

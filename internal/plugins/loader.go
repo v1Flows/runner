@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"plugin"
 
+	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"gitlab.justlab.xyz/alertflow-public/runner/pkg/models"
 )
 
 type Plugin interface {
@@ -16,7 +16,7 @@ type Plugin interface {
 	Handle(context *gin.Context)
 }
 
-func LoadPlugins(pluginDir string) ([]Plugin, error) {
+func loadPlugins(pluginDir string) ([]Plugin, error) {
 	var plugins []Plugin
 
 	log.Info("Loading plugins from ", pluginDir)
