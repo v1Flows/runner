@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func CloneAndBuildPlugin(repoURL, pluginDir string, pluginTempDir string, pluginName string, pluginVersion string) error {
+func cloneAndBuildPlugin(repoURL, pluginDir string, pluginTempDir string, pluginName string, pluginVersion string) error {
 	if repoURL == "" {
 		repoURL = "https://github.com/Alertflow/rp-" + pluginName
 	}
@@ -40,7 +40,7 @@ func CloneAndBuildPlugin(repoURL, pluginDir string, pluginTempDir string, plugin
 	}
 
 	// Update the .versions file
-	if err := UpdatePluginVersion(pluginName, pluginVersion); err != nil {
+	if err := updatePluginVersion(pluginName, pluginVersion); err != nil {
 		log.Error("failed to update .versions file: ", err.Error())
 		return err
 	}
