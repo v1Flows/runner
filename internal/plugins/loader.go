@@ -16,7 +16,7 @@ type Plugin interface {
 	Handle(context *gin.Context)
 }
 
-func LoadPlugins(pluginDir string) ([]Plugin, error) {
+func loadPlugins(pluginDir string) ([]Plugin, error) {
 	var plugins []Plugin
 
 	log.Info("Loading plugins from ", pluginDir)
