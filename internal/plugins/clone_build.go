@@ -1,123 +1,65 @@
 package plugins
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func CloneAndBuildPlugin(repoURL, pluginDir string, pluginRawRepos string, pluginName string, pluginVersion string) error {
-	// Check if the plugin is already installed and up-to-date
-	if isPluginUpToDate(pluginName, pluginVersion) {
-		log.Infof("Plugin %s is already up-to-date", pluginName)
-		return nil
+func cloneAndBuildPlugin(repoURL, pluginDir string, pluginTempDir string, pluginName string, pluginVersion string) error {
+	if repoURL == "" {
+		repoURL = "https://github.com/Alertflow/rp-" + pluginName
 	}
 
+	err := prepareClone(pluginTempDir, pluginDir)
+	if err != nil {
+		log.Error("failed to prepare clone: ", err.Error())
+		return err
+	}
+
+	outDir := filepath.Join(pluginTempDir, pluginName)
+
 	// Clone the repository
-	cmd := exec.Command("git", "clone", "https://"+repoURL, "--branch", pluginVersion, pluginRawRepos)
+	cmd := exec.Command("git", "clone", repoURL, "--branch", pluginVersion, outDir)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		log.Error("failed to clone repository: " + err.Error())
-		return fmt.Errorf("failed to clone repository: %w", err)
+		log.Errorf("failed to clone repository: %v, %s", err, stderr.String())
+		return err
 	}
 
 	// Build the plugin
-	cmd = exec.Command("go", "build", "-mod=mod", "-buildmode=plugin", "-o", filepath.Join(pluginDir, pluginName+".so"), pluginRawRepos+"/plugin.go")
+	cmd = exec.Command("go", "build", "-mod=mod", "-buildmode=plugin", "-o", filepath.Join(pluginDir, pluginName+".so"), outDir+"/plugin.go")
 	if err := cmd.Run(); err != nil {
-		log.Error("failed to build plugin: " + err.Error())
-		return fmt.Errorf("failed to build plugin: %w", err)
+		log.Error("failed to build plugin: ", err.Error())
+		return err
 	}
 
 	// Update the .versions file
 	if err := updatePluginVersion(pluginName, pluginVersion); err != nil {
-		log.Error("failed to update .versions file: " + err.Error())
-		return fmt.Errorf("failed to update .versions file: %w", err)
+		log.Error("failed to update .versions file: ", err.Error())
+		return err
 	}
 
 	return nil
 }
 
-func isPluginUpToDate(pluginName, pluginVersion string) bool {
-	file, err := os.Open(".versions")
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-		log.Error("failed to open .versions file: " + err.Error())
-		return false
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-		if len(parts) != 2 {
-			continue
-		}
-		if parts[0] == pluginName && parts[1] == pluginVersion {
-			return true
-		}
+func prepareClone(pluginTempDir string, pluginDir string) error {
+	// Create the temporary directory
+	if err := os.MkdirAll(pluginTempDir, 0755); err != nil {
+		log.Error("failed to create temporary directory: " + err.Error())
+		return fmt.Errorf("failed to create temporary directory: %w", err)
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Error("failed to read .versions file: " + err.Error())
+	// Create the plugin directory if it doesn't exist
+	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+		log.Error("failed to create plugin directory: " + err.Error())
+		return fmt.Errorf("failed to create plugin directory: %w", err)
 	}
 
-	return false
-}
-
-func updatePluginVersion(pluginName, pluginVersion string) error {
-	// Read the existing .versions file
-	file, err := os.Open(".versions")
-	if err != nil {
-		if os.IsNotExist(err) {
-			file, err = os.Create(".versions")
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-		if len(parts) != 2 {
-			continue
-		}
-		if parts[0] != pluginName {
-			lines = append(lines, line)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	// Write the updated content back to the .versions file
-	file, err = os.OpenFile(".versions", os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	for _, line := range lines {
-		_, err := file.WriteString(line + "\n")
-		if err != nil {
-			return err
-		}
-	}
-
-	// Append the new version entry
-	_, err = file.WriteString(fmt.Sprintf("%s %s\n", pluginName, pluginVersion))
-	return err
+	return nil
 }
