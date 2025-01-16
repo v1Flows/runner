@@ -40,7 +40,7 @@ func cloneAndBuildPlugin(repoURL, pluginDir string, pluginTempDir string, plugin
 	}
 
 	// Update the .versions file
-	if err := updatePluginVersion(pluginName, pluginVersion); err != nil {
+	if err := updatePluginVersion(pluginName, pluginVersion, pluginDir); err != nil {
 		log.Error("failed to update .versions file: ", err.Error())
 		return err
 	}

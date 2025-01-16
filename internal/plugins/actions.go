@@ -4,12 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
-func removePluginFromVersionsFile(pluginName string) error {
+func removePluginFromVersionsFile(pluginName string, pluginDir string) error {
+	versionsFile := filepath.Join(pluginDir, ".versions")
+
 	// remove plugin from versions file
-	file, err := os.Open(".versions")
+	file, err := os.Open(versionsFile)
 	if os.IsNotExist(err) {
 		return nil
 	} else if err != nil {
@@ -36,7 +39,7 @@ func removePluginFromVersionsFile(pluginName string) error {
 		return nil
 	}
 
-	file, err = os.Create(".versions")
+	file, err = os.Create(versionsFile)
 	if err != nil {
 		return fmt.Errorf("failed to create .versions file: %v", err)
 	}
@@ -52,12 +55,13 @@ func removePluginFromVersionsFile(pluginName string) error {
 	return nil
 }
 
-func updatePluginVersion(pluginName, pluginVersion string) error {
+func updatePluginVersion(pluginName string, pluginVersion string, pluginDir string) error {
+	versionsFile := filepath.Join(pluginDir, ".versions")
 	// Read the existing .versions file
-	file, err := os.Open(".versions")
+	file, err := os.Open(versionsFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			file, err = os.Create(".versions")
+			file, err = os.Create(versionsFile)
 			if err != nil {
 				return err
 			}
@@ -85,7 +89,7 @@ func updatePluginVersion(pluginName, pluginVersion string) error {
 	}
 
 	// Write the updated content back to the .versions file
-	file, err = os.OpenFile(".versions", os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err = os.OpenFile(versionsFile, os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

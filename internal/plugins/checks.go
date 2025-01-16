@@ -3,6 +3,7 @@ package plugins
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -13,8 +14,10 @@ func isPluginPresent(pluginName string, pluginDir string) bool {
 	return !os.IsNotExist(err)
 }
 
-func isPluginUpToDate(pluginName, pluginVersion string) bool {
-	file, err := os.Open(".versions")
+func isPluginUpToDate(pluginName string, pluginVersion string, pluginDir string) bool {
+	versionsFile := filepath.Join(pluginDir, ".versions")
+
+	file, err := os.Open(versionsFile)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false

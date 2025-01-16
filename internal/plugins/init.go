@@ -15,12 +15,12 @@ func Init() ([]Plugin, []models.Plugin, []models.ActionDetails, []models.Payload
 
 	for _, plugin := range config.Config.Plugins {
 		// Check if the plugin is already installed and up-to-date
-		if isPluginPresent(plugin.Name, pluginDir) && isPluginUpToDate(plugin.Name, plugin.Version) {
+		if isPluginPresent(plugin.Name, pluginDir) && isPluginUpToDate(plugin.Name, plugin.Version, pluginDir) {
 			log.Infof("Plugin %s is already up-to-date", plugin.Name)
 			continue
 		} else {
 			// Remove the plugin from the versions file
-			err := removePluginFromVersionsFile(plugin.Name)
+			err := removePluginFromVersionsFile(plugin.Name, pluginDir)
 			if err != nil {
 				log.Errorf("Failed to remove plugin %s from versions file: %v", plugin.Name, err)
 			}
