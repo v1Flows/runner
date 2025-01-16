@@ -50,38 +50,47 @@ func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Act
 		log.Fatal(err)
 	}
 	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+	for i := 0; i < 3; i++ {
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Errorf("Failed to send request: %v", err)
+			time.Sleep(5 * time.Second) // Add delay before retrying
+			continue
+		}
 
-	if resp.StatusCode != 201 {
-		log.Error("Failed to register at AlertFlow")
-		log.Error("Response: ", string(body))
-		panic("Failed to register at AlertFlow")
-	}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close() // Close the body after reading
+		if err != nil {
+			log.Errorf("Failed to read response body: %v", err)
+			time.Sleep(5 * time.Second) // Add delay before retrying
+			continue
+		}
 
-	var response struct {
-		RunnerID string `json:"runner_id"`
-	}
-	if err := json.Unmarshal(body, &response); err != nil {
-		log.Fatal(err)
-	}
+		if resp.StatusCode == 201 {
+			var response struct {
+				RunnerID string `json:"runner_id"`
+			}
+			if err := json.Unmarshal(body, &response); err != nil {
+				log.Fatal(err)
+			}
 
-	runner_id := ""
-	if response.RunnerID == "" {
-		runner_id = config.Config.Alertflow.RunnerID
-	} else {
-		runner_id = response.RunnerID
+			runner_id := ""
+			if response.RunnerID == "" {
+				runner_id = config.Config.Alertflow.RunnerID
+			} else {
+				runner_id = response.RunnerID
+			}
+
+			config.UpdateRunnerID(runner_id)
+
+			log.Info("Runner registered at AlertFlow. ID: ", config.GetRunnerID())
+			return
+		} else {
+			log.Errorf("Failed to register at AlertFlow, attempt %d", i+1)
+			log.Errorf("Response: %s", string(body))
+			time.Sleep(5 * time.Second) // Add delay before retrying
+		}
 	}
-
-	config.UpdateRunnerID(runner_id)
-
-	log.Info("Runner registered at AlertFlow. ID: ", config.GetRunnerID())
+	log.Fatalf("Failed to register at AlertFlow after 3 attempts")
 }
