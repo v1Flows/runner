@@ -74,7 +74,14 @@ func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Act
 		log.Fatal(err)
 	}
 
-	config.UpdateRunnerID(response.RunnerID)
+	runner_id := ""
+	if response.RunnerID == "" {
+		runner_id = config.Config.Alertflow.RunnerID
+	} else {
+		runner_id = response.RunnerID
+	}
+
+	config.UpdateRunnerID(runner_id)
 
 	log.Info("Runner registered at AlertFlow. ID: ", config.GetRunnerID())
 }
