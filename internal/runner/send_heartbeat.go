@@ -26,21 +26,36 @@ func SendHeartbeat() {
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Fatalf("Failed to send request: %v", err)
-		}
+		var resp *http.Response
+		var err error
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		resp.Body.Close()
+		for i := 0; i < 3; i++ {
+			resp, err = client.Do(req)
+			if err != nil {
+				log.Errorf("Failed to send request: %v", err)
+				time.Sleep(5 * time.Second) // Add delay before retrying
+				continue
+			}
 
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Errorf("Failed to read response body: %v", err)
+				resp.Body.Close()
+				continue
+			}
+			resp.Body.Close()
+
+			if resp.StatusCode == 200 {
+				log.Debugf("Heartbeat sent to AlertFlow")
+				break
+			} else {
+				log.Errorf("Failed to send heartbeat to AlertFlow, attempt %d", i+1)
+				log.Errorf("Response: %s", body)
+				time.Sleep(5 * time.Second) // Add delay before retrying
+			}
+		}
 		if resp.StatusCode != 200 {
-			log.Errorf("Failed to send heartbeat to AlertFlow")
-			log.Errorf("Response: %s", body)
+			log.Fatalf("Failed to send heartbeat to AlertFlow after 3 attempts")
 		}
-		log.Debugf("Heartbeat sent to AlertFlow")
 	}
 }
