@@ -27,27 +27,41 @@ func StartWorker() {
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Fatalf("Failed to send request: %v", err)
-		}
+		var resp *http.Response
+		var err error
+		for i := 0; i < 3; i++ {
+			resp, err = client.Do(req)
+			if err != nil {
+				log.Errorf("Failed to send request: %v", err)
+				time.Sleep(5 * time.Second) // Add delay before retrying
+				continue
+			}
 
+			if resp.StatusCode != 200 {
+				log.Errorf("Failed to get waiting executions from API: %s, attempt %d", url, i+1)
+				time.Sleep(5 * time.Second) // Add delay before retrying
+				continue
+			}
+
+			log.Debugf("Executions received from API: %s", url)
+
+			var executions models.Executions
+			err = json.NewDecoder(resp.Body).Decode(&executions)
+			resp.Body.Close() // Close the body after reading
+			if err != nil {
+				log.Errorf("Failed to decode response body: %v", err)
+				time.Sleep(5 * time.Second) // Add delay before retrying
+				continue
+			}
+
+			for _, execution := range executions.Executions {
+				// Process one execution at a time
+				startProcessing(execution)
+			}
+			break
+		}
 		if resp.StatusCode != 200 {
-			log.Errorf("Failed to get waiting executions from API: %s", url)
-			panic("Failed to get waiting executions from API")
-		}
-
-		log.Debugf("Executions received from API: %s", url)
-
-		var executions models.Executions
-		err = json.NewDecoder(resp.Body).Decode(&executions)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, execution := range executions.Executions {
-			// Process one execution at a time
-			startProcessing(execution)
+			log.Fatalf("Failed to get waiting executions from API after 3 attempts: %s", url)
 		}
 	}
 }

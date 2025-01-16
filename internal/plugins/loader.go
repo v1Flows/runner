@@ -1,8 +1,10 @@
 package plugins
 
 import (
+	"os"
 	"path/filepath"
 	"plugin"
+	"strings"
 
 	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/gin-gonic/gin"
@@ -26,10 +28,19 @@ func loadPlugins(pluginDir string) ([]Plugin, error) {
 		return nil, err
 	}
 
+	pluginRemove := false
+
 	for _, file := range files {
 		p, err := plugin.Open(file)
 		if err != nil {
-			log.Errorln("Error loading plugin:", err)
+			log.Error("Error opening plugin:", err.Error())
+			if strings.Contains(err.Error(), "plugin was built with a different version of package") {
+				pluginRemove = true
+				os.Remove(file) // Assuming pluginPath is the path to the plugin file
+				log.Warnln("Removed plugin due to version mismatch:", file)
+			} else {
+				log.Errorln("Error loading plugin:", err)
+			}
 			continue
 		}
 
@@ -46,6 +57,10 @@ func loadPlugins(pluginDir string) ([]Plugin, error) {
 		}
 
 		plugins = append(plugins, Plugin)
+	}
+
+	if pluginRemove {
+		Init()
 	}
 
 	return plugins, nil
