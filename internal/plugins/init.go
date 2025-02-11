@@ -55,6 +55,7 @@ func Init() ([]Plugin, []models.Plugin, []models.ActionDetails, []models.Payload
 
 		if p.Type == "action" {
 			action := plugin.Details()
+			action.Action.Version = p.Version
 			actions = append(actions, action.Action)
 			log.Infof("Loaded action plugin: %s", action.Action.Name)
 		}

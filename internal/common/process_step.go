@@ -27,6 +27,24 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 		return nil, false, false, false, false, err
 	}
 
+	valid, pluginVersion := checkActionVersionAgainstPluginVersion(step)
+
+	if !valid {
+		// dont execute step and quit execution
+		step.ActionMessages = append(step.ActionMessages, "Action not compatible with plugin version", "Plugin Version: "+pluginVersion+" Action Version: "+step.ActionVersion, "Stopping execution")
+		step.Running = false
+		step.Error = true
+		step.Finished = true
+		step.FinishedAt = time.Now()
+
+		if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
+			log.Error(err)
+			return nil, false, false, false, false, err
+		}
+
+		return nil, false, false, false, true, nil
+	}
+
 	var found bool
 	var action models.ActionDetails
 	for _, a := range actions {

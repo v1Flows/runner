@@ -8,6 +8,7 @@ type ActionDetails struct {
 	ID                string          `json:"id"`
 	Name              string          `json:"name"`
 	Description       string          `json:"description"`
+	Version           string          `json:"version"`
 	Icon              string          `json:"icon"`
 	Type              string          `json:"type"`
 	Category          string          `json:"category"`
