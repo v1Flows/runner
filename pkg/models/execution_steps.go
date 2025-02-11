@@ -45,4 +45,6 @@ type ExecutionSteps struct {
 	CreatedAt           time.Time `json:"created_at"`
 	StartedAt           time.Time `json:"started_at"`
 	FinishedAt          time.Time `json:"finished_at"`
+	Encrypted           bool      `json:"encrypted"`
+	ActionVersion       string    `json:"action_version"`
 }

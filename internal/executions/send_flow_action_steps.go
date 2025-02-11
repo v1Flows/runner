@@ -13,12 +13,13 @@ func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWi
 		}
 
 		step := models.ExecutionSteps{
-			ActionID:    action.ID.String(),
-			ActionType:  action.Type,
-			ActionName:  action.Name,
-			Icon:        action.Icon,
-			ExecutionID: execution.ID.String(),
-			Pending:     true,
+			ActionID:      action.ID.String(),
+			ActionType:    action.Type,
+			ActionName:    action.Name,
+			ActionVersion: action.Version,
+			Icon:          action.Icon,
+			ExecutionID:   execution.ID.String(),
+			Pending:       true,
 		}
 
 		// handle custom name
