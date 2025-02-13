@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/AlertFlow/runner/pkg/plugin"
 
 	log "github.com/sirupsen/logrus"
 )

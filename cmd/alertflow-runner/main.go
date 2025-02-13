@@ -6,8 +6,8 @@ import (
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/common"
 	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
-	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/internal/runner"
+	"github.com/AlertFlow/runner/pkg/plugin"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"

@@ -1,8 +1,8 @@
 package common
 
 import (
-	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/AlertFlow/runner/pkg/plugin"
 )
 
 func checkActionVersionAgainstPluginVersion(step models.ExecutionSteps) (valid bool, pluginVersion string) {

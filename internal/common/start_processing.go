@@ -5,10 +5,10 @@ import (
 
 	"github.com/AlertFlow/runner/config"
 	internal_executions "github.com/AlertFlow/runner/internal/executions"
-	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/AlertFlow/runner/pkg/plugin"
 
 	log "github.com/sirupsen/logrus"
 )

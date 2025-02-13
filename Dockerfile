@@ -31,8 +31,8 @@ RUN go mod download
 COPY . ./
 
 # Generate protobuf files
-RUN protoc --go_out=internal/plugin --go_opt=paths=source_relative \
-    --go-grpc_out=internal/plugin --go-grpc_opt=paths=source_relative \
+RUN protoc --go_out=pkg/plugin --go_opt=paths=source_relative \
+    --go-grpc_out=pkg/plugin --go-grpc_opt=paths=source_relative \
     proto/plugin.proto
 
 # Build the main application with static linking

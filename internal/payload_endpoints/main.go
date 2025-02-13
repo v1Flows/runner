@@ -3,8 +3,8 @@ package payloadendpoints
 import (
 	"strconv"
 
-	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/AlertFlow/runner/pkg/plugin"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
