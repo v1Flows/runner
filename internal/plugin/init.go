@@ -1,6 +1,7 @@
-package plugins
+package plugin
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/AlertFlow/runner/config"
@@ -9,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Init() ([]Plugin, []models.Plugin, []models.ActionDetails, []models.PayloadEndpoint) {
+func Init() ([]models.Plugin, []models.ActionDetails, []models.PayloadEndpoint) {
 	pluginDir := "plugins"
 	pluginTempDir := "plugins_temp"
 
@@ -40,31 +41,30 @@ func Init() ([]Plugin, []models.Plugin, []models.ActionDetails, []models.Payload
 		log.Errorf("Failed to remove temp directory: %v", err)
 	}
 
-	plugins, err := loadPlugins(pluginDir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	loader := NewLoader(pluginDir)
 
-	pluginsMap := []models.Plugin{}
-	actions := make([]models.ActionDetails, 0)
-	payloadEndpoints := make([]models.PayloadEndpoint, 0)
-	for _, plugin := range plugins {
-		p := plugin.Init()
+	fmt.Println(loader)
 
-		pluginsMap = append(pluginsMap, p)
+	// pluginsMap := []models.Plugin{}
+	// actions := make([]models.ActionDetails, 0)
+	// payloadEndpoints := make([]models.PayloadEndpoint, 0)
+	// for _, plugin := range plugins {
+	// 	p := plugin.Init()
 
-		if p.Type == "action" {
-			action := plugin.Details()
-			action.Action.Version = p.Version
-			actions = append(actions, action.Action)
-			log.Infof("Loaded action plugin: %s", action.Action.Name)
-		}
-		if p.Type == "payload_endpoint" {
-			payloadEndpoint := plugin.Details()
-			payloadEndpoints = append(payloadEndpoints, payloadEndpoint.Payload)
-			log.Infof("Loaded payload endpoint plugin: %s", payloadEndpoint.Payload.Name)
-		}
-	}
+	// 	pluginsMap = append(pluginsMap, p)
 
-	return plugins, pluginsMap, actions, payloadEndpoints
+	// 	if p.Type == "action" {
+	// 		action := plugin.Details()
+	// 		action.Action.Version = p.Version
+	// 		actions = append(actions, action.Action)
+	// 		log.Infof("Loaded action plugin: %s", action.Action.Name)
+	// 	}
+	// 	if p.Type == "payload_endpoint" {
+	// 		payloadEndpoint := plugin.Details()
+	// 		payloadEndpoints = append(payloadEndpoints, payloadEndpoint.Payload)
+	// 		log.Infof("Loaded payload endpoint plugin: %s", payloadEndpoint.Payload.Name)
+	// 	}
+	// }
+
+	return nil, nil, nil
 }

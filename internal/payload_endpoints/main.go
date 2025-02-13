@@ -3,14 +3,14 @@ package payloadendpoints
 import (
 	"strconv"
 
-	"github.com/AlertFlow/runner/internal/plugins"
+	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/pkg/models"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
-func InitPayloadRouter(port int, plugins []plugins.Plugin, payloadEndpoints []models.PayloadEndpoint) {
+func InitPayloadRouter(port int, plugins plugin.Plugin, payloadEndpoints []models.PayloadEndpoint) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	log.Info("Open Payload Port: ", port)
@@ -19,10 +19,8 @@ func InitPayloadRouter(port int, plugins []plugins.Plugin, payloadEndpoints []mo
 	for _, endpoint := range payloadEndpoints {
 		log.Infof("Open %s Endpoint: %s", endpoint.Name, endpoint.Endpoint)
 		payload.POST(endpoint.Endpoint, func(c *gin.Context) {
-			for _, plugin := range plugins {
-				if plugin.Init().Name == endpoint.Name {
-					plugin.Handle(c)
-				}
+			if plugin.Details().Name == endpoint.Name {
+				plugin.Execute(c)
 			}
 		})
 	}
