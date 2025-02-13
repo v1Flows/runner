@@ -17,13 +17,16 @@ func Busy(busy bool) {
 		ExecutingJob: busy,
 	}
 
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(payload)
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/"+config.GetRunnerID()+"/busy", payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/"+configManager.GetRunnerID()+"/busy", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)

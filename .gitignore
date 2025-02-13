@@ -29,3 +29,6 @@ alertflow-runner
 ./plugins
 ./plugins_temp
 .versions
+
+# Generated protobuf code
+*.pb.go

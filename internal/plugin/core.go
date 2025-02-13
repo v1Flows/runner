@@ -1,18 +1,83 @@
 package plugin
 
 import (
-	"github.com/AlertFlow/runner/pkg/models"
-	"github.com/gin-gonic/gin"
+	"context"
+
+	"github.com/hashicorp/go-plugin"
+	"google.golang.org/grpc"
 )
 
-// Action defines the core interface that all plugins must implement
-type Plugin interface {
-	// Info returns metadata about the action
-	Details() models.Plugin
+// Handler defines the interface that plugins must implement
+type Handler interface {
+	Execute(ctx context.Context, req *Request) (*Response, error)
+	StreamUpdates(req *Request, updates UpdateServer) error
+}
 
-	// Execute runs the action with given input and returns output or error
-	Execute(c *gin.Context) error
+// UpdateServer interface for streaming updates
+type UpdateServer interface {
+	Send(*StatusUpdate) error
+}
 
-	// Handles payload endpoints for incoming data
-	Handle(c *gin.Context) error
+// GRPCPlugin implements plugin.GRPCPlugin
+type GRPCPlugin struct {
+	plugin.Plugin
+	Impl Handler
+}
+
+// GRPCServer implements the gRPC server interface
+type GRPCServer struct {
+	UnimplementedPluginServer
+	Impl Handler
+}
+
+// Execute implements the RPC method for plugin execution
+func (s *GRPCServer) Execute(ctx context.Context, req *Request) (*Response, error) {
+	return s.Impl.Execute(ctx, req)
+}
+
+// StreamUpdates implements the RPC method for status updates
+func (s *GRPCServer) StreamUpdates(req *Request, stream Plugin_StreamUpdatesServer) error {
+	return s.Impl.StreamUpdates(req, stream)
+}
+
+// GRPCClient implements the client interface
+type GRPCClient struct {
+	client PluginClient
+}
+
+func (c *GRPCClient) Execute(ctx context.Context, req *Request) (*Response, error) {
+	return c.client.Execute(ctx, req)
+}
+
+func (c *GRPCClient) StreamUpdates(req *Request, server UpdateServer) error {
+	stream, err := c.client.StreamUpdates(context.Background(), req)
+	if err != nil {
+		return err
+	}
+
+	for {
+		update, err := stream.Recv()
+		if err != nil {
+			return err
+		}
+		if err := server.Send(update); err != nil {
+			return err
+		}
+	}
+}
+
+func (p *GRPCPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
+	RegisterPluginServer(s, &GRPCServer{Impl: p.Impl})
+	return nil
+}
+
+func (p *GRPCPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+	return &GRPCClient{client: NewPluginClient(c)}, nil
+}
+
+// Handshake is a common handshake that is shared by plugin and host
+var Handshake = plugin.HandshakeConfig{
+	ProtocolVersion:  1,
+	MagicCookieKey:   "ALERTFLOW_PLUGIN",
+	MagicCookieValue: "alertflow_plugin_v1",
 }

@@ -43,38 +43,43 @@ func main() {
 	log.Info("Starting AlertFlow Runner. Version: ", version)
 
 	log.Info("Loading config")
-	config, err := config.ReadConfig(*configFile)
+	configManager := config.GetInstance()
+	err := configManager.LoadConfig("project_auto_config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	logging(config.LogLevel)
+	cfg := configManager.GetConfig()
 
-	pluginsMap, actions, payloadEndpoints := plugin.Init()
+	logging(cfg.LogLevel)
+
+	manager, plugins, actions, payloadEndpoints := plugin.Init(cfg)
 
 	common.RegisterActions(actions)
-	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, nil, payloadEndpoints)
+	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, manager, plugins, payloadEndpoints)
 
-	runner.RegisterAtAPI(version, pluginsMap, actions, payloadEndpoints)
+	runner.RegisterAtAPI(version, plugins, actions, payloadEndpoints)
 	go runner.SendHeartbeat()
 
-	Init()
+	Init(manager, cfg)
 
 	<-make(chan struct{})
+
+	defer manager.Cleanup()
 }
 
-func Init() {
-	switch strings.ToLower(config.Config.Mode) {
+func Init(manager *plugin.Manager, cfg config.Config) {
+	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker()
+		go common.StartWorker(manager)
 		log.Info("Starting Payload Listener")
 		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker()
+		go common.StartWorker(manager)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")

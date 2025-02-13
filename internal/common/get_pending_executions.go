@@ -6,24 +6,29 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func StartWorker() {
+func StartWorker(manager *plugin.Manager) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
 	}
-	url := config.Config.Alertflow.URL + "/api/v1/runners/" + config.GetRunnerID() + "/executions/pending"
+
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
+	url := cfg.Alertflow.URL + "/api/v1/runners/" + configManager.GetRunnerID() + "/executions/pending"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {
@@ -56,7 +61,7 @@ func StartWorker() {
 
 			for _, execution := range executions.Executions {
 				// Process one execution at a time
-				startProcessing(execution)
+				startProcessing(manager, execution)
 			}
 			break
 		}

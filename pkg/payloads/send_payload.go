@@ -14,6 +14,9 @@ import (
 func SendPayload(payload models.Payload) {
 	log.Info("Sending Payload")
 
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Error(err)
@@ -21,12 +24,12 @@ func SendPayload(payload models.Payload) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/v1/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

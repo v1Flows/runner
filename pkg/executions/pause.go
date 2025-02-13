@@ -18,14 +18,17 @@ func SetToPaused(execution models.Execution) {
 }
 
 func Pause(execution models.Execution) {
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Error(err)

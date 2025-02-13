@@ -1,71 +1,49 @@
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/models"
-	"github.com/AlertFlow/runner/pkg/protocol"
 )
 
-func Init() ([]models.Plugin, []models.ActionDetails, []models.PayloadEndpoint) {
-	// pluginDir := "plugins"
-	// pluginTempDir := "plugins_temp"
-
-	manager := NewManager("plugins", "plugins_temp")
-
-	if err := manager.DownloadPlugin(config.PluginConf{
-		Name:    "Log",
-		Url:     "https://github.com/AlertFlow/rp-log",
-		Version: "refactor",
-	}); err != nil {
+func Init(config config.Config) (manager *Manager, plugins []models.Plugin, actions []models.ActionDetails, payloadEndpoints []models.PayloadEndpoint) {
+	manager, err := NewManager(config)
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := manager.StartPlugin(config.PluginConf{Name: "Log"}); err != nil {
-		log.Fatal(err)
+	actions = make([]models.ActionDetails, 0)
+	payloadEndpoints = make([]models.PayloadEndpoint, 0)
+
+	for _, plugin := range config.Plugins {
+		if err := manager.InstallPlugin(context.Background(), plugin.Name); err != nil {
+			log.Fatal(err)
+		}
+
+		client, err := manager.LoadPlugin(plugin.Name)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(client)
+		fmt.Println(manager)
+
+		// plugins = append(plugins, plugin.Name)
+
+		// if resp.Plugin.Action is defined with content, add it to actions
+		// if resp.Plugin.Action.ID != "" {
+		// 	resp.Plugin.Action.Version = resp.Plugin.Version
+		// 	actions = append(actions, resp.Plugin.Action)
+		// }
+
+		// if resp.Plugin.Payload.Endpoint != "" {
+		// 	resp.Plugin.Payload.Version = resp.Plugin.Version
+		// 	payloadEndpoints = append(payloadEndpoints, resp.Plugin.Payload)
+		// }
 	}
 
-	// Execute plugin
-	resp, err := manager.ExecutePlugin("Log", protocol.Request{
-		Action: "details",
-		Data: map[string]interface{}{
-			"param1": "value1",
-		},
-	})
-
-	fmt.Println(resp.Plugin, err)
-
-	resp, err = manager.ExecutePlugin("Log", protocol.Request{
-		Action: "process",
-		Data: map[string]interface{}{
-			"param1": "value1",
-		},
-	})
-
-	fmt.Println(resp, err)
-
-	// pluginsMap := []models.Plugin{}
-	// actions := make([]models.ActionDetails, 0)
-	// payloadEndpoints := make([]models.PayloadEndpoint, 0)
-	// for _, plugin := range plugins {
-	// 	p := plugin.Init()
-
-	// 	pluginsMap = append(pluginsMap, p)
-
-	// 	if p.Type == "action" {
-	// 		action := plugin.Details()
-	// 		action.Action.Version = p.Version
-	// 		actions = append(actions, action.Action)
-	// 		log.Infof("Loaded action plugin: %s", action.Action.Name)
-	// 	}
-	// 	if p.Type == "payload_endpoint" {
-	// 		payloadEndpoint := plugin.Details()
-	// 		payloadEndpoints = append(payloadEndpoints, payloadEndpoint.Payload)
-	// 		log.Infof("Loaded payload endpoint plugin: %s", payloadEndpoint.Payload.Name)
-	// 	}
-	// }
-
-	return nil, nil, nil
+	return manager, plugins, actions, payloadEndpoints
 }

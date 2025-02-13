@@ -14,42 +14,57 @@ import (
 )
 
 func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.ActionDetails, payloadInjectors []models.PayloadEndpoint) {
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
 	register := models.Register{
-		ID:            config.Config.Alertflow.RunnerID,
+		ID:            cfg.Alertflow.RunnerID,
 		Registered:    true,
 		LastHeartbeat: time.Now(),
 		Version:       version,
-		Mode:          config.Config.Mode,
+		Mode:          cfg.Mode,
 	}
 
-	// Convert plugins to JSON
-	pluginsJSON, err := json.Marshal(plugins)
-	if err != nil {
-		log.Fatal(err)
+	if len(plugins) > 0 {
+		// Convert plugins to JSON
+		pluginsJSON, err := json.Marshal(plugins)
+		if err != nil {
+			log.Fatal(err)
+		}
+		register.Plugins = json.RawMessage(pluginsJSON)
+	} else {
+		register.Plugins = json.RawMessage("[]")
 	}
-	register.Plugins = json.RawMessage(pluginsJSON)
 
-	// Convert actions to JSON
-	actionsJSON, err := json.Marshal(actions)
-	if err != nil {
-		log.Fatal(err)
+	if len(actions) > 0 {
+		// Convert actions to JSON
+		actionsJSON, err := json.Marshal(actions)
+		if err != nil {
+			log.Fatal(err)
+		}
+		register.Actions = json.RawMessage(actionsJSON)
+	} else {
+		register.Actions = json.RawMessage("[]")
 	}
-	register.Actions = json.RawMessage(actionsJSON)
 
-	// Convert payloadInjectors to JSON
-	payloadInjectorsJSON, err := json.Marshal(payloadInjectors)
-	if err != nil {
-		log.Fatal(err)
+	if len(payloadInjectors) > 0 {
+		// Convert payloadInjectors to JSON
+		payloadInjectorsJSON, err := json.Marshal(payloadInjectors)
+		if err != nil {
+			log.Fatal(err)
+		}
+		register.PayloadEndpoints = json.RawMessage(payloadInjectorsJSON)
+	} else {
+		register.PayloadEndpoints = json.RawMessage("[]")
 	}
-	register.PayloadEndpoints = json.RawMessage(payloadInjectorsJSON)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 
 	for i := 0; i < 3; i++ {
 		resp, err := http.DefaultClient.Do(req)
@@ -77,14 +92,14 @@ func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Act
 
 			runner_id := ""
 			if response.RunnerID == "" {
-				runner_id = config.Config.Alertflow.RunnerID
+				runner_id = cfg.Alertflow.RunnerID
 			} else {
 				runner_id = response.RunnerID
 			}
 
-			config.UpdateRunnerID(runner_id)
+			configManager.UpdateRunnerID(runner_id)
 
-			log.Info("Runner registered at AlertFlow. ID: ", config.GetRunnerID())
+			log.Info("Runner registered at AlertFlow. ID: ", configManager.GetRunnerID())
 			return
 		} else {
 			log.Errorf("Failed to register at AlertFlow, attempt %d", i+1)

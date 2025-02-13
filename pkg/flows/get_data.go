@@ -20,13 +20,16 @@ func GetFlowData(flowID string) (models.Flows, error) {
 		},
 	}
 
-	url := config.Config.Alertflow.URL + "/api/v1/flows/" + flowID
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
+	url := cfg.Alertflow.URL + "/api/v1/flows/" + flowID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
 		return models.Flows{}, err
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)

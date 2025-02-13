@@ -13,5 +13,9 @@ func checkActionVersionAgainstPluginVersion(step models.ExecutionSteps) (valid b
 		pluginVersion = pluginVersion[1:]
 	}
 
+	if step.ActionVersion == "" {
+		return true, pluginVersion
+	}
+
 	return pluginVersion == step.ActionVersion, pluginVersion
 }

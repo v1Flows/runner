@@ -1,146 +1,175 @@
 package plugin
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"sync"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/protocol"
+	"github.com/hashicorp/go-plugin"
 )
 
-type PluginProcess struct {
-	cmd    *exec.Cmd
-	stdin  *json.Encoder
-	stdout *json.Decoder
-	mutex  sync.Mutex
-}
-
 type Manager struct {
-	pluginDir     string
-	pluginTempDir string
-	plugins       map[string]*PluginProcess
-	mutex         sync.RWMutex
+	pluginDir string
+	config    config.Config
+	clients   map[string]*plugin.Client
+	mutex     sync.RWMutex
 }
 
-func NewManager(pluginDir, pluginTempDir string) *Manager {
-	return &Manager{
-		pluginDir:     pluginDir,
-		pluginTempDir: pluginTempDir,
-		plugins:       make(map[string]*PluginProcess),
+// getDefaultPluginDir returns the default plugin directory in user's home
+func getDefaultPluginDir() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current user: %w", err)
 	}
+	return filepath.Join(usr.HomeDir, ".alertflow", "plugins"), nil
 }
 
-func (m *Manager) DownloadPlugin(plugin config.PluginConf) error {
-	repoPath := filepath.Join(m.pluginTempDir, plugin.Name)
+func NewManager(config config.Config) (*Manager, error) {
+	pluginDir := config.PluginDir
 
-	// Clone and build as a standalone executable instead of a .so file
-	cmd := exec.Command("git", "clone", plugin.Url, repoPath)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to clone plugin repository: %w", err)
-	}
-
-	if plugin.Version != "" {
-		cmd = exec.Command("git", "-C", repoPath, "checkout", plugin.Version)
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to checkout version: %w", err)
+	// If no plugin directory specified, use default
+	if pluginDir == "" {
+		var err error
+		pluginDir, err = getDefaultPluginDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get default plugin directory: %w", err)
 		}
 	}
 
-	// Build as standalone executable
-	pwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
+	// Create plugin directory with parents
+	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create plugin directory %s: %w", pluginDir, err)
 	}
-	outputPath := filepath.Join(pwd, m.pluginDir, plugin.Name)
-	cmd = exec.Command("go", "build", "-o", outputPath)
-	cmd.Dir = repoPath
+
+	// Verify directory is writable
+	testFile := filepath.Join(pluginDir, ".write_test")
+	if err := os.WriteFile(testFile, []byte{}, 0644); err != nil {
+		return nil, fmt.Errorf("plugin directory %s is not writable: %w", pluginDir, err)
+	}
+	os.Remove(testFile)
+
+	return &Manager{
+		pluginDir: pluginDir,
+		config:    config,
+		clients:   make(map[string]*plugin.Client),
+	}, nil
+}
+
+// downloadFromGitHub clones or updates a plugin from GitHub
+func (m *Manager) downloadFromGitHub(ctx context.Context, pc config.PluginConfig) error {
+	pluginPath := filepath.Join(m.pluginDir, pc.Name)
+
+	// Create plugin-specific directory
+	if err := os.MkdirAll(pluginPath, 0755); err != nil {
+		return fmt.Errorf("failed to create plugin directory %s: %w", pluginPath, err)
+	}
+
+	// Check if repository already exists
+	if _, err := os.Stat(filepath.Join(pluginPath, ".git")); os.IsNotExist(err) {
+		// Clone repository
+		cmd := exec.Command("git", "clone", pc.Repository, pluginPath)
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to clone repository: %w", err)
+		}
+	} else {
+		// Update existing repository
+		cmd := exec.Command("git", "fetch", "origin")
+		cmd.Dir = pluginPath
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to fetch updates: %w", err)
+		}
+	}
+
+	// Checkout specific version
+	cmd := exec.Command("git", "checkout", pc.Version)
+	cmd.Dir = pluginPath
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to checkout version %s: %w", pc.Version, err)
+	}
+
+	// Build plugin
+	cmd = exec.Command("go", "build", "-o", filepath.Join(pluginPath, pc.Name))
+	cmd.Dir = pluginPath
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to build plugin: %w", err)
 	}
 
-	// Remove temporary directory
-	cmd = exec.Command("rm", "-rf", repoPath)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to remove temporary directory: %w", err)
-	}
-
 	return nil
 }
 
-func (m *Manager) StartPlugin(plugin config.PluginConf) error {
+// InstallPlugin downloads and builds a plugin
+func (m *Manager) InstallPlugin(ctx context.Context, name string) error {
+	var pluginConfig config.PluginConfig
+	for _, pc := range m.config.Plugins {
+		if pc.Name == name {
+			pluginConfig = pc
+			break
+		}
+	}
+
+	if pluginConfig.Name == "" {
+		return fmt.Errorf("plugin %s not found in configuration", name)
+	}
+
+	// Kill existing plugin instance if running
+	m.mutex.Lock()
+	if client, exists := m.clients[name]; exists {
+		client.Kill()
+		delete(m.clients, name)
+	}
+	m.mutex.Unlock()
+
+	return m.downloadFromGitHub(ctx, pluginConfig)
+}
+
+// LoadPlugin loads a plugin and returns its client
+func (m *Manager) LoadPlugin(name string) (*plugin.Client, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	pluginPath := filepath.Join(m.pluginDir, plugin.Name)
+	if client, exists := m.clients[name]; exists {
+		return client, nil
+	}
 
-	cmd := exec.Command(pluginPath)
-
-	stdin, err := cmd.StdinPipe()
+	client, err := m.startPlugin(name)
 	if err != nil {
-		return fmt.Errorf("failed to create stdin pipe: %w", err)
+		return nil, err
 	}
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to create stdout pipe: %w", err)
-	}
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start plugin: %w", err)
-	}
-
-	process := &PluginProcess{
-		cmd:    cmd,
-		stdin:  json.NewEncoder(stdin),
-		stdout: json.NewDecoder(stdout),
-		mutex:  sync.Mutex{},
-	}
-
-	m.plugins[plugin.Name] = process
-	return nil
+	m.clients[name] = client
+	return client, nil
 }
 
-func (m *Manager) ExecutePlugin(pluginName string, req protocol.Request) (*protocol.Response, error) {
-	m.mutex.RLock()
-	process, exists := m.plugins[pluginName]
-	m.mutex.RUnlock()
+// startPlugin initializes and starts a new plugin client
+func (m *Manager) startPlugin(name string) (*plugin.Client, error) {
+	pluginPath := filepath.Join(m.pluginDir, name)
 
-	if !exists {
-		return nil, fmt.Errorf("plugin %s not found", pluginName)
+	config := &plugin.ClientConfig{
+		HandshakeConfig: Handshake,
+		Plugins: map[string]plugin.Plugin{
+			name: &GRPCPlugin{},
+		},
+		Cmd: exec.Command(pluginPath),
+		AllowedProtocols: []plugin.Protocol{
+			plugin.ProtocolGRPC,
+		},
 	}
 
-	process.mutex.Lock()
-	defer process.mutex.Unlock()
-
-	if err := process.stdin.Encode(req); err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-
-	var resp protocol.Response
-	if err := process.stdout.Decode(&resp); err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	return &resp, nil
+	return plugin.NewClient(config), nil
 }
 
-func (m *Manager) StopPlugin(pluginName string) error {
+// Add cleanup method
+func (m *Manager) Cleanup() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	process, exists := m.plugins[pluginName]
-	if !exists {
-		return nil
+	for name, client := range m.clients {
+		client.Kill()
+		delete(m.clients, name)
 	}
-
-	if err := process.cmd.Process.Signal(os.Interrupt); err != nil {
-		return fmt.Errorf("failed to stop plugin: %w", err)
-	}
-
-	delete(m.plugins, pluginName)
-	return nil
 }

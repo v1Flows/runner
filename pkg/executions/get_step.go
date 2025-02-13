@@ -20,13 +20,16 @@ func GetStep(executionID string, stepID string) (models.ExecutionSteps, error) {
 		},
 	}
 
-	url := config.Config.Alertflow.URL + "/api/v1/executions/" + executionID + "/steps/" + stepID
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
+	url := cfg.Alertflow.URL + "/api/v1/executions/" + executionID + "/steps/" + stepID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
 		return models.ExecutionSteps{}, err
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)

@@ -12,15 +12,17 @@ import (
 )
 
 func SendStep(execution models.Execution, step models.ExecutionSteps) (models.ExecutionSteps, error) {
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String()+"/steps", payloadBuf)
+	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/executions/"+execution.ID.String()+"/steps", payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Error(err)

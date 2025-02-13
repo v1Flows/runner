@@ -5,6 +5,7 @@ import (
 
 	"github.com/AlertFlow/runner/config"
 	internal_executions "github.com/AlertFlow/runner/internal/executions"
+	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/AlertFlow/runner/pkg/models"
@@ -12,14 +13,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(execution models.Execution) {
+func startProcessing(manager *plugin.Manager, execution models.Execution) {
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
 	// ensure that runnerID is empty or equal to the current runnerID
-	if execution.RunnerID != "" && execution.RunnerID != config.Config.Alertflow.RunnerID {
+	if execution.RunnerID != "" && execution.RunnerID != cfg.Alertflow.RunnerID {
 		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
 		return
 	}
 
-	execution.RunnerID = config.Config.Alertflow.RunnerID
+	execution.RunnerID = cfg.Alertflow.RunnerID
 	execution.Pending = false
 	execution.Running = true
 	execution.ExecutedAt = time.Now()
@@ -45,7 +49,7 @@ func startProcessing(execution models.Execution) {
 	var payload models.Payload
 	for _, step := range initialSteps {
 		if step.Pending {
-			data, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, initialSteps, step, execution)
+			data, _, canceled, no_pattern_match, failed, err := processStep(manager, flow, payload, initialSteps, step, execution)
 			if err != nil {
 				executions.EndWithError(execution)
 				return
@@ -86,7 +90,7 @@ func startProcessing(execution models.Execution) {
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Pending {
-				_, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+				_, _, canceled, no_pattern_match, failed, err := processStep(manager, flow, payload, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					executions.EndWithError(execution)
 					return
@@ -117,7 +121,7 @@ func startProcessing(execution models.Execution) {
 		for _, step := range flowActionStepsWithIDs {
 			if step.Pending {
 				go func() {
-					_, finished, cancleded, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+					_, finished, cancleded, no_pattern_match, failed, err := processStep(manager, flow, payload, flowActionStepsWithIDs, step, execution)
 					if err != nil {
 						executions.EndWithError(execution)
 						return
