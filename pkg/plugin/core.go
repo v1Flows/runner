@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 
+	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 )
@@ -75,9 +76,15 @@ func (p *GRPCPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, 
 	return &GRPCClient{client: NewPluginClient(c)}, nil
 }
 
-// Handshake is a common handshake that is shared by plugin and host
+// Handshake is used to verify plugin compatibility
 var Handshake = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
 	MagicCookieKey:   "ALERTFLOW_PLUGIN",
 	MagicCookieValue: "alertflow_plugin_v1",
+}
+
+// PluginInterface defines what a plugin must implement
+type PluginInterface interface {
+	Details() (models.Plugin, error)
+	Execute(input string) (string, error)
 }
