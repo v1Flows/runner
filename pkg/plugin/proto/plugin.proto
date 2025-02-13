@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package alertflow.plugin;
+
+option go_package = "github.com/AlertFlow/runner/pkg/plugin/proto";
+
+message PluginRequest {
+  string id = 1;
+  map<string, string> parameters = 2;
+  bytes payload = 3;
+}
+
+message PluginResponse {
+  string id = 1;
+  bool success = 2;
+  string message = 3;
+  map<string, string> data = 4;
+}
+
+message StatusUpdate {
+  string id = 1;
+  string status = 2;
+  string message = 3;
+  map<string, string> metadata = 4;
+}
+
+service AlertFlowPlugin {
+  rpc Execute(PluginRequest) returns (PluginResponse) {}
+  rpc StreamStatus(PluginRequest) returns (stream StatusUpdate) {}
+}
