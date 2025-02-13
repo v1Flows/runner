@@ -2,32 +2,32 @@ syntax = "proto3";
 
 package plugin;
 
-option go_package = "github.com/AlertFlow/runner/internal/plugin;plugin";
-
-import "google/protobuf/timestamp.proto";
+option go_package = "github.com/AlertFlow/runner/pkg/plugin";
 
 service Plugin {
-  rpc Execute (Request) returns (Response) {}
-  rpc StreamUpdates (Request) returns (stream StatusUpdate) {}
+  rpc Execute(Request) returns (Response) {}
+  rpc StreamUpdates(Request) returns (stream StatusUpdate) {}
+  rpc Details(Empty) returns (PluginDetails) {}
 }
 
+message Empty {}
+
 message Request {
-  string id = 1;
-  string operation = 2;
-  map<string, string> data = 3;
-  google.protobuf.Timestamp timestamp = 4;
+  string input = 1;
 }
 
 message Response {
-  string id = 1;
+  string output = 1;
   bool success = 2;
-  map<string, string> result = 3;
-  string error = 4;
-  google.protobuf.Timestamp timestamp = 5;
 }
 
 message StatusUpdate {
-  int32 progress_percent = 1;
-  string status_message = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  string status = 1;
+  int32 progress = 2;
+}
+
+message PluginDetails {
+  string name = 1;
+  string version = 2;
+  string description = 3;
 }
