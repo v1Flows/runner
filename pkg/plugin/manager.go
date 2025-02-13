@@ -152,7 +152,10 @@ func (m *Manager) startPlugin(name string) (*plugin.Client, error) {
 	config := &plugin.ClientConfig{
 		HandshakeConfig: Handshake,
 		Plugins: map[string]plugin.Plugin{
-			name: &GRPCPlugin{},
+			name: &GRPCPlugin{
+				// You can optionally provide a default implementation here
+				Impl: nil,
+			},
 		},
 		Cmd: exec.Command(pluginPath),
 		AllowedProtocols: []plugin.Protocol{

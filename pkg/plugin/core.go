@@ -17,9 +17,22 @@ type Plugin struct {
 	Impl PluginHandler
 }
 
+// GRPCPlugin implements the go-plugin.GRPCPlugin interface
+type GRPCPlugin struct {
+	plugin.Plugin
+	Impl PluginHandler
+}
+
 type GRPCServer struct {
 	pb.UnimplementedAlertFlowPluginServer
 	Impl PluginHandler
+}
+
+// Handshake is a shared configuration between the host and plugins
+var Handshake = plugin.HandshakeConfig{
+	ProtocolVersion:  1,
+	MagicCookieKey:   "ALERTFLOW_PLUGIN",
+	MagicCookieValue: "d7e562f1-3d77-4c84-9e87-f4f19e766d0d",
 }
 
 func (s *GRPCServer) Execute(ctx context.Context, req *pb.PluginRequest) (*pb.PluginResponse, error) {
@@ -55,11 +68,13 @@ func (c *GRPCClient) StreamStatus(req *pb.PluginRequest, server pb.AlertFlowPlug
 	}
 }
 
-func (p *Plugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
+// GRPCServer registers the plugin server implementation
+func (p *GRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
 	pb.RegisterAlertFlowPluginServer(s, &GRPCServer{Impl: p.Impl})
 	return nil
 }
 
-func (p *Plugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+// GRPCClient creates a new client implementation
+func (p *GRPCPlugin) GRPCClient(_ context.Context, _ *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &GRPCClient{client: pb.NewAlertFlowPluginClient(c)}, nil
 }
