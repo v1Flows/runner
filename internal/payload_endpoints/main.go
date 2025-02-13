@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func InitPayloadRouter(port int, plugins plugin.Plugin, payloadEndpoints []models.PayloadEndpoint) {
+func InitPayloadRouter(port int, plugin plugin.Plugin, payloadEndpoints []models.PayloadEndpoint) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	log.Info("Open Payload Port: ", port)
@@ -19,9 +19,7 @@ func InitPayloadRouter(port int, plugins plugin.Plugin, payloadEndpoints []model
 	for _, endpoint := range payloadEndpoints {
 		log.Infof("Open %s Endpoint: %s", endpoint.Name, endpoint.Endpoint)
 		payload.POST(endpoint.Endpoint, func(c *gin.Context) {
-			if plugin.Details().Name == endpoint.Name {
-				plugin.Execute(c)
-			}
+			plugin.Handle(c)
 		})
 	}
 

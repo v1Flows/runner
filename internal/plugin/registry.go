@@ -10,7 +10,7 @@ type Registry struct {
 	mu      sync.RWMutex
 }
 
-func NewRegistry() *Registry {
+func newRegistry() *Registry {
 	return &Registry{
 		plugins: make(map[string]Plugin),
 	}
@@ -23,10 +23,6 @@ func (r *Registry) Register(p Plugin) error {
 	details := p.Details()
 	if _, exists := r.plugins[details.Name]; exists {
 		return fmt.Errorf("plugin %s already registered", details.Name)
-	}
-
-	if err := p.Validate(); err != nil {
-		return fmt.Errorf("plugin %s validation failed: %w", details.Name, err)
 	}
 
 	r.plugins[details.Name] = p

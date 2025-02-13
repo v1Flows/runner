@@ -1,49 +1,17 @@
 package plugin
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/models"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func Init() ([]models.Plugin, []models.ActionDetails, []models.PayloadEndpoint) {
-	pluginDir := "plugins"
-	pluginTempDir := "plugins_temp"
+	// pluginDir := "plugins"
+	// pluginTempDir := "plugins_temp"
 
-	for _, plugin := range config.Config.Plugins {
-		// Check if the plugin is already installed and up-to-date
-		if isPluginPresent(plugin.Name, pluginDir) && isPluginUpToDate(plugin.Name, plugin.Version, pluginDir) {
-			log.Infof("Plugin %s is already up-to-date", plugin.Name)
-			continue
-		} else {
-			// Remove the plugin from the versions file
-			err := removePluginFromVersionsFile(plugin.Name, pluginDir)
-			if err != nil {
-				log.Errorf("Failed to remove plugin %s from versions file: %v", plugin.Name, err)
-			}
-		}
+	registry := newRegistry()
 
-		// Clone and build the plugin
-		log.Infof("Cloning and building plugin %s", plugin.Name)
-		err := cloneAndBuildPlugin(plugin.Url, pluginDir, pluginTempDir, plugin.Name, plugin.Version)
-		if err != nil {
-			log.Errorf("Failed to clone and build plugin %s: %v", plugin.Name, err)
-		}
-	}
-
-	// cleanup the temp directory
-	err := os.RemoveAll(pluginTempDir)
-	if err != nil {
-		log.Errorf("Failed to remove temp directory: %v", err)
-	}
-
-	loader := NewLoader(pluginDir)
-
-	fmt.Println(loader)
+	logPlugin := logPlugin.New()
+	registry.Register(&ActionPlugin{})
 
 	// pluginsMap := []models.Plugin{}
 	// actions := make([]models.ActionDetails, 0)

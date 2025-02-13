@@ -13,6 +13,6 @@ type Plugin interface {
 	// Execute runs the action with given input and returns output or error
 	Execute(c *gin.Context) error
 
-	// Validate validates the plugin configuration
-	Validate() error
+	// Handles payload endpoints for incoming data
+	Handle(c *gin.Context) error
 }
