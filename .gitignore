@@ -30,10 +30,6 @@ alertflow-runner
 ./plugins_temp
 .versions
 
-# Generated protobuf files
-*.pb.go
-*_grpc.pb.go
-
 # Binary files
 /bin/
 
