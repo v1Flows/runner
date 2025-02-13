@@ -6,7 +6,7 @@ import (
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/common"
 	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
-	"github.com/AlertFlow/runner/internal/plugins"
+	"github.com/AlertFlow/runner/internal/plugin"
 	"github.com/AlertFlow/runner/internal/runner"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -50,10 +50,10 @@ func main() {
 
 	logging(config.LogLevel)
 
-	plugins, pluginsMap, actions, payloadEndpoints := plugins.Init()
+	pluginsMap, actions, payloadEndpoints := plugin.Init()
 
 	common.RegisterActions(actions)
-	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpoints)
+	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, nil, payloadEndpoints)
 
 	runner.RegisterAtAPI(version, pluginsMap, actions, payloadEndpoints)
 	go runner.SendHeartbeat()

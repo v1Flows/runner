@@ -1,17 +1,50 @@
 package plugin
 
 import (
+	"fmt"
+	"log"
+
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/AlertFlow/runner/pkg/protocol"
 )
 
 func Init() ([]models.Plugin, []models.ActionDetails, []models.PayloadEndpoint) {
 	// pluginDir := "plugins"
 	// pluginTempDir := "plugins_temp"
 
-	registry := newRegistry()
+	manager := NewManager("plugins", "plugins_temp")
 
-	logPlugin := logPlugin.New()
-	registry.Register(&ActionPlugin{})
+	if err := manager.DownloadPlugin(config.PluginConf{
+		Name:    "Log",
+		Url:     "https://github.com/AlertFlow/rp-log",
+		Version: "refactor",
+	}); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := manager.StartPlugin(config.PluginConf{Name: "Log"}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Execute plugin
+	resp, err := manager.ExecutePlugin("Log", protocol.Request{
+		Action: "details",
+		Data: map[string]interface{}{
+			"param1": "value1",
+		},
+	})
+
+	fmt.Println(resp.Plugin, err)
+
+	resp, err = manager.ExecutePlugin("Log", protocol.Request{
+		Action: "process",
+		Data: map[string]interface{}{
+			"param1": "value1",
+		},
+	})
+
+	fmt.Println(resp, err)
 
 	// pluginsMap := []models.Plugin{}
 	// actions := make([]models.ActionDetails, 0)

@@ -51,11 +51,21 @@ func (m *Manager) DownloadPlugin(plugin config.PluginConf) error {
 	}
 
 	// Build as standalone executable
-	outputPath := filepath.Join(m.pluginDir, plugin.Name)
+	pwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
+	outputPath := filepath.Join(pwd, m.pluginDir, plugin.Name)
 	cmd = exec.Command("go", "build", "-o", outputPath)
 	cmd.Dir = repoPath
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to build plugin: %w", err)
+	}
+
+	// Remove temporary directory
+	cmd = exec.Command("rm", "-rf", repoPath)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to remove temporary directory: %w", err)
 	}
 
 	return nil
@@ -66,6 +76,7 @@ func (m *Manager) StartPlugin(plugin config.PluginConf) error {
 	defer m.mutex.Unlock()
 
 	pluginPath := filepath.Join(m.pluginDir, plugin.Name)
+
 	cmd := exec.Command(pluginPath)
 
 	stdin, err := cmd.StdinPipe()
