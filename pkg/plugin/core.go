@@ -10,13 +10,9 @@ import (
 
 // Handler defines the interface that plugins must implement
 type Handler interface {
+	Details() *models.Plugin
 	Execute(ctx context.Context, req *Request) (*Response, error)
-	StreamUpdates(req *Request, updates UpdateServer) error
-}
-
-// UpdateServer interface for streaming updates
-type UpdateServer interface {
-	Send(*StatusUpdate) error
+	StreamUpdates(req *Request, updates Plugin_StreamUpdatesServer) error
 }
 
 // GRPCPlugin implements plugin.GRPCPlugin
@@ -81,10 +77,4 @@ var Handshake = plugin.HandshakeConfig{
 	ProtocolVersion:  1,
 	MagicCookieKey:   "ALERTFLOW_PLUGIN",
 	MagicCookieValue: "alertflow_plugin_v1",
-}
-
-// PluginInterface defines what a plugin must implement
-type PluginInterface interface {
-	Details() (models.Plugin, error)
-	Execute(input string) (string, error)
 }
