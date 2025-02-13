@@ -44,7 +44,7 @@ func main() {
 
 	log.Info("Loading config")
 	configManager := config.GetInstance()
-	err := configManager.LoadConfig("project_auto_config.yaml")
+	err := configManager.LoadConfig(*configFile)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}

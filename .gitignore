@@ -30,5 +30,13 @@ alertflow-runner
 ./plugins_temp
 .versions
 
-# Generated protobuf code
+# Generated protobuf files
 *.pb.go
+*_grpc.pb.go
+
+# Binary files
+/bin/
+
+# IDE specific files
+.idea/
+.vscode/
