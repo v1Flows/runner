@@ -6,19 +6,17 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToRunning(execution models.Execution) {
-	execution.Running = true
-	execution.Paused = false
-	execution.InteractionRequired = false
+func SetToRunning(execution bmodels.Executions) {
+	execution.Status = "running"
 	Running(execution)
 }
 
-func Running(execution models.Execution) {
+func Running(execution bmodels.Executions) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 

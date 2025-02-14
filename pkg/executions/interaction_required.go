@@ -6,21 +6,17 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToInteractionRequired(execution models.Execution) {
-	execution.Running = false
-	execution.Paused = false
-	execution.Pending = false
-	execution.Canceled = false
-	execution.InteractionRequired = true
+func SetToInteractionRequired(execution bmodels.Executions) {
+	execution.Status = "interactionRequired"
 	InteractionRequired(execution)
 }
 
-func InteractionRequired(execution models.Execution) {
+func InteractionRequired(execution bmodels.Executions) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 

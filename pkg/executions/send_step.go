@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendStep(execution models.Execution, step models.ExecutionSteps) (models.ExecutionSteps, error) {
+func SendStep(execution bmodels.Executions, step bmodels.ExecutionSteps) (bmodels.ExecutionSteps, error) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
@@ -32,11 +32,11 @@ func SendStep(execution models.Execution, step models.ExecutionSteps) (models.Ex
 		log.Error("Failed to send execution step at API")
 	}
 
-	var stepResponse models.ExecutionSteps
+	var stepResponse bmodels.ExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&stepResponse)
 	if err != nil {
 		log.Error(err)
-		return models.ExecutionSteps{}, err
+		return bmodels.ExecutionSteps{}, err
 	}
 
 	return stepResponse, nil

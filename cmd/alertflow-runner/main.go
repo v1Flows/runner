@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/common"
+	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/plugins"
 
@@ -53,21 +57,32 @@ func main() {
 
 	logging(cfg.LogLevel)
 
-	plugins.Init(cfg)
+	loadedPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	loadedPlugins := plugins.GetLoadedPlugins()
+	result, err := loadedPlugins["alertmanager"].Execute(map[string]string{"target": "example.com"})
+	if err != nil {
+		log.Fatalf("Error executing plugin %s: %v", "test", err)
+	}
 
-	fmt.Println("Loaded Plugins: ", loadedPlugins)
+	fmt.Printf("Plugin %s Execute Result: %s\n", "test", result)
 
-	// common.RegisterActions(actions)
-	// go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, plugins, payloadEndpoints)
+	common.RegisterActions(actionPlugins)
+	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, endpointPlugins)
 
 	// runner.RegisterAtAPI(version, plugins, actions, payloadEndpoints)
 	go runner.SendHeartbeat()
 
 	Init(cfg)
 
-	<-make(chan struct{})
+	// <-make(chan struct{})
+	// Handle graceful shutdown
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
+
+	log.Info("Shutting down...")
+	plugins.ShutdownPlugins()
+	log.Info("Shutdown complete")
 }
 
 func Init(cfg config.Config) {

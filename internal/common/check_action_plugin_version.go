@@ -1,10 +1,10 @@
 package common
 
 import (
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func checkActionVersionAgainstPluginVersion(step models.ExecutionSteps) (valid bool, pluginVersion string) {
+func checkActionVersionAgainstPluginVersion(step bmodels.ExecutionSteps) (valid bool, pluginVersion string) {
 	pluginVersion = "1.0.0"
 
 	// Remove the 'v' prefix from the plugin version if it exists
@@ -12,9 +12,9 @@ func checkActionVersionAgainstPluginVersion(step models.ExecutionSteps) (valid b
 		pluginVersion = pluginVersion[1:]
 	}
 
-	if step.ActionVersion == "" {
+	if step.Action.Version == "" {
 		return true, pluginVersion
 	}
 
-	return pluginVersion == step.ActionVersion, pluginVersion
+	return pluginVersion == step.Action.Version, pluginVersion
 }

@@ -8,43 +8,36 @@ import (
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/runner"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func EndCanceled(execution models.Execution) {
+func EndCanceled(execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = false
-	execution.Canceled = true
+	execution.Status = "canceled"
 	End(execution)
 }
 
-func EndNoPatternMatch(execution models.Execution) {
+func EndNoPatternMatch(execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = false
-	execution.NoPatternMatch = true
+	execution.Status = "noPatternMatch"
 	End(execution)
 }
 
-func EndWithError(execution models.Execution) {
+func EndWithError(execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = true
+	execution.Status = "error"
 	End(execution)
 }
 
-func EndSuccess(execution models.Execution) {
-	execution.Running = false
-	execution.Error = false
-	execution.Finished = true
+func EndSuccess(execution bmodels.Executions) {
+	execution.Status = "success"
 	execution.FinishedAt = time.Now()
 	End(execution)
 }
 
-func End(execution models.Execution) {
+func End(execution bmodels.Executions) {
 	runner.Busy(false)
 
 	configManager := config.GetInstance()

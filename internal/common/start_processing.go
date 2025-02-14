@@ -7,12 +7,12 @@ import (
 	internal_executions "github.com/AlertFlow/runner/internal/executions"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/executions"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(execution models.Execution) {
+func startProcessing(execution bmodels.Executions) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
@@ -23,8 +23,7 @@ func startProcessing(execution models.Execution) {
 	}
 
 	execution.RunnerID = cfg.Alertflow.RunnerID
-	execution.Pending = false
-	execution.Running = true
+	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
 	err := executions.Update(execution)
@@ -44,8 +43,8 @@ func startProcessing(execution models.Execution) {
 	}
 
 	// process each initial step where pending is true
-	var flow models.Flows
-	var payload models.Payload
+	var flow bmodels.Flows
+	var payload bmodels.Payloads
 	for _, step := range initialSteps {
 		if step.Pending {
 			data, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, initialSteps, step, execution)
@@ -55,11 +54,11 @@ func startProcessing(execution models.Execution) {
 			}
 
 			if data["flow"] != nil {
-				flow = data["flow"].(models.Flows)
+				flow = data["flow"].(bmodels.Flows)
 			}
 
 			if data["payload"] != nil {
-				payload = data["payload"].(models.Payload)
+				payload = data["payload"].(bmodels.Payloads)
 			}
 
 			if failed {

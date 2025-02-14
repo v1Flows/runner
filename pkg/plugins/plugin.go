@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/hashicorp/go-plugin"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
 // Plugin interface that all plugins must implement
@@ -19,9 +20,22 @@ type PluginRPC struct {
 	Client *rpc.Client
 }
 
-func (p *PluginRPC) Execute(args map[string]string) (string, error) {
-	var resp string
-	err := p.Client.Call("Plugin.Execute", args, &resp)
+type ExecuteRequest struct {
+	Args      map[string]string
+	Flow      bmodels.Flows
+	Execution bmodels.Executions
+	Step      bmodels.ExecutionSteps
+	Payload   bmodels.Payloads
+}
+
+type ExecuteResponse struct {
+	Success bool
+	Error   string
+}
+
+func (p *PluginRPC) Execute(request ExecuteRequest) (ExecuteResponse, error) {
+	var resp ExecuteResponse
+	err := p.Client.Call("Plugin.Execute", request, &resp)
 	return resp, err
 }
 

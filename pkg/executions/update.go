@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Update(execution models.Execution) error {
+func Update(execution bmodels.Executions) error {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 

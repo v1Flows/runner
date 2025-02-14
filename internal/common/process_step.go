@@ -5,20 +5,22 @@ import (
 
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-var actions []models.ActionDetails
+var actions []bmodels.Actions
 
-func RegisterActions(loadedActions []models.ActionDetails) {
-	actions = loadedActions
+func RegisterActions(loadedPluginActions []models.Plugin) {
+	for _, plugin := range loadedPluginActions {
+		actions = append(actions, plugin.Action)
+	}
 }
 
-func processStep(flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
+func processStep(flow bmodels.Flows, payload bmodels.Payloads, steps []bmodels.ExecutionSteps, step bmodels.ExecutionSteps, execution bmodels.Executions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
-	step.Pending = false
-	step.Running = true
+	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
@@ -31,10 +33,8 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 
 	if !valid {
 		// dont execute step and quit execution
-		step.ActionMessages = append(step.ActionMessages, "Action not compatible with plugin version", "Plugin Version: "+pluginVersion+" Action Version: "+step.ActionVersion, "Stopping execution")
-		step.Running = false
-		step.Error = true
-		step.Finished = true
+		step.Messages = append(step.Messages, "Action not compatible with plugin version", "Plugin Version: "+pluginVersion+" Action Version: "+step.Action.Version, "Stopping execution")
+		step.Status = "error"
 		step.FinishedAt = time.Now()
 
 		if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
@@ -46,9 +46,9 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 	}
 
 	var found bool
-	var action models.ActionDetails
+	var action bmodels.Actions
 	for _, a := range actions {
-		if a.ID == step.ActionType {
+		if a.ID == step.Action.ID {
 			found = true
 			action = a
 			break
@@ -58,12 +58,10 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 	}
 
 	if !found {
-		log.Warnf("Action %s not found", step.ActionType)
+		log.Warnf("Action %s not found", step.Action.Name)
 
-		step.ActionMessages = append(step.ActionMessages, "Action not found")
-		step.Running = false
-		step.Error = true
-		step.Finished = true
+		step.Messages = append(step.Messages, "Action not found")
+		step.Status = "error"
 		step.FinishedAt = time.Now()
 
 		if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
@@ -74,10 +72,10 @@ func processStep(flow models.Flows, payload models.Payload, steps []models.Execu
 		return nil, false, false, false, true, nil
 	}
 
-	var flow_action models.Actions
+	var flow_action bmodels.Actions
 	if len(flow.Actions) > 0 {
 		for _, flowAction := range flow.Actions {
-			if flowAction.ID.String() == step.ActionID {
+			if flowAction.ID == step.Action.ID {
 				flow_action = flowAction
 			}
 		}

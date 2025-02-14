@@ -2,24 +2,24 @@
 package plugins
 
 import (
-	"fmt"
 	"log"
 	"os/exec"
 
 	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/hashicorp/go-plugin"
 )
 
 var loadedPlugins = make(map[string]Plugin)
+var actionPlugins = make([]models.Plugin, 0)
+var endpointPlugins = make([]models.Plugin, 0)
+var pluginClients = make([]*plugin.Client, 0) // Track plugin clients
 
-func Init(cfg config.Config) {
-
+func Init(cfg config.Config) (loadedPlugin map[string]Plugin, actionPlugins []models.Plugin, endpointPlugins []models.Plugin) {
 	pluginPaths, err := DownloadAndBuildPlugins(cfg.Plugins, ".plugins_temp", cfg.PluginDir)
 	if err != nil {
 		log.Fatalf("Error downloading and building plugins: %v", err)
 	}
-
-	fmt.Println("Plugin Paths: ", pluginPaths)
 
 	for name, path := range pluginPaths {
 		client := plugin.NewClient(&plugin.ClientConfig{
@@ -34,8 +34,6 @@ func Init(cfg config.Config) {
 			Cmd: exec.Command(path),
 		})
 
-		defer client.Kill()
-
 		rpcClient, err := client.Client()
 		if err != nil {
 			log.Fatalf("Error loading plugin %s: %v", name, err)
@@ -48,14 +46,7 @@ func Init(cfg config.Config) {
 
 		plugin := raw.(Plugin)
 		loadedPlugins[name] = plugin
-
-		// Execute the plugin
-		result, err := plugin.Execute(map[string]string{"target": "example.com"})
-		if err != nil {
-			log.Fatalf("Error executing plugin %s: %v", name, err)
-		}
-
-		fmt.Printf("Plugin %s Execute Result: %s\n", name, result)
+		pluginClients = append(pluginClients, client) // Store the client
 
 		// Get plugin info
 		info, err := plugin.Info()
@@ -63,10 +54,19 @@ func Init(cfg config.Config) {
 			log.Fatalf("Error getting info for plugin %s: %v", name, err)
 		}
 
-		fmt.Printf("Plugin %s Info: %+v\n", name, info)
+		if info.Type == "payload_endpoint" {
+			endpointPlugins = append(endpointPlugins, info)
+		} else if info.Type == "action" {
+			actionPlugins = append(actionPlugins, info)
+		}
 	}
+
+	return loadedPlugins, actionPlugins, endpointPlugins
 }
 
-func GetLoadedPlugins() map[string]Plugin {
-	return loadedPlugins
+// ShutdownPlugins terminates all plugin clients
+func ShutdownPlugins() {
+	for _, client := range pluginClients {
+		client.Kill()
+	}
 }

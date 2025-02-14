@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendPayload(payload models.Payload) {
+func SendPayload(payload bmodels.Payloads) {
 	log.Info("Sending Payload")
 
 	configManager := config.GetInstance()

@@ -6,18 +6,17 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToPaused(execution models.Execution) {
-	execution.Running = false
-	execution.Paused = true
+func SetToPaused(execution bmodels.Executions) {
+	execution.Status = "paused"
 	Pause(execution)
 }
 
-func Pause(execution models.Execution) {
+func Pause(execution bmodels.Executions) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
