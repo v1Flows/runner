@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/common"
-	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
 	"github.com/AlertFlow/runner/internal/runner"
-	"github.com/AlertFlow/runner/pkg/plugin"
+	"github.com/AlertFlow/runner/pkg/plugins"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -53,33 +53,35 @@ func main() {
 
 	logging(cfg.LogLevel)
 
-	manager, plugins, actions, payloadEndpoints := plugin.Init(cfg)
+	plugins.Init(cfg)
 
-	common.RegisterActions(actions)
-	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, manager, plugins, payloadEndpoints)
+	loadedPlugins := plugins.GetLoadedPlugins()
 
-	runner.RegisterAtAPI(version, plugins, actions, payloadEndpoints)
+	fmt.Println("Loaded Plugins: ", loadedPlugins)
+
+	// common.RegisterActions(actions)
+	// go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, plugins, payloadEndpoints)
+
+	// runner.RegisterAtAPI(version, plugins, actions, payloadEndpoints)
 	go runner.SendHeartbeat()
 
-	Init(manager, cfg)
+	Init(cfg)
 
 	<-make(chan struct{})
-
-	defer manager.Cleanup()
 }
 
-func Init(manager *plugin.Manager, cfg config.Config) {
+func Init(cfg config.Config) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(manager)
+		go common.StartWorker()
 		log.Info("Starting Payload Listener")
 		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(manager)
+		go common.StartWorker()
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")

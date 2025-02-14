@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -128,6 +129,14 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 	}
 	if config.PayloadEndpoints.Port == 0 {
 		config.PayloadEndpoints.Port = defaultPort
+	}
+	if config.PluginDir == "" {
+		// get the current working directory and add plugins folder
+		currentDir, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("failed to get current working directory: %v", err)
+		}
+		config.PluginDir = currentDir + "/plugins"
 	}
 }
 

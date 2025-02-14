@@ -5,7 +5,6 @@ import (
 
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/AlertFlow/runner/pkg/models"
-	"github.com/AlertFlow/runner/pkg/plugin"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -16,7 +15,7 @@ func RegisterActions(loadedActions []models.ActionDetails) {
 	actions = loadedActions
 }
 
-func processStep(pluginManager *plugin.Manager, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
+func processStep(flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Execution) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
 	step.Pending = false
 	step.Running = true

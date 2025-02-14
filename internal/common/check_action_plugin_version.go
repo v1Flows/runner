@@ -2,11 +2,10 @@ package common
 
 import (
 	"github.com/AlertFlow/runner/pkg/models"
-	"github.com/AlertFlow/runner/pkg/plugin"
 )
 
 func checkActionVersionAgainstPluginVersion(step models.ExecutionSteps) (valid bool, pluginVersion string) {
-	pluginVersion = plugin.GetPluginVersion(step.ActionType)
+	pluginVersion = "1.0.0"
 
 	// Remove the 'v' prefix from the plugin version if it exists
 	if len(pluginVersion) > 0 && pluginVersion[0] == 'v' {

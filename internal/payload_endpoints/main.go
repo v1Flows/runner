@@ -4,13 +4,12 @@ import (
 	"strconv"
 
 	"github.com/AlertFlow/runner/pkg/models"
-	"github.com/AlertFlow/runner/pkg/plugin"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
-func InitPayloadRouter(port int, pluginManager *plugin.Manager, plugins []models.Plugin, payloadEndpoints []models.PayloadEndpoint) {
+func InitPayloadRouter(port int, plugins []models.Plugin, payloadEndpoints []models.PayloadEndpoint) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	log.Info("Open Payload Port: ", port)

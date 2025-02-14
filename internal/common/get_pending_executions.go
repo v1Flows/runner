@@ -7,12 +7,11 @@ import (
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/models"
-	"github.com/AlertFlow/runner/pkg/plugin"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func StartWorker(manager *plugin.Manager) {
+func StartWorker() {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -61,7 +60,7 @@ func StartWorker(manager *plugin.Manager) {
 
 			for _, execution := range executions.Executions {
 				// Process one execution at a time
-				startProcessing(manager, execution)
+				startProcessing(execution)
 			}
 			break
 		}

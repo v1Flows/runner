@@ -4,20 +4,14 @@ package plugins
 import (
 	"net/rpc"
 
+	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/hashicorp/go-plugin"
 )
 
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	Execute(args map[string]string) (string, error)
-	Info() (PluginInfo, error)
-}
-
-// PluginInfo holds metadata about the plugin
-type PluginInfo struct {
-	Name    string
-	Version string
-	Author  string
+	Info() (models.Plugin, error)
 }
 
 // PluginRPC is an implementation of net/rpc for Plugin
@@ -31,8 +25,8 @@ func (p *PluginRPC) Execute(args map[string]string) (string, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) Info() (PluginInfo, error) {
-	var resp PluginInfo
+func (p *PluginRPC) Info() (models.Plugin, error) {
+	var resp models.Plugin
 	err := p.Client.Call("Plugin.Info", new(interface{}), &resp)
 	return resp, err
 }
@@ -61,7 +55,7 @@ func (s *PluginRPCServer) Execute(args map[string]string, resp *string) error {
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *PluginInfo) error {
+func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugin) error {
 	result, err := s.Impl.Info()
 	*resp = result
 	return err
