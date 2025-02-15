@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -57,24 +56,25 @@ func main() {
 
 	logging(cfg.LogLevel)
 
-	loadedPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
+	_, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	result, err := loadedPlugins["alertmanager"].Execute(map[string]string{"target": "example.com"})
-	if err != nil {
-		log.Fatalf("Error executing plugin %s: %v", "test", err)
-	}
+	// result, err := loadedPlugins["alertmanager"].Execute(map[string]string{"target": "example.com"})
+	// if err != nil {
+	// 	log.Fatalf("Error executing plugin %s: %v", "test", err)
+	// }
 
-	fmt.Printf("Plugin %s Execute Result: %s\n", "test", result)
+	// fmt.Printf("Plugin %s Execute Result: %s\n", "test", result)
 
-	common.RegisterActions(actionPlugins)
+	actions := common.RegisterActions(actionPlugins)
+	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
+
 	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, endpointPlugins)
 
-	// runner.RegisterAtAPI(version, plugins, actions, payloadEndpoints)
+	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 	go runner.SendHeartbeat()
 
 	Init(cfg)
 
-	// <-make(chan struct{})
 	// Handle graceful shutdown
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

@@ -8,55 +8,30 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/google/uuid"
 
 	log "github.com/sirupsen/logrus"
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func RegisterAtAPI(version string, plugins []models.Plugin, actions []bmodels.Actions, payloadInjectors []models.PayloadEndpoint) {
+func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Actions, payloadEndpoints []models.PayloadEndpoints) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	register := models.Register{
-		ID:            cfg.Alertflow.RunnerID,
-		Registered:    true,
-		LastHeartbeat: time.Now(),
-		Version:       version,
-		Mode:          cfg.Mode,
+	runnerID, err := uuid.Parse(cfg.Alertflow.RunnerID)
+	if err != nil {
+		log.Fatalf("Invalid RunnerID: %v", err)
 	}
 
-	if len(plugins) > 0 {
-		// Convert plugins to JSON
-		pluginsJSON, err := json.Marshal(plugins)
-		if err != nil {
-			log.Fatal(err)
-		}
-		register.Plugins = json.RawMessage(pluginsJSON)
-	} else {
-		register.Plugins = json.RawMessage("[]")
-	}
-
-	if len(actions) > 0 {
-		// Convert actions to JSON
-		actionsJSON, err := json.Marshal(actions)
-		if err != nil {
-			log.Fatal(err)
-		}
-		register.Actions = json.RawMessage(actionsJSON)
-	} else {
-		register.Actions = json.RawMessage("[]")
-	}
-
-	if len(payloadInjectors) > 0 {
-		// Convert payloadInjectors to JSON
-		payloadInjectorsJSON, err := json.Marshal(payloadInjectors)
-		if err != nil {
-			log.Fatal(err)
-		}
-		register.PayloadEndpoints = json.RawMessage(payloadInjectorsJSON)
-	} else {
-		register.PayloadEndpoints = json.RawMessage("[]")
+	register := models.Runners{
+		ID:               runnerID,
+		Registered:       true,
+		LastHeartbeat:    time.Now(),
+		Version:          version,
+		Mode:             cfg.Mode,
+		Plugins:          plugins,
+		Actions:          actions,
+		PayloadEndpoints: payloadEndpoints,
 	}
 
 	payloadBuf := new(bytes.Buffer)

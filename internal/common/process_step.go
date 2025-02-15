@@ -4,21 +4,26 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/pkg/executions"
-	"github.com/AlertFlow/runner/pkg/models"
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-var actions []bmodels.Actions
+var actions []models.Actions
 
-func RegisterActions(loadedPluginActions []models.Plugin) {
+func RegisterActions(loadedPluginActions []models.Plugins) (actions []models.Actions) {
 	for _, plugin := range loadedPluginActions {
-		actions = append(actions, plugin.Action)
+		actions = append(actions, plugin.Actions)
 	}
+
+	if len(actions) == 0 {
+		actions = []models.Actions{}
+	}
+
+	return actions
 }
 
-func processStep(flow bmodels.Flows, payload bmodels.Payloads, steps []bmodels.ExecutionSteps, step bmodels.ExecutionSteps, execution bmodels.Executions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
+func processStep(flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
 	step.Status = "running"
 	step.StartedAt = time.Now()
@@ -46,7 +51,7 @@ func processStep(flow bmodels.Flows, payload bmodels.Payloads, steps []bmodels.E
 	}
 
 	var found bool
-	var action bmodels.Actions
+	var action models.Actions
 	for _, a := range actions {
 		if a.ID == step.Action.ID {
 			found = true
@@ -72,7 +77,7 @@ func processStep(flow bmodels.Flows, payload bmodels.Payloads, steps []bmodels.E
 		return nil, false, false, false, true, nil
 	}
 
-	var flow_action bmodels.Actions
+	var flow_action models.Actions
 	if len(flow.Actions) > 0 {
 		for _, flowAction := range flow.Actions {
 			if flowAction.ID == step.Action.ID {

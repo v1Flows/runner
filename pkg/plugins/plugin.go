@@ -4,15 +4,14 @@ package plugins
 import (
 	"net/rpc"
 
-	"github.com/AlertFlow/runner/pkg/models"
 	"github.com/hashicorp/go-plugin"
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	Execute(request ExecuteRequest) (ExecuteResponse, error)
-	Info() (models.Plugin, error)
+	Info() (models.Plugins, error)
 }
 
 // PluginRPC is an implementation of net/rpc for Plugin
@@ -22,10 +21,10 @@ type PluginRPC struct {
 
 type ExecuteRequest struct {
 	Args      map[string]string
-	Flow      bmodels.Flows
-	Execution bmodels.Executions
-	Step      bmodels.ExecutionSteps
-	Payload   bmodels.Payloads
+	Flow      models.Flows
+	Execution models.Executions
+	Step      models.ExecutionSteps
+	Payload   models.Payloads
 }
 
 type ExecuteResponse struct {
@@ -39,8 +38,8 @@ func (p *PluginRPC) Execute(request ExecuteRequest) (ExecuteResponse, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) Info() (models.Plugin, error) {
-	var resp models.Plugin
+func (p *PluginRPC) Info() (models.Plugins, error) {
+	var resp models.Plugins
 	err := p.Client.Call("Plugin.Info", new(interface{}), &resp)
 	return resp, err
 }
@@ -69,7 +68,7 @@ func (s *PluginRPCServer) Execute(request ExecuteRequest, resp *ExecuteResponse)
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugin) error {
+func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugins) error {
 	result, err := s.Impl.Info()
 	*resp = result
 	return err

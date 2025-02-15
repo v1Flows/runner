@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-plugin v1.6.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250215095829-3b82b56a790a
+	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250215104036-f8c3b0847818
 )
 
 require (
