@@ -11,10 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendStep(execution bmodels.Executions, step bmodels.ExecutionSteps) (bmodels.ExecutionSteps, error) {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func SendStep(cfg config.Config, execution bmodels.Executions, step bmodels.ExecutionSteps) (bmodels.ExecutionSteps, error) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 

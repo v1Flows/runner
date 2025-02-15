@@ -13,9 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetData(payloadID string) (bmodels.Payloads, error) {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
+func GetData(cfg config.Config, payloadID string) (bmodels.Payloads, error) {
 
 	client := http.Client{
 		Timeout: 10 * time.Second,

@@ -11,10 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateStep(executionID string, step bmodels.ExecutionSteps) error {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func UpdateStep(cfg config.Config, executionID string, step bmodels.ExecutionSteps) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 

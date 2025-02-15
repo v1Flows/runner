@@ -3,13 +3,14 @@ package internal_executions
 import (
 	"time"
 
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/executions"
 	log "github.com/sirupsen/logrus"
 )
 
-func CancelRemainingSteps(executionID string) error {
+func CancelRemainingSteps(cfg config.Config, executionID string) error {
 	// get all steps where pending is true
-	steps, err := executions.GetSteps(executionID)
+	steps, err := executions.GetSteps(cfg, executionID)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -25,7 +26,7 @@ func CancelRemainingSteps(executionID string) error {
 			step.StartedAt = time.Now()
 			step.FinishedAt = time.Now()
 
-			err := executions.UpdateStep(executionID, step)
+			err := executions.UpdateStep(cfg, executionID, step)
 			if err != nil {
 				log.Error(err)
 				return err

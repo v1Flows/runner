@@ -13,16 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetFlowData(flowID string) (bmodels.Flows, error) {
+func GetFlowData(cfg config.Config, flowID string) (bmodels.Flows, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
 	}
-
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
 
 	url := cfg.Alertflow.URL + "/api/v1/flows/" + flowID
 	req, err := http.NewRequest("GET", url, nil)

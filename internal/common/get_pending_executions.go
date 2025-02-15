@@ -15,7 +15,7 @@ type IncomingExecutions struct {
 	Executions []bmodels.Executions `json:"executions"`
 }
 
-func StartWorker() {
+func StartWorker(cfg config.Config) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -23,10 +23,7 @@ func StartWorker() {
 		},
 	}
 
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
-	url := cfg.Alertflow.URL + "/api/v1/runners/" + configManager.GetRunnerID() + "/executions/pending"
+	url := cfg.Alertflow.URL + "/api/v1/runners/" + cfg.Alertflow.RunnerID + "/executions/pending"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
@@ -64,7 +61,7 @@ func StartWorker() {
 
 			for _, execution := range executions.Executions {
 				// Process one execution at a time
-				startProcessing(execution)
+				startProcessing(cfg, execution)
 			}
 			break
 		}

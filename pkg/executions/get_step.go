@@ -13,16 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetStep(executionID string, stepID string) (bmodels.ExecutionSteps, error) {
+func GetStep(cfg config.Config, executionID string, stepID string) (bmodels.ExecutionSteps, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
 	}
-
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
 
 	url := cfg.Alertflow.URL + "/api/v1/executions/" + executionID + "/steps/" + stepID
 	req, err := http.NewRequest("GET", url, nil)

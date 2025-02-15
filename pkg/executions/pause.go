@@ -11,15 +11,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToPaused(execution bmodels.Executions) {
+func SetToPaused(cfg config.Config, execution bmodels.Executions) {
 	execution.Status = "paused"
-	Pause(execution)
+	Pause(cfg, execution)
 }
 
-func Pause(execution bmodels.Executions) {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func Pause(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

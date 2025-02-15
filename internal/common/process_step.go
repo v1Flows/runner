@@ -3,6 +3,7 @@ package common
 import (
 	"time"
 
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
@@ -23,13 +24,13 @@ func RegisterActions(loadedPluginActions []models.Plugins) (actions []models.Act
 	return actions
 }
 
-func processStep(flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
+func processStep(cfg config.Config, flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
 	// set step to running
 	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
-	if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
+	if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 		log.Error(err)
 		return nil, false, false, false, false, err
 	}
@@ -42,7 +43,7 @@ func processStep(flow models.Flows, payload models.Payloads, steps []models.Exec
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
+		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return nil, false, false, false, false, err
 		}
@@ -69,7 +70,7 @@ func processStep(flow models.Flows, payload models.Payloads, steps []models.Exec
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(execution.ID.String(), step); err != nil {
+		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return nil, false, false, false, false, err
 		}

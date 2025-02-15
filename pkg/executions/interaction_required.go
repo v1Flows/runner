@@ -11,15 +11,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToInteractionRequired(execution bmodels.Executions) {
+func SetToInteractionRequired(cfg config.Config, execution bmodels.Executions) {
 	execution.Status = "interactionRequired"
-	InteractionRequired(execution)
+	InteractionRequired(cfg, execution)
 }
 
-func InteractionRequired(execution bmodels.Executions) {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func InteractionRequired(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

@@ -13,35 +13,32 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func EndCanceled(execution bmodels.Executions) {
+func EndCanceled(cfg config.Config, execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "canceled"
-	End(execution)
+	End(cfg, execution)
 }
 
-func EndNoPatternMatch(execution bmodels.Executions) {
+func EndNoPatternMatch(cfg config.Config, execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "noPatternMatch"
-	End(execution)
+	End(cfg, execution)
 }
 
-func EndWithError(execution bmodels.Executions) {
+func EndWithError(cfg config.Config, execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "error"
-	End(execution)
+	End(cfg, execution)
 }
 
-func EndSuccess(execution bmodels.Executions) {
+func EndSuccess(cfg config.Config, execution bmodels.Executions) {
 	execution.Status = "success"
 	execution.FinishedAt = time.Now()
-	End(execution)
+	End(cfg, execution)
 }
 
-func End(execution bmodels.Executions) {
+func End(cfg config.Config, execution bmodels.Executions) {
 	runner.Busy(false)
-
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)

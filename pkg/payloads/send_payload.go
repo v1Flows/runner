@@ -6,16 +6,13 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendPayload(payload bmodels.Payloads) {
+func SendPayload(cfg config.Config, payload models.Payloads) {
 	log.Info("Sending Payload")
-
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {

@@ -11,15 +11,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToRunning(execution bmodels.Executions) {
+func SetToRunning(cfg config.Config, execution bmodels.Executions) {
 	execution.Status = "running"
-	Running(execution)
+	Running(cfg, execution)
 }
 
-func Running(execution bmodels.Executions) {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func Running(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

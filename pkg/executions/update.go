@@ -11,10 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Update(execution bmodels.Executions) error {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func Update(cfg config.Config, execution bmodels.Executions) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

@@ -3,13 +3,14 @@ package internal_executions
 import (
 	"time"
 
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/google/uuid"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(execution bmodels.Executions) (stepsWithIDs []bmodels.ExecutionSteps, err error) {
+func SendInitialSteps(cfg config.Config, execution bmodels.Executions) (stepsWithIDs []bmodels.ExecutionSteps, err error) {
 	var initialSteps = []bmodels.ExecutionSteps{
 		{
 			Action: bmodels.Actions{
@@ -52,7 +53,7 @@ func SendInitialSteps(execution bmodels.Executions) (stepsWithIDs []bmodels.Exec
 	for i, step := range initialSteps {
 		step.ExecutionID = execution.ID.String()
 
-		stepID, err := executions.SendStep(execution, step)
+		stepID, err := executions.SendStep(cfg, execution, step)
 		if err != nil {
 			return nil, err
 		}

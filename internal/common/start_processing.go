@@ -12,10 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(execution bmodels.Executions) {
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
+func startProcessing(cfg config.Config, execution bmodels.Executions) {
 	// ensure that runnerID is empty or equal to the current runnerID
 	if execution.RunnerID != "" && execution.RunnerID != cfg.Alertflow.RunnerID {
 		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
@@ -26,9 +23,9 @@ func startProcessing(execution bmodels.Executions) {
 	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
-	err := executions.Update(execution)
+	err := executions.Update(cfg, execution)
 	if err != nil {
-		executions.EndWithError(execution)
+		executions.EndWithError(cfg, execution)
 		return
 	}
 
@@ -36,9 +33,9 @@ func startProcessing(execution bmodels.Executions) {
 	runner.Busy(true)
 
 	// send initial step to alertflow
-	initialSteps, err := internal_executions.SendInitialSteps(execution)
+	initialSteps, err := internal_executions.SendInitialSteps(cfg, execution)
 	if err != nil {
-		executions.EndWithError(execution)
+		executions.EndWithError(cfg, execution)
 		return
 	}
 
@@ -47,9 +44,9 @@ func startProcessing(execution bmodels.Executions) {
 	var payload bmodels.Payloads
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			data, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, initialSteps, step, execution)
+			data, _, canceled, no_pattern_match, failed, err := processStep(cfg, flow, payload, initialSteps, step, execution)
 			if err != nil {
-				executions.EndWithError(execution)
+				executions.EndWithError(cfg, execution)
 				return
 			}
 
@@ -62,25 +59,25 @@ func startProcessing(execution bmodels.Executions) {
 			}
 
 			if failed {
-				internal_executions.CancelRemainingSteps(execution.ID.String())
-				executions.EndWithError(execution)
+				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndWithError(cfg, execution)
 				return
 			} else if canceled {
-				internal_executions.CancelRemainingSteps(execution.ID.String())
-				executions.EndCanceled(execution)
+				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndCanceled(cfg, execution)
 				return
 			} else if no_pattern_match {
-				internal_executions.CancelRemainingSteps(execution.ID.String())
-				executions.EndNoPatternMatch(execution)
+				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndNoPatternMatch(cfg, execution)
 				return
 			}
 		}
 	}
 
 	// send flow actions as steps to alertflow
-	flowActionStepsWithIDs, err := internal_executions.SendFlowActionSteps(execution, flow)
+	flowActionStepsWithIDs, err := internal_executions.SendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
-		executions.EndWithError(execution)
+		executions.EndWithError(cfg, execution)
 		return
 	}
 
@@ -88,23 +85,23 @@ func startProcessing(execution bmodels.Executions) {
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				_, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+				_, _, canceled, no_pattern_match, failed, err := processStep(cfg, flow, payload, flowActionStepsWithIDs, step, execution)
 				if err != nil {
-					executions.EndWithError(execution)
+					executions.EndWithError(cfg, execution)
 					return
 				}
 
 				if failed {
-					internal_executions.CancelRemainingSteps(execution.ID.String())
-					executions.EndWithError(execution)
+					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+					executions.EndWithError(cfg, execution)
 					return
 				} else if canceled {
-					internal_executions.CancelRemainingSteps(execution.ID.String())
-					executions.EndCanceled(execution)
+					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+					executions.EndCanceled(cfg, execution)
 					return
 				} else if no_pattern_match {
-					internal_executions.CancelRemainingSteps(execution.ID.String())
-					executions.EndNoPatternMatch(execution)
+					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+					executions.EndNoPatternMatch(cfg, execution)
 					return
 				}
 			}
@@ -119,9 +116,9 @@ func startProcessing(execution bmodels.Executions) {
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					_, finished, cancleded, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
+					_, finished, cancleded, no_pattern_match, failed, err := processStep(cfg, flow, payload, flowActionStepsWithIDs, step, execution)
 					if err != nil {
-						executions.EndWithError(execution)
+						executions.EndWithError(cfg, execution)
 						return
 					}
 
@@ -148,18 +145,18 @@ func startProcessing(execution bmodels.Executions) {
 		}
 
 		if failedSteps > 0 {
-			executions.EndWithError(execution)
+			executions.EndWithError(cfg, execution)
 			return
 		} else if canceledSteps > 0 {
-			executions.EndCanceled(execution)
+			executions.EndCanceled(cfg, execution)
 			return
 		} else if noPatternMatchSteps > 0 {
-			executions.EndNoPatternMatch(execution)
+			executions.EndNoPatternMatch(cfg, execution)
 			return
 		}
 	}
 
-	executions.EndSuccess(execution)
+	executions.EndSuccess(cfg, execution)
 
 	runner.Busy(false)
 }

@@ -90,13 +90,13 @@ func Init(cfg config.Config) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker()
+		go common.StartWorker(cfg)
 		log.Info("Starting Payload Listener")
 		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker()
+		go common.StartWorker(cfg)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")
