@@ -68,7 +68,7 @@ func main() {
 	actions := common.RegisterActions(actionPlugins)
 	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
 
-	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, endpointPlugins, loadedPlugins)
+	go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
 
 	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 	go runner.SendHeartbeat()

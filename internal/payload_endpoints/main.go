@@ -3,6 +3,7 @@ package payloadendpoints
 import (
 	"strconv"
 
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/plugins"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
@@ -22,19 +23,22 @@ func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []mode
 	return endpoints
 }
 
-func InitPayloadRouter(port int, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
+func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	log.Info("Open Payload Port: ", port)
+	log.Info("Open Payload Port: ", cfg.PayloadEndpoints.Port)
 
 	payload := router.Group("/payloads")
 	for _, plugin := range endpointPlugins {
 		log.Infof("Open %s Endpoint: %s", plugin.Name, plugin.Endpoints.Endpoint)
 		payload.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
 			log.Info("Received Payload for: ", plugin.Name)
-			loadedPlugins[plugin.Name].HandlePayload(c)
+			loadedPlugins[plugin.Name].HandlePayload(plugins.PayloadHandlerRequest{
+				Config:  cfg,
+				Context: c,
+			})
 		})
 	}
 
-	router.Run(":" + strconv.Itoa(port))
+	router.Run(":" + strconv.Itoa(cfg.PayloadEndpoints.Port))
 }

@@ -4,6 +4,7 @@ package plugins
 import (
 	"net/rpc"
 
+	"github.com/AlertFlow/runner/config"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/go-plugin"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
@@ -12,7 +13,7 @@ import (
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
-	HandlePayload(c *gin.Context) (Response, error)
+	HandlePayload(request PayloadHandlerRequest) (Response, error)
 	Info() (models.Plugins, error)
 }
 
@@ -23,10 +24,16 @@ type PluginRPC struct {
 
 type ExecuteTaskRequest struct {
 	Args      map[string]string
+	Config    config.Config
 	Flow      models.Flows
 	Execution models.Executions
 	Step      models.ExecutionSteps
 	Payload   models.Payloads
+}
+
+type PayloadHandlerRequest struct {
+	Config  config.Config
+	Context *gin.Context
 }
 
 type Response struct {
@@ -40,9 +47,9 @@ func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) HandlePayload(c *gin.Context) (Response, error) {
+func (p *PluginRPC) HandlePayload(request PayloadHandlerRequest) (Response, error) {
 	var resp Response
-	err := p.Client.Call("Plugin.HandlePayload", c, &resp)
+	err := p.Client.Call("Plugin.HandlePayload", request, &resp)
 	return resp, err
 }
 
@@ -75,8 +82,8 @@ func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response
 	*resp = result
 	return err
 }
-func (s *PluginRPCServer) HandlePayload(c *gin.Context, resp *Response) error {
-	result, err := s.Impl.HandlePayload(c)
+func (s *PluginRPCServer) HandlePayload(request PayloadHandlerRequest, resp *Response) error {
+	result, err := s.Impl.HandlePayload(request)
 	*resp = result
 	return err
 }
