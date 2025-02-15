@@ -2,10 +2,10 @@
 package plugins
 
 import (
+	"io"
 	"net/rpc"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/go-plugin"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
@@ -32,8 +32,8 @@ type ExecuteTaskRequest struct {
 }
 
 type PayloadHandlerRequest struct {
-	Config  config.Config
-	Context *gin.Context
+	Config config.Config
+	Body   io.ReadCloser
 }
 
 type Response struct {

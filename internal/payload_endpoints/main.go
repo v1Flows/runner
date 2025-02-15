@@ -34,8 +34,8 @@ func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, load
 		payload.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
 			log.Info("Received Payload for: ", plugin.Name)
 			loadedPlugins[plugin.Name].HandlePayload(plugins.PayloadHandlerRequest{
-				Config:  cfg,
-				Context: c,
+				Config: cfg,
+				Body:   c.Request.Body,
 			})
 		})
 	}
