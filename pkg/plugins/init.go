@@ -2,11 +2,14 @@
 package plugins
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/AlertFlow/runner/config"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	log "github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
@@ -23,6 +26,12 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 	}
 
 	for name, path := range pluginPaths {
+		logger := hclog.New(&hclog.LoggerOptions{
+			Name:   fmt.Sprintf("plugin.%s", name),
+			Output: os.Stdout,
+			Level:  hclog.Error, // Set to Error level to suppress debug logs
+		})
+
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: plugin.HandshakeConfig{
 				ProtocolVersion:  1,
@@ -32,7 +41,8 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 			Plugins: map[string]plugin.Plugin{
 				"plugin": &PluginServer{},
 			},
-			Cmd: exec.Command(path),
+			Cmd:    exec.Command(path),
+			Logger: logger, // Suppress plugin logs
 		})
 
 		rpcClient, err := client.Client()

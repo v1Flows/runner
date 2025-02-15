@@ -1,7 +1,6 @@
 package payloadendpoints
 
 import (
-	"fmt"
 	"io"
 	"strconv"
 
@@ -62,8 +61,6 @@ func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, load
 					"response": res,
 				})
 			}
-
-			fmt.Println("Response: ", res)
 		})
 	}
 

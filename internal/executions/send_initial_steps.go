@@ -25,7 +25,7 @@ func SendInitialSteps(cfg config.Config, execution bmodels.Executions) (stepsWit
 			Messages: []string{
 				execution.RunnerID + " picked up the execution",
 			},
-			Status:     "success",
+			Status:     "finished",
 			RunnerID:   execution.RunnerID,
 			StartedAt:  time.Now(),
 			FinishedAt: time.Now(),
