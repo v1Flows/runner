@@ -1,6 +1,8 @@
 package payloadendpoints
 
 import (
+	"fmt"
+	"io"
 	"strconv"
 
 	"github.com/AlertFlow/runner/config"
@@ -33,10 +35,35 @@ func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, load
 		log.Infof("Open %s Endpoint: %s", plugin.Name, plugin.Endpoints.Endpoint)
 		payload.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
 			log.Info("Received Payload for: ", plugin.Name)
-			loadedPlugins[plugin.Name].HandlePayload(plugins.PayloadHandlerRequest{
+
+			bodyBytes, err := io.ReadAll(c.Request.Body)
+			if err != nil {
+				log.Error("Error reading request body: ", err)
+				c.JSON(500, gin.H{
+					"error": "Error reading request body",
+				})
+				return
+			}
+
+			request := plugins.PayloadHandlerRequest{
 				Config: cfg,
-				Body:   c.Request.Body,
-			})
+				Body:   bodyBytes,
+			}
+
+			res, err := loadedPlugins[plugin.Endpoints.ID].HandlePayload(request)
+			if err != nil {
+				log.Error("Error in handling payload: ", err)
+				c.JSON(500, gin.H{
+					"error": err,
+				})
+			} else {
+				log.Info("Payload handled successfully")
+				c.JSON(200, gin.H{
+					"response": res,
+				})
+			}
+
+			fmt.Println("Response: ", res)
 		})
 	}
 

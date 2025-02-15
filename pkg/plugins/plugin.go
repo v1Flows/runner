@@ -2,7 +2,6 @@
 package plugins
 
 import (
-	"io"
 	"net/rpc"
 
 	"github.com/AlertFlow/runner/config"
@@ -33,7 +32,7 @@ type ExecuteTaskRequest struct {
 
 type PayloadHandlerRequest struct {
 	Config config.Config
-	Body   io.ReadCloser
+	Body   []byte
 }
 
 type Response struct {
