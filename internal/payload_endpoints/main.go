@@ -3,6 +3,7 @@ package payloadendpoints
 import (
 	"strconv"
 
+	"github.com/AlertFlow/runner/pkg/plugins"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []mode
 	return endpoints
 }
 
-func InitPayloadRouter(port int, endpointPlugins []models.Plugins) {
+func InitPayloadRouter(port int, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	log.Info("Open Payload Port: ", port)
@@ -30,7 +31,8 @@ func InitPayloadRouter(port int, endpointPlugins []models.Plugins) {
 	for _, plugin := range endpointPlugins {
 		log.Infof("Open %s Endpoint: %s", plugin.Name, plugin.Endpoints.Endpoint)
 		payload.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
-			log.Info("Received Payload: ", plugin.Name)
+			log.Info("Received Payload for: ", plugin.Name)
+			loadedPlugins[plugin.Name].HandlePayload(c)
 		})
 	}
 

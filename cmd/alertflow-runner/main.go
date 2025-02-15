@@ -56,7 +56,7 @@ func main() {
 
 	logging(cfg.LogLevel)
 
-	_, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
+	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
 	// result, err := loadedPlugins["alertmanager"].Execute(map[string]string{"target": "example.com"})
 	// if err != nil {
@@ -68,7 +68,7 @@ func main() {
 	actions := common.RegisterActions(actionPlugins)
 	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
 
-	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, endpointPlugins)
+	go payloadendpoints.InitPayloadRouter(cfg.PayloadEndpoints.Port, endpointPlugins, loadedPlugins)
 
 	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 	go runner.SendHeartbeat()

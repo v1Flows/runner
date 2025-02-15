@@ -56,7 +56,7 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 		}
 
 		plugins = append(plugins, info)
-		if info.Type == "payload_endpoint" {
+		if info.Type == "endpoint" {
 			endpointPlugins = append(endpointPlugins, info)
 		} else if info.Type == "action" {
 			actionPlugins = append(actionPlugins, info)
