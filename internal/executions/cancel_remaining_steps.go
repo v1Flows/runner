@@ -17,12 +17,11 @@ func CancelRemainingSteps(executionID string) error {
 
 	// cancel each step where pending is true
 	for _, step := range steps {
-		if step.Pending {
-			step.Pending = false
-			step.Canceled = true
+		if step.Status == "pending" {
+			step.Status = "canceled"
 			step.CanceledBy = "Runner"
 			step.CanceledAt = time.Now()
-			step.ActionMessages = []string{"Canceled by runner due to previous step failure/interaction/timeout"}
+			step.Messages = []string{"Canceled by runner due to previous step failure/interaction/timeout"}
 			step.StartedAt = time.Now()
 			step.FinishedAt = time.Now()
 

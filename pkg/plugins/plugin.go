@@ -11,7 +11,7 @@ import (
 
 // Plugin interface that all plugins must implement
 type Plugin interface {
-	Execute(args map[string]string) (string, error)
+	Execute(request ExecuteRequest) (ExecuteResponse, error)
 	Info() (models.Plugin, error)
 }
 
@@ -63,8 +63,8 @@ type PluginRPCServer struct {
 	Impl Plugin
 }
 
-func (s *PluginRPCServer) Execute(args map[string]string, resp *string) error {
-	result, err := s.Impl.Execute(args)
+func (s *PluginRPCServer) Execute(request ExecuteRequest, resp *ExecuteResponse) error {
+	result, err := s.Impl.Execute(request)
 	*resp = result
 	return err
 }

@@ -46,7 +46,7 @@ func startProcessing(execution bmodels.Executions) {
 	var flow bmodels.Flows
 	var payload bmodels.Payloads
 	for _, step := range initialSteps {
-		if step.Pending {
+		if step.Status == "pending" {
 			data, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, initialSteps, step, execution)
 			if err != nil {
 				executions.EndWithError(execution)
@@ -87,7 +87,7 @@ func startProcessing(execution bmodels.Executions) {
 	if !flow.ExecParallel {
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
-			if step.Pending {
+			if step.Status == "pending" {
 				_, _, canceled, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					executions.EndWithError(execution)
@@ -117,7 +117,7 @@ func startProcessing(execution bmodels.Executions) {
 		var successSteps int
 		// process each flow action step in parallel where pending is true
 		for _, step := range flowActionStepsWithIDs {
-			if step.Pending {
+			if step.Status == "pending" {
 				go func() {
 					_, finished, cancleded, no_pattern_match, failed, err := processStep(flow, payload, flowActionStepsWithIDs, step, execution)
 					if err != nil {

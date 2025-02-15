@@ -11,9 +11,10 @@ import (
 	"github.com/AlertFlow/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.ActionDetails, payloadInjectors []models.PayloadEndpoint) {
+func RegisterAtAPI(version string, plugins []models.Plugin, actions []bmodels.Actions, payloadInjectors []models.PayloadEndpoint) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 

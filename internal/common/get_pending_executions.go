@@ -6,10 +6,14 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
+
+type IncomingExecutions struct {
+	Executions []bmodels.Executions `json:"executions"`
+}
 
 func StartWorker() {
 	client := http.Client{
@@ -49,7 +53,7 @@ func StartWorker() {
 
 			log.Debugf("Executions received from API: %s", url)
 
-			var executions models.Executions
+			var executions IncomingExecutions
 			err = json.NewDecoder(resp.Body).Decode(&executions)
 			resp.Body.Close() // Close the body after reading
 			if err != nil {
