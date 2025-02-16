@@ -1,10 +1,12 @@
 package steps
 
-import "github.com/AlertFlow/runner/pkg/models"
+import (
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+)
 
 func GetStepByActionName(steps []models.ExecutionSteps, actionName string) models.ExecutionSteps {
 	for _, step := range steps {
-		if step.ActionName == actionName {
+		if step.Action.Name == actionName {
 			return step
 		}
 	}

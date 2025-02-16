@@ -8,48 +8,39 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/google/uuid"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.ActionDetails, payloadInjectors []models.PayloadEndpoint) {
-	register := models.Register{
-		ID:            config.Config.Alertflow.RunnerID,
-		Registered:    true,
-		LastHeartbeat: time.Now(),
-		Version:       version,
-		Mode:          config.Config.Mode,
+func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Actions, payloadEndpoints []models.PayloadEndpoints) {
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
+	runnerID, err := uuid.Parse(cfg.Alertflow.RunnerID)
+	if err != nil {
+		log.Fatalf("Invalid RunnerID: %v", err)
 	}
 
-	// Convert plugins to JSON
-	pluginsJSON, err := json.Marshal(plugins)
-	if err != nil {
-		log.Fatal(err)
+	register := models.Runners{
+		ID:               runnerID,
+		Registered:       true,
+		LastHeartbeat:    time.Now(),
+		Version:          version,
+		Mode:             cfg.Mode,
+		Plugins:          plugins,
+		Actions:          actions,
+		PayloadEndpoints: payloadEndpoints,
 	}
-	register.Plugins = json.RawMessage(pluginsJSON)
-
-	// Convert actions to JSON
-	actionsJSON, err := json.Marshal(actions)
-	if err != nil {
-		log.Fatal(err)
-	}
-	register.Actions = json.RawMessage(actionsJSON)
-
-	// Convert payloadInjectors to JSON
-	payloadInjectorsJSON, err := json.Marshal(payloadInjectors)
-	if err != nil {
-		log.Fatal(err)
-	}
-	register.PayloadEndpoints = json.RawMessage(payloadInjectorsJSON)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 
 	for i := 0; i < 3; i++ {
 		resp, err := http.DefaultClient.Do(req)
@@ -77,14 +68,14 @@ func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Act
 
 			runner_id := ""
 			if response.RunnerID == "" {
-				runner_id = config.Config.Alertflow.RunnerID
+				runner_id = cfg.Alertflow.RunnerID
 			} else {
 				runner_id = response.RunnerID
 			}
 
-			config.UpdateRunnerID(runner_id)
+			configManager.UpdateRunnerID(runner_id)
 
-			log.Info("Runner registered at AlertFlow. ID: ", config.GetRunnerID())
+			log.Info("Runner registered at AlertFlow. ID: ", configManager.GetRunnerID())
 			return
 		} else {
 			log.Errorf("Failed to register at AlertFlow, attempt %d", i+1)

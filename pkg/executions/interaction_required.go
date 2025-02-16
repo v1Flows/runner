@@ -6,29 +6,25 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToInteractionRequired(execution models.Execution) {
-	execution.Running = false
-	execution.Paused = false
-	execution.Pending = false
-	execution.Canceled = false
-	execution.InteractionRequired = true
-	InteractionRequired(execution)
+func SetToInteractionRequired(cfg config.Config, execution bmodels.Executions) {
+	execution.Status = "interactionRequired"
+	InteractionRequired(cfg, execution)
 }
 
-func InteractionRequired(execution models.Execution) {
+func InteractionRequired(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Error(err)

@@ -6,22 +6,21 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateStep(executionID string, step models.ExecutionSteps) error {
-
+func UpdateStep(cfg config.Config, executionID string, step bmodels.ExecutionSteps) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+executionID+"/steps/"+step.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/executions/"+executionID+"/steps/"+step.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Error(err)

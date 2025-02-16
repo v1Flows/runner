@@ -2,108 +2,176 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/viper"
 )
+
+// ConfigurationManager handles all configuration operations
+type ConfigurationManager struct {
+	config *Config
+	mu     sync.RWMutex
+	viper  *viper.Viper
+}
+
+// Config represents the application configuration
+type Config struct {
+	LogLevel         string          `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
+	Mode             string          `mapstructure:"mode" validate:"required,oneof=master worker"`
+	Alertflow        AlertflowConfig `mapstructure:"alertflow" validate:"required"`
+	PayloadEndpoints EndpointConfig  `mapstructure:"payload_endpoints" validate:"required"`
+	PluginDir        string          `mapstructure:"plugin_dir" validate:"dir"`
+	Plugins          []PluginConfig  `mapstructure:"plugins"`
+}
+
+type AlertflowConfig struct {
+	URL      string `mapstructure:"url" validate:"required,url"`
+	RunnerID string `mapstructure:"runner_id"`
+	APIKey   string `mapstructure:"api_key" validate:"required"`
+}
+
+type EndpointConfig struct {
+	Port int `mapstructure:"port" validate:"required,min=1024,max=65535"`
+}
+
+type PluginConfig struct {
+	Name       string            `mapstructure:"name" validate:"required"`
+	Repository string            `mapstructure:"repository" validate:"required,url"`
+	Version    string            `mapstructure:"version" validate:"required"`
+	Config     map[string]string `mapstructure:"config"`
+}
 
 const (
 	defaultLogLevel = "info"
 	defaultMode     = "master"
 	defaultPort     = 8081
-	defaultRunnerID = ""
-	defaultAPIKey   = ""
 )
 
 var (
-	Config RestfulConf
-	mu     sync.RWMutex
+	instance *ConfigurationManager
+	once     sync.Once
 )
 
-type AlertflowConf struct {
-	URL      string `json:"url"`
-	RunnerID string `json:"runnerID,omitempty"`
-	APIKey   string `json:"apiKey,omitempty"`
+// GetInstance returns the singleton configuration manager instance
+func GetInstance() *ConfigurationManager {
+	once.Do(func() {
+		instance = &ConfigurationManager{
+			viper: viper.New(),
+		}
+	})
+	return instance
 }
 
-type PayloadEndpointsConf struct {
-	Port int `json:"port,omitempty"`
+// LoadConfig initializes the configuration from file and environment
+func (cm *ConfigurationManager) LoadConfig(configFile string) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	// Set up Viper
+	cm.viper.SetConfigFile(configFile)
+	cm.viper.SetEnvPrefix("RUNNER")
+	cm.viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	cm.viper.AutomaticEnv()
+
+	// Bind specific environment variables
+	envBindings := map[string]string{
+		"alertflow.api_key": "RUNNER_ALERTFLOW_API_KEY",
+		"plugin_dir":        "RUNNER_PLUGIN_DIR",
+	}
+
+	for configKey, envVar := range envBindings {
+		if err := cm.viper.BindEnv(configKey, envVar); err != nil {
+			return fmt.Errorf("failed to bind env var %s: %w", envVar, err)
+		}
+	}
+
+	// Read configuration file
+	if err := cm.viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	// Create new config instance
+	var config Config
+
+	// Unmarshal configuration
+	if err := cm.viper.Unmarshal(&config); err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	// Set defaults
+	cm.setDefaults(&config)
+
+	// Validate configuration
+	if err := cm.validateConfig(&config); err != nil {
+		return fmt.Errorf("config validation failed: %w", err)
+	}
+
+	// Store the config
+	cm.config = &config
+
+	log.WithFields(log.Fields{
+		"file":    configFile,
+		"content": cm.viper.AllSettings(),
+	}).Debug("Configuration loaded successfully")
+
+	return nil
 }
 
-type PluginConf struct {
-	Name    string `json:"name,omitempty"`
-	Url     string `json:"url,omitempty"`
-	Version string `json:"version,omitempty"`
-}
-
-type RestfulConf struct {
-	LogLevel         string               `json:"logLevel,omitempty"`
-	Mode             string               `json:"mode,omitempty"`
-	Alertflow        AlertflowConf        `json:"alertflow"`
-	PayloadEndpoints PayloadEndpointsConf `json:"payload_endpoints"`
-	Plugins          []PluginConf         `json:"plugins"`
-}
-
-func (c *RestfulConf) SetDefaults() {
-	if c.LogLevel == "" {
-		c.LogLevel = defaultLogLevel
+func (cm *ConfigurationManager) setDefaults(config *Config) {
+	if config.LogLevel == "" {
+		config.LogLevel = defaultLogLevel
 	}
-	if c.Mode == "" {
-		c.Mode = defaultMode
+	if config.Mode == "" {
+		config.Mode = defaultMode
 	}
-	if c.PayloadEndpoints.Port == 0 {
-		c.PayloadEndpoints.Port = defaultPort
+	if config.PayloadEndpoints.Port == 0 {
+		config.PayloadEndpoints.Port = defaultPort
+	}
+	if config.PluginDir == "" {
+		// get the current working directory and add plugins folder
+		currentDir, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("failed to get current working directory: %v", err)
+		}
+		config.PluginDir = currentDir + "/plugins"
 	}
 }
 
-func (c *RestfulConf) Validate() error {
-	if c.LogLevel == "" {
-		return fmt.Errorf("log level is required")
+func (cm *ConfigurationManager) validateConfig(config *Config) error {
+	if config.Alertflow.APIKey == "" {
+		return fmt.Errorf("api_key is required")
 	}
-	if c.Mode == "" {
-		return fmt.Errorf("mode is required")
-	}
-	if c.PayloadEndpoints.Port == 0 {
-		return fmt.Errorf("payload endpoints port is required")
-	}
-	if c.Alertflow.APIKey == "" {
-		return fmt.Errorf("api key is required")
+	if config.Alertflow.URL == "" {
+		return fmt.Errorf("alertflow URL is required")
 	}
 	return nil
 }
 
-func ReadConfig(configFile string) (*RestfulConf, error) {
-	viper.SetConfigFile(configFile)
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-	log.Infoln("Loaded Config File:", configFile)
-
-	if err := viper.Unmarshal(&Config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
-	Config.SetDefaults()
-
-	if err := Config.Validate(); err != nil {
-		return nil, err
-	}
-
-	return &Config, nil
+// GetConfig returns a copy of the current configuration
+func (cm *ConfigurationManager) GetConfig() Config {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+	return *cm.config
 }
 
-func UpdateRunnerID(runnerID string) {
-	mu.Lock()
-	defer mu.Unlock()
-	Config.Alertflow.RunnerID = runnerID
+// UpdateRunnerID updates the runner ID in the configuration
+func (cm *ConfigurationManager) UpdateRunnerID(runnerID string) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	cm.config.Alertflow.RunnerID = runnerID
 }
 
-func GetRunnerID() string {
-	mu.RLock()
-	defer mu.RUnlock()
-	return Config.Alertflow.RunnerID
+// GetRunnerID returns the current runner ID
+func (cm *ConfigurationManager) GetRunnerID() string {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+	return cm.config.Alertflow.RunnerID
+}
+
+// ReloadConfig reloads the configuration from the file
+func (cm *ConfigurationManager) ReloadConfig() error {
+	return cm.LoadConfig(cm.viper.ConfigFileUsed())
 }

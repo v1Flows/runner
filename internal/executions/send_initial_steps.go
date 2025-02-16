@@ -3,50 +3,85 @@ package internal_executions
 import (
 	"time"
 
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/executions"
-	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(execution models.Execution) (stepsWithIDs []models.ExecutionSteps, err error) {
+func SendInitialSteps(cfg config.Config, actions []models.Actions, execution models.Executions) (stepsWithIDs []models.ExecutionSteps, err error) {
 	var initialSteps = []models.ExecutionSteps{
 		{
-			ActionType: "runner_pick_up",
-			ActionName: "Runner Pick Up",
-			ActionMessages: []string{
+			Action: models.Actions{
+				Name:        "Runner Pick Up",
+				Description: "Runner picked up the execution",
+				Version:     "1.0.0",
+				Icon:        "solar:rocket-2-bold-duotone",
+				Category:    "runner",
+			},
+			Messages: []string{
 				execution.RunnerID + " picked up the execution",
 			},
-			Icon:       "solar:rocket-2-bold-duotone",
+			Status:     "finished",
 			RunnerID:   execution.RunnerID,
-			Pending:    false,
-			Finished:   true,
+			CreatedAt:  time.Now(),
 			StartedAt:  time.Now(),
 			FinishedAt: time.Now(),
 		},
 		{
-			ActionType: "collect_data",
-			ActionName: "Collect Data",
-			Icon:       "solar:inbox-archive-linear",
-			Pending:    true,
+			Action: models.Actions{
+				Plugin: "collect_data",
+				Params: []models.Params{
+					{
+						Key:   "PayloadID",
+						Value: execution.PayloadID,
+					},
+					{
+						Key:   "FlowID",
+						Value: execution.FlowID,
+					},
+					{
+						Key:   "LogData",
+						Value: "false",
+					},
+				},
+			},
+			Status:    "pending",
+			CreatedAt: time.Now(),
 		},
 		{
-			ActionType: "pattern_check",
-			ActionName: "Pattern Check",
-			Icon:       "solar:list-check-minimalistic-bold",
-			Pending:    true,
+			Action: models.Actions{
+				Plugin: "pattern_check",
+			},
+			Status:    "pending",
+			CreatedAt: time.Now(),
 		},
 		{
-			ActionType: "actions_check",
-			ActionName: "Actions Check",
-			Icon:       "solar:bolt-linear",
-			Pending:    true,
+			Action: models.Actions{
+				Plugin: "actions_check",
+			},
+			Status:    "pending",
+			CreatedAt: time.Now(),
 		},
 	}
 
 	for i, step := range initialSteps {
 		step.ExecutionID = execution.ID.String()
 
-		stepID, err := executions.SendStep(execution, step)
+		// get action plugin info
+		for _, action := range actions {
+			if action.Plugin == step.Action.Plugin {
+				if step.Action.Name == "" || step.Action.Description == "" {
+					step.Action.Name = action.Name
+					step.Action.Description = action.Description
+					step.Action.Version = action.Version
+					step.Action.Icon = action.Icon
+					step.Action.Category = action.Category
+				}
+			}
+		}
+
+		stepID, err := executions.SendStep(cfg, execution, step)
 		if err != nil {
 			return nil, err
 		}

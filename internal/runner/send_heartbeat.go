@@ -17,12 +17,15 @@ func SendHeartbeat() {
 			DisableKeepAlives: true,
 		},
 	}
-	url := config.Config.Alertflow.URL + "/api/v1/runners/" + config.GetRunnerID() + "/heartbeat"
+	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
+
+	url := cfg.Alertflow.URL + "/api/v1/runners/" + configManager.GetRunnerID() + "/heartbeat"
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {

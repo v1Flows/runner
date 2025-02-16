@@ -1,19 +1,23 @@
 package main
 
 import (
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/common"
 	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
-	"github.com/AlertFlow/runner/internal/plugins"
 	"github.com/AlertFlow/runner/internal/runner"
+	"github.com/AlertFlow/runner/pkg/plugins"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "0.21.0"
+const version string = "1.0.0-beta1"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
@@ -43,38 +47,50 @@ func main() {
 	log.Info("Starting AlertFlow Runner. Version: ", version)
 
 	log.Info("Loading config")
-	config, err := config.ReadConfig(*configFile)
+	configManager := config.GetInstance()
+	err := configManager.LoadConfig(*configFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	logging(config.LogLevel)
+	cfg := configManager.GetConfig()
 
-	plugins, pluginsMap, actions, payloadEndpoints := plugins.Init()
+	logging(cfg.LogLevel)
 
-	common.RegisterActions(actions)
-	go payloadendpoints.InitPayloadRouter(config.PayloadEndpoints.Port, plugins, payloadEndpoints)
+	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	runner.RegisterAtAPI(version, pluginsMap, actions, payloadEndpoints)
+	actions := common.RegisterActions(actionPlugins)
+	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
+
+	go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
+
+	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 	go runner.SendHeartbeat()
 
-	Init()
+	Init(cfg, actions, loadedPlugins)
 
-	<-make(chan struct{})
+	// Handle graceful shutdown
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
+
+	log.Info("Shutting down...")
+	plugins.ShutdownPlugins()
+	log.Info("Shutdown complete")
 }
 
-func Init() {
-	switch strings.ToLower(config.Config.Mode) {
+func Init(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
+	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker()
+		go common.StartWorker(cfg, actions, loadedPlugins)
 		log.Info("Starting Payload Listener")
 		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker()
+		go common.StartWorker(cfg, actions, loadedPlugins)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")
