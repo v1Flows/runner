@@ -14,9 +14,6 @@ import (
 )
 
 var loadedPlugins = make(map[string]Plugin)
-var plugins = make([]models.Plugins, 0)
-var actionPlugins = make([]models.Plugins, 0)
-var endpointPlugins = make([]models.Plugins, 0)
 var pluginClients = make([]*plugin.Client, 0) // Track plugin clients
 
 func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.Plugins, actionPlugins []models.Plugins, endpointPlugins []models.Plugins) {

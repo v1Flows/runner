@@ -36,6 +36,7 @@ type PayloadHandlerRequest struct {
 }
 
 type Response struct {
+	Data    map[string]interface{}
 	Success bool
 	Error   string
 }
