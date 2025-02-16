@@ -66,6 +66,11 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 		if info.Type == "endpoint" {
 			endpointPlugins = append(endpointPlugins, info)
 		} else if info.Type == "action" {
+
+			if info.Actions.Version == "" {
+				info.Actions.Version = info.Version
+			}
+
 			actionPlugins = append(actionPlugins, info)
 		}
 	}
