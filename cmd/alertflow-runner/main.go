@@ -62,12 +62,14 @@ func main() {
 	actions := common.RegisterActions(actionPlugins)
 	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
 
-	go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
-
 	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
+
+	// RunnerID might have changed after registration, so fetch the config again
+	cfg = configManager.GetConfig()
+
 	go runner.SendHeartbeat()
 
-	Init(cfg, actions, loadedPlugins)
+	Init(cfg, actions, endpointPlugins, loadedPlugins)
 
 	// Handle graceful shutdown
 	sigs := make(chan os.Signal, 1)
@@ -79,14 +81,14 @@ func main() {
 	log.Info("Shutdown complete")
 }
 
-func Init(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
+func Init(cfg config.Config, actions []models.Actions, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(cfg, actions, loadedPlugins)
 		log.Info("Starting Payload Listener")
-		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
+		go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
@@ -94,6 +96,6 @@ func Init(cfg config.Config, actions []models.Actions, loadedPlugins map[string]
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")
-		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
+		go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
 	}
 }
