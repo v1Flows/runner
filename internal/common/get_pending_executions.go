@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/pkg/plugins"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -15,7 +17,7 @@ type IncomingExecutions struct {
 	Executions []bmodels.Executions `json:"executions"`
 }
 
-func StartWorker(cfg config.Config) {
+func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -61,7 +63,7 @@ func StartWorker(cfg config.Config) {
 
 			for _, execution := range executions.Executions {
 				// Process one execution at a time
-				startProcessing(cfg, execution)
+				startProcessing(cfg, actions, loadedPlugins, execution)
 			}
 			break
 		}

@@ -5,12 +5,11 @@ import (
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/executions"
+	"github.com/AlertFlow/runner/pkg/plugins"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
-
-var actions []models.Actions
 
 func RegisterActions(loadedPluginActions []models.Plugins) (actions []models.Actions) {
 	for _, plugin := range loadedPluginActions {
@@ -24,15 +23,14 @@ func RegisterActions(loadedPluginActions []models.Plugins) (actions []models.Act
 	return actions
 }
 
-func processStep(cfg config.Config, flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool, err error) {
-	// set step to running
+func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin, flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (data map[string]interface{}, success bool, err error) {
 	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
 	if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 		log.Error(err)
-		return nil, false, false, false, false, err
+		return nil, false, err
 	}
 
 	valid, pluginVersion := checkActionVersionAgainstPluginVersion(step)
@@ -45,10 +43,10 @@ func processStep(cfg config.Config, flow models.Flows, payload models.Payloads, 
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
-			return nil, false, false, false, false, err
+			return nil, false, err
 		}
 
-		return nil, false, false, false, true, nil
+		return nil, false, nil
 	}
 
 	var found bool
@@ -72,10 +70,10 @@ func processStep(cfg config.Config, flow models.Flows, payload models.Payloads, 
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
-			return nil, false, false, false, false, err
+			return nil, false, err
 		}
 
-		return nil, false, false, false, true, nil
+		return nil, false, nil
 	}
 
 	var flow_action models.Actions
@@ -90,21 +88,25 @@ func processStep(cfg config.Config, flow models.Flows, payload models.Payloads, 
 	log.Info("Flow Action: ", flow_action)
 	log.Infof("Execute Action: %s", action.Name)
 
-	// resp, err := pluginManager.ExecutePlugin(action.ID, protocol.Request{
-	// 	Action: "execute",
-	// 	Data: map[string]interface{}{
-	// 		"execution": execution,
-	// 		"flow":      flow,
-	// 		"payload":   payload,
-	// 		"steps":     steps,
-	// 		"step":      step,
-	// 		"action":    flow_action,
-	// 	},
-	// })
-	// if err != nil {
-	// 	log.Error(err)
-	// 	return nil, false, false, false, true, err
-	// }
+	req := plugins.ExecuteTaskRequest{
+		Config:    cfg,
+		Flow:      flow,
+		Execution: execution,
+		Step:      step,
+		Payload:   payload,
+	}
+
+	res, err := loadedPlugins[step.Action.Plugin].ExecuteTask(req)
+	if err != nil {
+		log.Error(err)
+		return nil, false, err
+	}
+
+	if res.Success {
+		return res.Data, true, nil
+	} else {
+		return nil, false, nil
+	}
 
 	// if fn, ok := action.Function.(func(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool)); ok {
 	// 	data, finished, canceled, no_pattern_match, failed := fn(execution, flow, payload, steps, step, flow_action)
@@ -121,6 +123,4 @@ func processStep(cfg config.Config, flow models.Flows, payload models.Payloads, 
 	// }
 
 	// return data, true, false, false, false, nil
-
-	return nil, false, false, false, false, nil
 }

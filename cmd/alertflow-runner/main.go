@@ -11,6 +11,7 @@ import (
 	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/plugins"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -58,13 +59,6 @@ func main() {
 
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	// result, err := loadedPlugins["alertmanager"].Execute(map[string]string{"target": "example.com"})
-	// if err != nil {
-	// 	log.Fatalf("Error executing plugin %s: %v", "test", err)
-	// }
-
-	// fmt.Printf("Plugin %s Execute Result: %s\n", "test", result)
-
 	actions := common.RegisterActions(actionPlugins)
 	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
 
@@ -73,7 +67,7 @@ func main() {
 	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 	go runner.SendHeartbeat()
 
-	Init(cfg)
+	Init(cfg, actions, loadedPlugins)
 
 	// Handle graceful shutdown
 	sigs := make(chan os.Signal, 1)
@@ -85,18 +79,18 @@ func main() {
 	log.Info("Shutdown complete")
 }
 
-func Init(cfg config.Config) {
+func Init(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(cfg)
+		go common.StartWorker(cfg, actions, loadedPlugins)
 		log.Info("Starting Payload Listener")
 		// go payloadhandler.InitPayloadRouter(config.Config.Payloads.Port, config.Config.Payloads.Managers)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(cfg)
+		go common.StartWorker(cfg, actions, loadedPlugins)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Payload Listener")
