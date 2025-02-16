@@ -18,9 +18,13 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	runnerID, err := uuid.Parse(cfg.Alertflow.RunnerID)
-	if err != nil {
-		log.Fatalf("Invalid RunnerID: %v", err)
+	var runnerID uuid.UUID
+	var err error
+	if cfg.Alertflow.RunnerID != "" {
+		runnerID, err = uuid.Parse(cfg.Alertflow.RunnerID)
+		if err != nil {
+			log.Fatalf("Invalid RunnerID: %v", err)
+		}
 	}
 
 	register := models.Runners{
