@@ -1,33 +1,30 @@
 package internal_executions
 
 import (
+	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/pkg/executions"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
-func SendFlowActionSteps(execution models.Execution, flow models.Flows) (stepsWithIDs []models.ExecutionSteps, err error) {
+func SendFlowActionSteps(cfg config.Config, execution bmodels.Executions, flow bmodels.Flows) (stepsWithIDs []bmodels.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
 		if !action.Active {
 			continue
 		}
 
-		step := models.ExecutionSteps{
-			ActionID:      action.ID.String(),
-			ActionType:    action.Type,
-			ActionName:    action.Name,
-			ActionVersion: action.Version,
-			Icon:          action.Icon,
-			ExecutionID:   execution.ID.String(),
-			Pending:       true,
+		step := bmodels.ExecutionSteps{
+			Action:      action,
+			ExecutionID: execution.ID.String(),
+			Status:      "pending",
 		}
 
 		// handle custom name
 		if action.CustomName != "" {
-			step.ActionName = action.CustomName
+			step.Action.Name = action.CustomName
 		}
 
-		stepID, err := executions.SendStep(execution, step)
+		stepID, err := executions.SendStep(cfg, execution, step)
 		if err != nil {
 			return nil, err
 		}

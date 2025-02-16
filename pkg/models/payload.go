@@ -1,29 +1,7 @@
 package models
 
-import (
-	"encoding/json"
-
-	"github.com/gin-gonic/gin"
-)
+import bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 type IncomingPayload struct {
-	PayloadData Payload `json:"payload"`
-}
-
-type Payload struct {
-	Payload  json.RawMessage `json:"payload"`
-	FlowID   string          `json:"flow_id"`
-	RunnerID string          `json:"runner_id"`
-	Endpoint string          `json:"endpoint"`
-}
-
-type PayloadEndpoint struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Endpoint string `json:"endpoint"`
-}
-
-type PayloadHandler interface {
-	Init() PayloadEndpoint
-	Handle(context *gin.Context)
+	PayloadData bmodels.Payloads `json:"payload"`
 }

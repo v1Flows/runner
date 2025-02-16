@@ -8,53 +8,46 @@ import (
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/AlertFlow/runner/internal/runner"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func EndCanceled(execution models.Execution) {
+func EndCanceled(cfg config.Config, execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = false
-	execution.Canceled = true
-	End(execution)
+	execution.Status = "canceled"
+	End(cfg, execution)
 }
 
-func EndNoPatternMatch(execution models.Execution) {
+func EndNoPatternMatch(cfg config.Config, execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = false
-	execution.NoPatternMatch = true
-	End(execution)
+	execution.Status = "noPatternMatch"
+	End(cfg, execution)
 }
 
-func EndWithError(execution models.Execution) {
+func EndWithError(cfg config.Config, execution bmodels.Executions) {
 	execution.FinishedAt = time.Now()
-	execution.Running = false
-	execution.Error = true
-	End(execution)
+	execution.Status = "error"
+	End(cfg, execution)
 }
 
-func EndSuccess(execution models.Execution) {
-	execution.Running = false
-	execution.Error = false
-	execution.Finished = true
+func EndSuccess(cfg config.Config, execution bmodels.Executions) {
+	execution.Status = "success"
 	execution.FinishedAt = time.Now()
-	End(execution)
+	End(cfg, execution)
 }
 
-func End(execution models.Execution) {
+func End(cfg config.Config, execution bmodels.Executions) {
 	runner.Busy(false)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Error(err)

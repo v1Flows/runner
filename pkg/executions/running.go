@@ -6,27 +6,25 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToRunning(execution models.Execution) {
-	execution.Running = true
-	execution.Paused = false
-	execution.InteractionRequired = false
-	Running(execution)
+func SetToRunning(cfg config.Config, execution bmodels.Executions) {
+	execution.Status = "running"
+	Running(cfg, execution)
 }
 
-func Running(execution models.Execution) {
+func Running(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	req, err := http.NewRequest("PUT", config.Config.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
 	if err != nil {
 		log.Error(err)
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Error(err)

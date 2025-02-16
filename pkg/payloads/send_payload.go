@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendPayload(payload models.Payload) {
+func SendPayload(cfg config.Config, payload models.Payloads) {
 	log.Info("Sending Payload")
 
 	jsonPayload, err := json.Marshal(payload)
@@ -21,12 +21,12 @@ func SendPayload(payload models.Payload) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", config.Config.Alertflow.URL+"/api/v1/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req.Header.Set("Authorization", config.Config.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
