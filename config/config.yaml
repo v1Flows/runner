@@ -5,12 +5,12 @@ mode: master
 
 alertflow:
   url: https://alertflow.org
-  runnerID: null
-  apiKey: null
+  runner_id: null
+  api_key: null
 
 plugins:
   - name: log
-    url: gitlab.justlab.xyz/alertflow-public/runner-plugins/log
+    repository: https://github.com/AlertFlow/rp-alertmanager
     version: v1.0.2
 
 payload_endpoints:
