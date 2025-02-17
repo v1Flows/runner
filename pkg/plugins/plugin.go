@@ -37,8 +37,9 @@ type PayloadHandlerRequest struct {
 
 type Response struct {
 	Data    map[string]interface{}
+	Flow    *models.Flows
+	Payload *models.Payloads
 	Success bool
-	Error   string
 }
 
 func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
@@ -82,6 +83,7 @@ func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response
 	*resp = result
 	return err
 }
+
 func (s *PluginRPCServer) HandlePayload(request PayloadHandlerRequest, resp *Response) error {
 	result, err := s.Impl.HandlePayload(request)
 	*resp = result

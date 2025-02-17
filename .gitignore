@@ -26,7 +26,7 @@ serviceAccountKey.json
 .envrc
 alertflow-runner
 *config*.yaml
-plugins/
+plugins
 plugins_temp/
 .versions
 

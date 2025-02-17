@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"time"
 
 	"github.com/AlertFlow/runner/config"
@@ -23,17 +24,17 @@ func RegisterActions(loadedPluginActions []models.Plugins) (actions []models.Act
 	return actions
 }
 
-func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin, flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (data map[string]interface{}, success bool, err error) {
+func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin, flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (res plugins.Response, success bool, err error) {
 	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
 	if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 		log.Error(err)
-		return nil, false, err
+		return plugins.Response{}, false, err
 	}
 
-	valid, pluginVersion := checkActionVersionAgainstPluginVersion(step)
+	valid, pluginVersion := checkActionVersionAgainstPluginVersion(actions, step)
 
 	if !valid {
 		// dont execute step and quit execution
@@ -43,50 +44,26 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
-			return nil, false, err
+			return plugins.Response{}, false, err
 		}
 
-		return nil, false, nil
+		return plugins.Response{}, false, nil
 	}
 
-	var found bool
-	var action models.Actions
-	for _, a := range actions {
-		if a.ID == step.Action.ID {
-			found = true
-			action = a
-			break
-		} else {
-			found = false
-		}
-	}
+	if _, ok := loadedPlugins[step.Action.Plugin]; !ok {
+		log.Warnf("Action %s not found", step.Action.Plugin)
 
-	if !found {
-		log.Warnf("Action %s not found", step.Action.Name)
-
-		step.Messages = append(step.Messages, "Action not found")
+		step.Messages = append(step.Messages, "Action not found in loaded plugins", "Target plugin: "+step.Action.Plugin, "Stopping execution")
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
-			return nil, false, err
+			return plugins.Response{}, false, err
 		}
 
-		return nil, false, nil
+		return plugins.Response{}, false, errors.New("plugin not found")
 	}
-
-	var flow_action models.Actions
-	if len(flow.Actions) > 0 {
-		for _, flowAction := range flow.Actions {
-			if flowAction.ID == step.Action.ID {
-				flow_action = flowAction
-			}
-		}
-	}
-
-	log.Info("Flow Action: ", flow_action)
-	log.Infof("Execute Action: %s", action.Name)
 
 	req := plugins.ExecuteTaskRequest{
 		Config:    cfg,
@@ -96,31 +73,17 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 		Payload:   payload,
 	}
 
-	res, err := loadedPlugins[step.Action.Plugin].ExecuteTask(req)
+	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)
 	if err != nil {
 		log.Error(err)
-		return nil, false, err
+		return plugins.Response{}, false, err
 	}
 
 	if res.Success {
-		return res.Data, true, nil
+		return res, true, nil
 	} else {
-		return nil, false, nil
+		return plugins.Response{}, false, nil
 	}
-
-	// if fn, ok := action.Function.(func(execution models.Execution, flow models.Flows, payload models.Payload, steps []models.ExecutionSteps, step models.ExecutionSteps, action models.Actions) (data map[string]interface{}, finished bool, canceled bool, no_pattern_match bool, failed bool)); ok {
-	// 	data, finished, canceled, no_pattern_match, failed := fn(execution, flow, payload, steps, step, flow_action)
-
-	// 	if failed {
-	// 		return nil, false, false, false, true, nil
-	// 	} else if canceled {
-	// 		return nil, false, true, false, false, nil
-	// 	} else if no_pattern_match {
-	// 		return nil, false, false, true, false, nil
-	// 	} else if finished {
-	// 		return data, true, false, false, false, nil
-	// 	}
-	// }
 
 	// return data, true, false, false, false, nil
 }
