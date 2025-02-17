@@ -36,7 +36,9 @@ type PayloadHandlerRequest struct {
 }
 
 type Response struct {
-	Data    interface{}
+	Data    map[string]interface{}
+	Flow    *models.Flows
+	Payload *models.Payloads
 	Success bool
 }
 
