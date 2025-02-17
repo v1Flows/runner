@@ -8,6 +8,7 @@ import (
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/AlertFlow/runner/pkg/plugins"
+	"github.com/google/uuid"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
@@ -31,7 +32,7 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 	}
 
 	// set runner to busy
-	runner.Busy(true)
+	runner.Busy(cfg, true)
 
 	// send initial step to alertflow
 	initialSteps, err := internal_executions.SendInitialSteps(cfg, actions, execution)
@@ -47,6 +48,7 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 		if step.Status == "pending" {
 			res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, initialSteps, step, execution)
 			if err != nil {
+				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 				// end execution
@@ -56,7 +58,8 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 
 			if res.Flow != nil {
 				flow = *res.Flow
-			} else {
+			} else if flow.ID == uuid.Nil {
+				log.Error("Error parsing flow")
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
 				return
@@ -64,9 +67,22 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 
 			if res.Payload != nil {
 				payload = *res.Payload
-			} else {
+			} else if payload.ID == uuid.Nil {
+				log.Error("Error parsing payload")
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
+				return
+			}
+
+			if res.Data["status"] == "noPatternMatch" {
+				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndNoPatternMatch(cfg, execution)
+				return
+			}
+
+			if res.Data["status"] == "canceled" {
+				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndCanceled(cfg, execution)
 				return
 			}
 
@@ -89,12 +105,24 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				_, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, flowActionStepsWithIDs, step, execution)
+				res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
 					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 					// end execution
 					executions.EndWithError(cfg, execution)
+					return
+				}
+
+				if res.Data["status"] == "noPatternMatch" {
+					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+					executions.EndNoPatternMatch(cfg, execution)
+					return
+				}
+
+				if res.Data["status"] == "canceled" {
+					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
+					executions.EndCanceled(cfg, execution)
 					return
 				}
 
@@ -108,26 +136,34 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 	} else {
 		var executedSteps int
 		var failedSteps int
+		var noPatternMatchSteps int
+		var canceledSteps int
 		var successSteps int
 		// process each flow action step in parallel where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					_, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, flowActionStepsWithIDs, step, execution)
+					res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, flowActionStepsWithIDs, step, execution)
 					if err != nil {
-						// cancel remaining steps
-						internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
-						// end execution
-						executions.EndWithError(cfg, execution)
-						return
+						failedSteps++
 					}
 
 					executedSteps++
 
+					if res.Data["status"] == "noPatternMatch" {
+						noPatternMatchSteps++
+					}
+
+					if res.Data["status"] == "canceled" {
+						canceledSteps++
+					}
+
+					if !success {
+						failedSteps++
+					}
+
 					if success {
 						successSteps++
-					} else {
-						failedSteps++
 					}
 				}()
 			}
@@ -144,9 +180,19 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 			executions.EndWithError(cfg, execution)
 			return
 		}
+
+		if canceledSteps > 0 {
+			executions.EndCanceled(cfg, execution)
+			return
+		}
+
+		if noPatternMatchSteps > 0 {
+			executions.EndNoPatternMatch(cfg, execution)
+			return
+		}
 	}
 
 	executions.EndSuccess(cfg, execution)
 
-	runner.Busy(false)
+	runner.Busy(cfg, false)
 }

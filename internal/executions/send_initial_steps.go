@@ -22,7 +22,7 @@ func SendInitialSteps(cfg config.Config, actions []models.Actions, execution mod
 			Messages: []string{
 				execution.RunnerID + " picked up the execution",
 			},
-			Status:     "finished",
+			Status:     "success",
 			RunnerID:   execution.RunnerID,
 			CreatedAt:  time.Now(),
 			StartedAt:  time.Now(),

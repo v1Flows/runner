@@ -82,7 +82,7 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 	if res.Success {
 		return res, true, nil
 	} else {
-		return plugins.Response{}, false, nil
+		return res, false, nil
 	}
 
 	// return data, true, false, false, false, nil
