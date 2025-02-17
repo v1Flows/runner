@@ -38,7 +38,6 @@ type PayloadHandlerRequest struct {
 type Response struct {
 	Data    map[string]interface{}
 	Success bool
-	Error   string
 }
 
 func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
