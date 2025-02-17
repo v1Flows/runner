@@ -36,7 +36,7 @@ type PayloadHandlerRequest struct {
 }
 
 type Response struct {
-	Data    map[string]interface{}
+	Data    interface{}
 	Success bool
 }
 
@@ -81,6 +81,7 @@ func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response
 	*resp = result
 	return err
 }
+
 func (s *PluginRPCServer) HandlePayload(request PayloadHandlerRequest, resp *Response) error {
 	result, err := s.Impl.HandlePayload(request)
 	*resp = result
