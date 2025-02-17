@@ -15,13 +15,12 @@ import (
 )
 
 func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin, execution bmodels.Executions) {
-	// ensure that runnerID is empty or equal to the current runnerID
-	if execution.RunnerID != "" && execution.RunnerID != cfg.Alertflow.RunnerID {
+	// ensure that execution runnerid equals the config runnerid
+	if execution.RunnerID != cfg.Alertflow.RunnerID {
 		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
 		return
 	}
 
-	execution.RunnerID = cfg.Alertflow.RunnerID
 	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
@@ -46,7 +45,7 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 	var payload bmodels.Payloads
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			data, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, initialSteps, step, execution)
+			res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, initialSteps, step, execution)
 			if err != nil {
 				// cancel remaining steps
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
@@ -55,16 +54,16 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 				return
 			}
 
-			if data["flow"] != nil {
-				flow = data["flow"].(bmodels.Flows)
+			if res.Flow != nil {
+				flow = *res.Flow
 			} else {
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
 				return
 			}
 
-			if data["payload"] != nil {
-				payload = data["payload"].(bmodels.Payloads)
+			if res.Payload != nil {
+				payload = *res.Payload
 			} else {
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
