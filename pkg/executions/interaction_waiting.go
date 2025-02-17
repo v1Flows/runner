@@ -12,11 +12,11 @@ import (
 )
 
 func SetToInteractionRequired(cfg config.Config, execution bmodels.Executions) {
-	execution.Status = "interactionRequired"
-	InteractionRequired(cfg, execution)
+	execution.Status = "interactionWaiting"
+	InteractionWaiting(cfg, execution)
 }
 
-func InteractionRequired(cfg config.Config, execution bmodels.Executions) {
+func InteractionWaiting(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

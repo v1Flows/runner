@@ -38,7 +38,7 @@ func EndSuccess(cfg config.Config, execution bmodels.Executions) {
 }
 
 func End(cfg config.Config, execution bmodels.Executions) {
-	runner.Busy(false)
+	runner.Busy(cfg, false)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)

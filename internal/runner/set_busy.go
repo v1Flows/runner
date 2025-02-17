@@ -7,22 +7,19 @@ import (
 	"net/http"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/models"
+	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Busy(busy bool) {
-	payload := models.Busy{
+func Busy(cfg config.Config, busy bool) {
+	payload := models.Runners{
 		ExecutingJob: busy,
 	}
 
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
-
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(payload)
-	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/"+configManager.GetRunnerID()+"/busy", payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/"+cfg.Alertflow.RunnerID+"/busy", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
