@@ -17,6 +17,8 @@ type IncomingExecutions struct {
 	Executions []bmodels.Executions `json:"executions"`
 }
 
+var executionsExecuted = make(map[string]bool)
+
 func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
@@ -62,6 +64,13 @@ func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[
 			}
 
 			for _, execution := range executions.Executions {
+				// Check if execution is already executed
+				if _, ok := executionsExecuted[execution.ID.String()]; ok {
+					continue
+				}
+				// Add execution to executed map
+				executionsExecuted[execution.ID.String()] = true
+
 				// Process one execution at a time
 				startProcessing(cfg, actions, loadedPlugins, execution)
 			}

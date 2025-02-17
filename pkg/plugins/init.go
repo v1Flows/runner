@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/AlertFlow/runner/config"
 	"github.com/hashicorp/go-hclog"
@@ -16,6 +17,52 @@ import (
 var loadedPlugins = make(map[string]Plugin)
 var pluginClients = make([]*plugin.Client, 0) // Track plugin clients
 
+const maxRetries = 3
+const retryInterval = 5 * time.Second
+
+func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
+	logger := hclog.New(&hclog.LoggerOptions{
+		Name:   fmt.Sprintf("plugin.%s", name),
+		Output: os.Stdout,
+		Level:  hclog.Error, // Set to Error level to suppress debug logs
+	})
+
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig: plugin.HandshakeConfig{
+			ProtocolVersion:  1,
+			MagicCookieKey:   "PLUGIN_MAGIC_COOKIE",
+			MagicCookieValue: "hello",
+		},
+		Plugins: map[string]plugin.Plugin{
+			"plugin": &PluginServer{},
+		},
+		Cmd:    exec.Command(path),
+		Logger: logger, // Suppress plugin logs
+	})
+
+	var rpcClient plugin.ClientProtocol
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		rpcClient, err = client.Client()
+		if err == nil {
+			break
+		}
+		log.Errorf("Error loading plugin %s: %v. Retrying in %v...", name, err, retryInterval)
+		time.Sleep(retryInterval)
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to connect to plugin %s after %d retries: %v", name, maxRetries, err)
+	}
+
+	raw, err := rpcClient.Dispense("plugin")
+	if err != nil {
+		return nil, nil, fmt.Errorf("error dispensing plugin %s: %v", name, err)
+	}
+
+	plugin := raw.(Plugin)
+	return plugin, client, nil
+}
+
 func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.Plugins, actionPlugins []models.Plugins, endpointPlugins []models.Plugins) {
 	pluginPaths, err := DownloadAndBuildPlugins(cfg.Plugins, ".plugins_temp", cfg.PluginDir)
 	if err != nil {
@@ -23,36 +70,11 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 	}
 
 	for name, path := range pluginPaths {
-		logger := hclog.New(&hclog.LoggerOptions{
-			Name:   fmt.Sprintf("plugin.%s", name),
-			Output: os.Stdout,
-			Level:  hclog.Error, // Set to Error level to suppress debug logs
-		})
-
-		client := plugin.NewClient(&plugin.ClientConfig{
-			HandshakeConfig: plugin.HandshakeConfig{
-				ProtocolVersion:  1,
-				MagicCookieKey:   "PLUGIN_MAGIC_COOKIE",
-				MagicCookieValue: "hello",
-			},
-			Plugins: map[string]plugin.Plugin{
-				"plugin": &PluginServer{},
-			},
-			Cmd:    exec.Command(path),
-			Logger: logger, // Suppress plugin logs
-		})
-
-		rpcClient, err := client.Client()
+		plugin, client, err := connectPlugin(name, path)
 		if err != nil {
-			log.Fatalf("Error loading plugin %s: %v", name, err)
+			log.Fatalf("Error connecting to plugin %s: %v", name, err)
 		}
 
-		raw, err := rpcClient.Dispense("plugin")
-		if err != nil {
-			log.Fatalf("Error dispensing plugin %s: %v", name, err)
-		}
-
-		plugin := raw.(Plugin)
 		loadedPlugins[name] = plugin
 		pluginClients = append(pluginClients, client) // Store the client
 
