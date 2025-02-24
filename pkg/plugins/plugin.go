@@ -27,7 +27,7 @@ type ExecuteTaskRequest struct {
 	Flow      models.Flows
 	Execution models.Executions
 	Step      models.ExecutionSteps
-	Payload   models.Payloads
+	Alert     models.Alerts
 }
 
 type PayloadHandlerRequest struct {
@@ -38,7 +38,7 @@ type PayloadHandlerRequest struct {
 type Response struct {
 	Data    map[string]interface{}
 	Flow    *models.Flows
-	Payload *models.Payloads
+	Alert   *models.Alerts
 	Success bool
 }
 

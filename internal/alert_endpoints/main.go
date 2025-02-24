@@ -1,4 +1,4 @@
-package payloadendpoints
+package alert_endpoints
 
 import (
 	"io"
@@ -12,13 +12,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []models.PayloadEndpoints) {
+func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []models.AlertEndpoints) {
 	for _, plugin := range loadedPluginEndpoints {
 		endpoints = append(endpoints, plugin.Endpoints)
 	}
 
 	if len(endpoints) == 0 {
-		endpoints = []models.PayloadEndpoints{}
+		endpoints = []models.AlertEndpoints{}
 	}
 
 	return endpoints

@@ -43,10 +43,10 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 
 	// process each initial step where pending is true
 	var flow bmodels.Flows
-	var payload bmodels.Payloads
+	var alert bmodels.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, initialSteps, step, execution)
+			res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, initialSteps, step, execution)
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
@@ -65,10 +65,10 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 				return
 			}
 
-			if res.Payload != nil {
-				payload = *res.Payload
-			} else if payload.ID == uuid.Nil {
-				log.Error("Error parsing payload")
+			if res.Alert != nil {
+				alert = *res.Alert
+			} else if alert.ID == uuid.Nil {
+				log.Error("Error parsing alert")
 				internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
 				return
@@ -105,7 +105,7 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, flowActionStepsWithIDs, step, execution)
+				res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
 					internal_executions.CancelRemainingSteps(cfg, execution.ID.String())
@@ -143,7 +143,7 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					res, success, err := processStep(cfg, actions, loadedPlugins, flow, payload, flowActionStepsWithIDs, step, execution)
+					res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, flowActionStepsWithIDs, step, execution)
 					if err != nil {
 						failedSteps++
 					}

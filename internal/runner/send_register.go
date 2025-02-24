@@ -14,7 +14,7 @@ import (
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Actions, payloadEndpoints []models.PayloadEndpoints) {
+func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Actions, alertEndpoints []models.AlertEndpoints) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
@@ -28,14 +28,14 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 	}
 
 	register := models.Runners{
-		ID:               runnerID,
-		Registered:       true,
-		LastHeartbeat:    time.Now(),
-		Version:          version,
-		Mode:             cfg.Mode,
-		Plugins:          plugins,
-		Actions:          actions,
-		PayloadEndpoints: payloadEndpoints,
+		ID:             runnerID,
+		Registered:     true,
+		LastHeartbeat:  time.Now(),
+		Version:        version,
+		Mode:           cfg.Mode,
+		Plugins:        plugins,
+		Actions:        actions,
+		AlertEndpoints: alertEndpoints,
 	}
 
 	payloadBuf := new(bytes.Buffer)
