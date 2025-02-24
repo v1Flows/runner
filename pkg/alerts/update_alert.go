@@ -11,8 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendAlert(cfg config.Config, alert models.Alerts) {
-	log.Info("Sending Alert")
+func UpdateAlert(cfg config.Config, alert models.Alerts) {
+	log.Info("Updating Alert")
 
 	jsonPayload, err := json.Marshal(alert)
 	if err != nil {
@@ -21,7 +21,7 @@ func SendAlert(cfg config.Config, alert models.Alerts) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
@@ -37,9 +37,9 @@ func SendAlert(cfg config.Config, alert models.Alerts) {
 	defer res.Body.Close()
 
 	if res.StatusCode != 201 {
-		log.Error("Failed to send alert")
+		log.Error("Failed to update alert")
 		return
 	} else {
-		log.Info("Alert Sent")
+		log.Info("Alert Updated")
 	}
 }
