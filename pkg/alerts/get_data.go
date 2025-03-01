@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetData(cfg config.Config, payloadID string) (bmodels.Alerts, error) {
+func GetData(cfg config.Config, alertID string) (bmodels.Alerts, error) {
 
 	client := http.Client{
 		Timeout: 10 * time.Second,
@@ -22,7 +22,7 @@ func GetData(cfg config.Config, payloadID string) (bmodels.Alerts, error) {
 		},
 	}
 
-	url := cfg.Alertflow.URL + "/api/v1/alerts/" + payloadID
+	url := cfg.Alertflow.URL + "/api/v1/alerts/" + alertID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
@@ -36,12 +36,12 @@ func GetData(cfg config.Config, payloadID string) (bmodels.Alerts, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get payload from API: %s", url)
-		err = fmt.Errorf("failed to get payload from API: %s", url)
+		log.Errorf("Failed to get alert from API: %s", url)
+		err = fmt.Errorf("failed to get alert from API: %s", url)
 		return bmodels.Alerts{}, err
 	}
 
-	log.Debugf("Payload data received from API: %s", url)
+	log.Debugf("Alert data received from API: %s", url)
 
 	var alert models.IncomingAlert
 	err = json.NewDecoder(resp.Body).Decode(&alert)

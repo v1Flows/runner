@@ -1,6 +1,6 @@
 module github.com/AlertFlow/runner
 
-go 1.23
+go 1.23.5
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-plugin v1.6.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250224125208-0d04391f4bff
+	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250301192414-cdc24f0bb200
 )
 
 require (
