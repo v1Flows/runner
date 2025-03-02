@@ -29,9 +29,9 @@ func InitAlertRouter(cfg config.Config, endpointPlugins []models.Plugins, loaded
 	router := gin.Default()
 	log.Info("Open Alert Port: ", cfg.AlertEndpoints.Port)
 
-	alert := router.Group("/alerts")
+	alert := router.Group("/alert")
 	for _, plugin := range endpointPlugins {
-		log.Infof("Open %s Endpoint: %s", plugin.Name, plugin.Endpoints.Endpoint)
+		log.Infof("Open %s Endpoint at /alert%s", plugin.Name, plugin.Endpoints.Endpoint)
 		alert.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
 			log.Info("Received Alert for: ", plugin.Name)
 
