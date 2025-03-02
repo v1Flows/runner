@@ -13,5 +13,5 @@ plugins:
     repository: https://github.com/AlertFlow/rp-alertmanager
     version: v1.0.2
 
-payload_endpoints:
+alert_endpoints:
   port: 8081

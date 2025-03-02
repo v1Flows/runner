@@ -33,8 +33,8 @@ func SendInitialSteps(cfg config.Config, actions []models.Actions, execution mod
 				Plugin: "collect_data",
 				Params: []models.Params{
 					{
-						Key:   "PayloadID",
-						Value: execution.PayloadID,
+						Key:   "AlertID",
+						Value: execution.AlertID,
 					},
 					{
 						Key:   "FlowID",

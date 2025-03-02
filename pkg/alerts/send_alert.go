@@ -1,4 +1,4 @@
-package payloads
+package alerts
 
 import (
 	"bytes"
@@ -11,17 +11,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendPayload(cfg config.Config, payload models.Payloads) {
-	log.Info("Sending Payload")
+func SendAlert(cfg config.Config, alert models.Alerts) {
+	log.Info("Sending Alert")
 
-	jsonPayload, err := json.Marshal(payload)
+	jsonPayload, err := json.Marshal(alert)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/flows/"+payload.FlowID+"/payloads/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
@@ -37,9 +37,9 @@ func SendPayload(cfg config.Config, payload models.Payloads) {
 	defer res.Body.Close()
 
 	if res.StatusCode != 201 {
-		log.Error("Failed to send payload")
+		log.Error("Failed to send alert")
 		return
 	} else {
-		log.Info("Payload Sent")
+		log.Info("Alert Sent")
 	}
 }
