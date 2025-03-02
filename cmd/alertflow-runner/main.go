@@ -87,7 +87,7 @@ func Init(cfg config.Config, actions []models.Actions, endpointPlugins []models.
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(cfg, actions, loadedPlugins)
-		log.Info("Starting Payload Listener")
+		log.Info("Starting Alert Listener")
 		go alert_endpoints.InitAlertRouter(cfg, endpointPlugins, loadedPlugins)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
@@ -95,7 +95,7 @@ func Init(cfg config.Config, actions []models.Actions, endpointPlugins []models.
 		go common.StartWorker(cfg, actions, loadedPlugins)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
-		log.Info("Starting Payload Listener")
+		log.Info("Starting Alert Listener")
 		go alert_endpoints.InitAlertRouter(cfg, endpointPlugins, loadedPlugins)
 	}
 }
