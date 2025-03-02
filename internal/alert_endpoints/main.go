@@ -24,16 +24,16 @@ func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []mode
 	return endpoints
 }
 
-func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
+func InitAlertRouter(cfg config.Config, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	log.Info("Open Payload Port: ", cfg.PayloadEndpoints.Port)
+	log.Info("Open Alert Port: ", cfg.AlertEndpoints.Port)
 
-	payload := router.Group("/payloads")
+	alert := router.Group("/alerts")
 	for _, plugin := range endpointPlugins {
 		log.Infof("Open %s Endpoint: %s", plugin.Name, plugin.Endpoints.Endpoint)
-		payload.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
-			log.Info("Received Payload for: ", plugin.Name)
+		alert.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
+			log.Info("Received Alert for: ", plugin.Name)
 
 			bodyBytes, err := io.ReadAll(c.Request.Body)
 			if err != nil {
@@ -44,19 +44,19 @@ func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, load
 				return
 			}
 
-			request := plugins.PayloadHandlerRequest{
+			request := plugins.AlertHandlerRequest{
 				Config: cfg,
 				Body:   bodyBytes,
 			}
 
-			res, err := loadedPlugins[plugin.Endpoints.ID].HandlePayload(request)
+			res, err := loadedPlugins[plugin.Endpoints.ID].HandleAlert(request)
 			if err != nil {
-				log.Error("Error in handling payload: ", err)
+				log.Error("Error in handling alert: ", err)
 				c.JSON(500, gin.H{
 					"error": err,
 				})
 			} else {
-				log.Info("Payload handled successfully")
+				log.Info("Alert handled successfully")
 				c.JSON(200, gin.H{
 					"response": res,
 				})
@@ -64,5 +64,5 @@ func InitPayloadRouter(cfg config.Config, endpointPlugins []models.Plugins, load
 		})
 	}
 
-	router.Run(":" + strconv.Itoa(cfg.PayloadEndpoints.Port))
+	router.Run(":" + strconv.Itoa(cfg.AlertEndpoints.Port))
 }

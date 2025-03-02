@@ -19,12 +19,12 @@ type ConfigurationManager struct {
 
 // Config represents the application configuration
 type Config struct {
-	LogLevel         string          `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
-	Mode             string          `mapstructure:"mode" validate:"required,oneof=master worker"`
-	Alertflow        AlertflowConfig `mapstructure:"alertflow" validate:"required"`
-	PayloadEndpoints EndpointConfig  `mapstructure:"payload_endpoints" validate:"required"`
-	PluginDir        string          `mapstructure:"plugin_dir" validate:"dir"`
-	Plugins          []PluginConfig  `mapstructure:"plugins"`
+	LogLevel       string          `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
+	Mode           string          `mapstructure:"mode" validate:"required,oneof=master worker"`
+	Alertflow      AlertflowConfig `mapstructure:"alertflow" validate:"required"`
+	AlertEndpoints EndpointConfig  `mapstructure:"alert_endpoints" validate:"required"`
+	PluginDir      string          `mapstructure:"plugin_dir" validate:"dir"`
+	Plugins        []PluginConfig  `mapstructure:"plugins"`
 }
 
 type AlertflowConfig struct {
@@ -127,8 +127,8 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 	if config.Mode == "" {
 		config.Mode = defaultMode
 	}
-	if config.PayloadEndpoints.Port == 0 {
-		config.PayloadEndpoints.Port = defaultPort
+	if config.AlertEndpoints.Port == 0 {
+		config.AlertEndpoints.Port = defaultPort
 	}
 	if config.PluginDir == "" {
 		// get the current working directory and add plugins folder
