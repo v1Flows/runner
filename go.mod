@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/go-hclog v1.5.0
+	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.6.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250217135827-391bd2b5b705
