@@ -24,7 +24,7 @@ func RegisterActions(loadedPluginActions []models.Plugins) (actions []models.Act
 	return actions
 }
 
-func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin, flow models.Flows, payload models.Payloads, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (res plugins.Response, success bool, err error) {
+func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin, flow models.Flows, alert models.Alerts, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (res plugins.Response, success bool, err error) {
 	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
@@ -70,7 +70,7 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 		Flow:      flow,
 		Execution: execution,
 		Step:      step,
-		Payload:   payload,
+		Alert:     alert,
 	}
 
 	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)

@@ -7,8 +7,8 @@ import (
 	"syscall"
 
 	"github.com/AlertFlow/runner/config"
+	"github.com/AlertFlow/runner/internal/alert_endpoints"
 	"github.com/AlertFlow/runner/internal/common"
-	payloadendpoints "github.com/AlertFlow/runner/internal/payload_endpoints"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/plugins"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version string = "1.0.0-beta4"
+const version string = "1.0.0-beta5"
 
 var (
 	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
@@ -60,7 +60,7 @@ func main() {
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
 	actions := common.RegisterActions(actionPlugins)
-	endpoints := payloadendpoints.RegisterEndpoints(endpointPlugins)
+	endpoints := alert_endpoints.RegisterEndpoints(endpointPlugins)
 
 	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 
@@ -87,15 +87,15 @@ func Init(cfg config.Config, actions []models.Actions, endpointPlugins []models.
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(cfg, actions, loadedPlugins)
-		log.Info("Starting Payload Listener")
-		go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
+		log.Info("Starting Alert Listener")
+		go alert_endpoints.InitAlertRouter(cfg, endpointPlugins, loadedPlugins)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(cfg, actions, loadedPlugins)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
-		log.Info("Starting Payload Listener")
-		go payloadendpoints.InitPayloadRouter(cfg, endpointPlugins, loadedPlugins)
+		log.Info("Starting Alert Listener")
+		go alert_endpoints.InitAlertRouter(cfg, endpointPlugins, loadedPlugins)
 	}
 }
