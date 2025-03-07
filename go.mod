@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.6.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250302111503-8b6f6e8b260d
+	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250307165523-59256c895eeb
 )
 
 require (
