@@ -7,35 +7,36 @@ import (
 	"syscall"
 
 	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/internal/alert_endpoints"
 	"github.com/AlertFlow/runner/internal/common"
+	"github.com/AlertFlow/runner/internal/endpoints"
 	"github.com/AlertFlow/runner/internal/runner"
 	"github.com/AlertFlow/runner/pkg/plugins"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
-	log "github.com/sirupsen/logrus"
 )
 
-const version string = "1.0.0-beta7"
-
 var (
-	configFile = kingpin.Flag("config", "Config File").Short('c').Default("config.yaml").String()
+	log        = logrus.New()
+	version    = "1.0.0-beta8"
+	configFile = kingpin.Flag("config", "Path to configuration file").Short('c').String()
 )
 
 func logging(logLevel string) {
 	logLevel = strings.ToLower(logLevel)
 
 	if logLevel == "info" {
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(logrus.InfoLevel)
 	} else if logLevel == "warn" {
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(logrus.WarnLevel)
 	} else if logLevel == "error" {
-		log.SetLevel(log.ErrorLevel)
+		log.SetLevel(logrus.ErrorLevel)
 	} else if logLevel == "debug" {
-		log.SetLevel(log.DebugLevel)
+		log.SetLevel(logrus.DebugLevel)
 	} else {
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(logrus.InfoLevel)
 	}
 }
 
@@ -60,7 +61,7 @@ func main() {
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
 	actions := common.RegisterActions(actionPlugins)
-	endpoints := alert_endpoints.RegisterEndpoints(endpointPlugins)
+	endpoints := endpoints.RegisterEndpoints(endpointPlugins)
 
 	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
 
@@ -69,7 +70,10 @@ func main() {
 
 	go runner.SendHeartbeat()
 
-	Init(cfg, actions, endpointPlugins, loadedPlugins)
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+
+	Init(cfg, router, actions, endpointPlugins, loadedPlugins)
 
 	// Handle graceful shutdown
 	sigs := make(chan os.Signal, 1)
@@ -81,21 +85,24 @@ func main() {
 	log.Info("Shutdown complete")
 }
 
-func Init(cfg config.Config, actions []models.Actions, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
+func Init(cfg config.Config, router *gin.Engine, actions []models.Actions, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(cfg, actions, loadedPlugins)
 		log.Info("Starting Alert Listener")
-		go alert_endpoints.InitAlertRouter(cfg, endpointPlugins, loadedPlugins)
+		go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+		go endpoints.ReadyEndpoint(cfg, router)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
 		go common.StartWorker(cfg, actions, loadedPlugins)
+		go endpoints.ReadyEndpoint(cfg, router)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Alert Listener")
-		go alert_endpoints.InitAlertRouter(cfg, endpointPlugins, loadedPlugins)
+		go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+		go endpoints.ReadyEndpoint(cfg, router)
 	}
 }
