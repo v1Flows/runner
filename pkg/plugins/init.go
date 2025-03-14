@@ -64,9 +64,44 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 }
 
 func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.Plugins, actionPlugins []models.Plugins, endpointPlugins []models.Plugins) {
-	pluginPaths, err := DownloadAndBuildPlugins(cfg.Plugins, ".plugins_temp", cfg.PluginDir)
+	// Define mandatory plugins
+	mandatoryPlugins := []config.PluginConfig{
+		{Name: "collect_data", Version: "main", Repository: "https://github.com/AlertFlow/rp-collect_data"},
+		{Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
+		{Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
+		{Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
+		{Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
+		{Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},
+		{Name: "ping", Version: "main", Repository: "https://github.com/AlertFlow/rp-ping"},
+		{Name: "port_checker", Version: "main", Repository: "https://github.com/AlertFlow/rp-port_checker"},
+	}
+
+	// Merge mandatory plugins with config plugins, handling conflicts
+	pluginMap := make(map[string]config.PluginConfig)
+	for _, plugin := range mandatoryPlugins {
+		pluginMap[plugin.Name] = plugin
+	}
+	for _, plugin := range cfg.Plugins {
+		if _, exists := pluginMap[plugin.Name]; exists {
+			log.Warnf("Conflict: Plugin %s is defined in both mandatory list and config. Using config version.", plugin.Name)
+		}
+		pluginMap[plugin.Name] = plugin
+	}
+
+	// Convert pluginMap to a slice
+	var allPlugins []config.PluginConfig
+	for _, plugin := range pluginMap {
+		allPlugins = append(allPlugins, plugin)
+	}
+
+	pluginPaths, err := DownloadAndBuildPlugins(allPlugins, ".plugins_temp", cfg.PluginDir)
 	if err != nil {
 		log.Fatalf("Error downloading and building plugins: %v", err)
+	}
+
+	err = CleanupUnusedPlugins(allPlugins, cfg.PluginDir)
+	if err != nil {
+		log.Warnf("Error cleaning up unused plugins: %v", err)
 	}
 
 	for name, path := range pluginPaths {
