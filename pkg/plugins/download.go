@@ -15,12 +15,18 @@ import (
 func DownloadAndBuildPlugins(pluginRepos []config.PluginConfig, buildDir string, pluginDir string) (map[string]string, error) {
 	pluginPaths := make(map[string]string)
 
-	// Create the build directory if it doesn't exist
-	if _, err := os.Stat(buildDir); os.IsNotExist(err) {
-		err := os.MkdirAll(buildDir, 0755)
+	// Delete the build directory if it already exists
+	if _, err := os.Stat(buildDir); !os.IsNotExist(err) {
+		err := os.RemoveAll(buildDir)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create build directory: %v", err)
+			return nil, fmt.Errorf("failed to remove existing build directory: %v", err)
 		}
+	}
+
+	// Create the build directory
+	err := os.MkdirAll(buildDir, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create build directory: %v", err)
 	}
 
 	// Create the pluginDir directory if it doesn't exist
@@ -32,8 +38,15 @@ func DownloadAndBuildPlugins(pluginRepos []config.PluginConfig, buildDir string,
 	}
 
 	for _, plugin := range pluginRepos {
-		// Define the plugin path
-		pluginPath := filepath.Join(pluginDir, plugin.Name)
+		// Define the plugin path with name-version format
+		pluginPath := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", plugin.Name, plugin.Version))
+
+		// Check if the plugin already exists
+		if _, err := os.Stat(pluginPath); !os.IsNotExist(err) {
+			log.Info("Plugin already exists: ", pluginPath)
+			pluginPaths[plugin.Name] = pluginPath
+			continue
+		}
 
 		// Clone the plugin repository
 		log.Info("Cloning plugin ", plugin.Name)
@@ -68,7 +81,7 @@ func DownloadAndBuildPlugins(pluginRepos []config.PluginConfig, buildDir string,
 	}
 
 	// remove the buildDir directory
-	err := os.RemoveAll(buildDir)
+	err = os.RemoveAll(buildDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove build directory: %v", err)
 	}
