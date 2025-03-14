@@ -1,4 +1,4 @@
-package alert_endpoints
+package endpoints
 
 import (
 	"io"
@@ -24,9 +24,7 @@ func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []mode
 	return endpoints
 }
 
-func InitAlertRouter(cfg config.Config, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
+func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	log.Info("Open Alert Port: ", cfg.AlertEndpoints.Port)
 
 	alert := router.Group("/alert")
