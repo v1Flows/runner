@@ -27,7 +27,7 @@ serviceAccountKey.json
 alertflow-runner
 *config*.yaml
 plugins
-plugins_temp/
+.plugins_temp/
 .versions
 
 # Binary files
