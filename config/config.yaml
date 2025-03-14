@@ -1,6 +1,6 @@
 ---
 
-logLevel: info
+log_level: info
 mode: master
 
 alertflow:
@@ -9,7 +9,7 @@ alertflow:
   api_key: null
 
 plugins:
-  - name: log
+  - name: alertmanager
     repository: https://github.com/AlertFlow/rp-alertmanager
     version: v1.0.2
 

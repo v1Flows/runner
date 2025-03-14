@@ -1,5 +1,5 @@
 # AlertFlow Runner
-> This runner is the execution part of the AlertFlow platform. Please see the [AlertFlow](https://github.com/v1Flows/AlertFlow) repo for detailed informations
+> This runner is the execution engine of the AlertFlow platform. Please see the [AlertFlow](https://github.com/v1Flows/AlertFlow) repo for detailed informations
 
 ## Table of Contents
 
@@ -12,9 +12,8 @@
 - [License](#license)
 
 ## Features
-- **Modes**:
-- **Plugins**:
-- **Docker/Kubernetes**:
+- **Modes**: The runner can be started in different modes which either offer full functionality or just be a standby listener for incoming alerts
+- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow to your needs
 
 ## Configuration
 ```yaml
@@ -38,7 +37,9 @@ alert_endpoints:
 ```
 
 ## Plugins
+The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be seen [here](https://github.com/orgs/AlertFlow/repositories) (all the repos that start with rp-).
 
+To develop your own plugin you can start right away with this [template](https://github.com/AlertFlow/rp-template)
 
 ## Modes
 
@@ -52,6 +53,10 @@ The Worker mode will disable the payload receiver component. The runner will onl
 The runner will only act as a payload receiver. There will be no components enable to scan or execute any jobs.
 
 ## Self Hosting
+To run the AlertFlow Runner on your own infrastructure we provide various docker images available at 
+[Docker Hub](htthttps://hub.docker.com/r/justnz/alertflow-runner).
+- **justnz/alertflow-runner:latest** - Latest Version
+- **justnz/alertflow-runner:vx.x.x** - Versioned release
 
 ## Contributing
 
