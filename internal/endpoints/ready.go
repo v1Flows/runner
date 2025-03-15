@@ -1,8 +1,8 @@
 package endpoints
 
 import (
-	"github.com/AlertFlow/runner/config"
 	"github.com/gin-gonic/gin"
+	"github.com/v1Flows/runner/config"
 )
 
 func ReadyEndpoint(cfg config.Config, router *gin.Engine) {

@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AlertFlow/runner/config"
 	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/runner/config"
 )
 
 func CleanupUnusedPlugins(pluginRepos []config.PluginConfig, pluginDir string) error {

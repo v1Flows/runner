@@ -22,12 +22,21 @@ type Config struct {
 	LogLevel       string          `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
 	Mode           string          `mapstructure:"mode" validate:"required,oneof=master worker"`
 	Alertflow      AlertflowConfig `mapstructure:"alertflow" validate:"required"`
+	exFlow         exflowConfig    `mapstructure:"exflow" validate:"required"`
 	AlertEndpoints EndpointConfig  `mapstructure:"alert_endpoints" validate:"required"`
 	PluginDir      string          `mapstructure:"plugin_dir" validate:"dir"`
 	Plugins        []PluginConfig  `mapstructure:"plugins"`
 }
 
 type AlertflowConfig struct {
+	Enabled  bool   `mapstructure:"enabled" default:"true"`
+	URL      string `mapstructure:"url" validate:"required,url"`
+	RunnerID string `mapstructure:"runner_id"`
+	APIKey   string `mapstructure:"api_key" validate:"required"`
+}
+
+type exflowConfig struct {
+	Enabled  bool   `mapstructure:"enabled" default:"true"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
 	APIKey   string `mapstructure:"api_key" validate:"required"`
@@ -79,6 +88,7 @@ func (cm *ConfigurationManager) LoadConfig(configFile string) error {
 	// Bind specific environment variables
 	envBindings := map[string]string{
 		"alertflow.api_key": "RUNNER_ALERTFLOW_API_KEY",
+		"exflow.api_key":    "RUNNER_EXFLOW_API_KEY",
 		"plugin_dir":        "RUNNER_PLUGIN_DIR",
 	}
 
@@ -141,12 +151,23 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 }
 
 func (cm *ConfigurationManager) validateConfig(config *Config) error {
-	if config.Alertflow.APIKey == "" {
-		return fmt.Errorf("api_key is required")
+	if config.Alertflow.Enabled {
+		if config.Alertflow.APIKey == "" {
+			return fmt.Errorf("api_key is required")
+		}
+		if config.Alertflow.URL == "" {
+			return fmt.Errorf("alertflow URL is required")
+		}
 	}
-	if config.Alertflow.URL == "" {
-		return fmt.Errorf("alertflow URL is required")
+	if config.exFlow.Enabled {
+		if config.exFlow.APIKey == "" {
+			return fmt.Errorf("api_key is required")
+		}
+		if config.exFlow.URL == "" {
+			return fmt.Errorf("exflow URL is required")
+		}
 	}
+
 	return nil
 }
 

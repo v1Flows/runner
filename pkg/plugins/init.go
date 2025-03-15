@@ -1,4 +1,4 @@
-// filepath: /Users/Justin.Neubert/projects/v1flows/alertflow/runner/pkg/plugins/init.go
+// filepath: /Users/Justin.Neubert/projects/v1flows/v1Flows/runner/pkg/plugins/init.go
 package plugins
 
 import (
@@ -7,11 +7,11 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/AlertFlow/runner/config"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
 )
 
 var loadedPlugins = make(map[string]Plugin)

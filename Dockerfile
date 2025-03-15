@@ -11,7 +11,7 @@ RUN go mod download
 COPY . ./
 
 # Build the main application
-RUN CGO_ENABLED=1 GOOS=linux go build -o /alertflow-runner ./cmd/alertflow-runner
+RUN CGO_ENABLED=1 GOOS=linux go build -o /runner ./cmd/runner
 
 # Copy configuration files
 RUN mkdir -p /app/config
@@ -22,4 +22,4 @@ VOLUME [ "/app/config", "/app/plugins" ]
 
 EXPOSE 8081
 
-CMD [ "/alertflow-runner", "-c", "/app/config/config.yaml" ]
+CMD [ "/runner", "-c", "/app/config/config.yaml" ]

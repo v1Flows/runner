@@ -3,9 +3,9 @@ package internal_executions
 import (
 	"time"
 
-	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/executions"
 	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/executions"
 )
 
 func CancelRemainingSteps(cfg config.Config, executionID string) error {

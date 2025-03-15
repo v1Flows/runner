@@ -1,4 +1,4 @@
-module github.com/AlertFlow/runner
+module github.com/v1Flows/runner
 
 go 1.23.5
 

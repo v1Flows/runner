@@ -6,21 +6,23 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/internal/common"
-	"github.com/AlertFlow/runner/internal/endpoints"
-	"github.com/AlertFlow/runner/internal/runner"
-	"github.com/AlertFlow/runner/pkg/plugins"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/alertflow"
+	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/internal/endpoints"
+	"github.com/v1Flows/runner/internal/exflow"
+	"github.com/v1Flows/runner/internal/runner"
+	"github.com/v1Flows/runner/pkg/plugins"
 
 	"github.com/alecthomas/kingpin/v2"
 )
 
 var (
 	log        = logrus.New()
-	version    = "1.0.0-beta8"
+	version    = "1.0.0-beta9"
 	configFile = kingpin.Flag("config", "Path to configuration file").Short('c').String()
 )
 
@@ -45,7 +47,7 @@ func main() {
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
-	log.Info("Starting AlertFlow Runner. Version: ", version)
+	log.Info("Starting v1Flows Runner. Version: ", version)
 
 	log.Info("Loading config")
 	configManager := config.GetInstance()
@@ -61,9 +63,15 @@ func main() {
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
 	actions := common.RegisterActions(actionPlugins)
-	endpoints := endpoints.RegisterEndpoints(endpointPlugins)
 
-	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
+	if cfg.Alertflow.Enabled {
+		endpoints := endpoints.RegisterEndpoints(endpointPlugins)
+		alertflow.RegisterAtAPI(version, modelPlugins, actions, endpoints)
+	}
+
+	if cfg.exFlow.Enabled {
+		exflow.RegisterAtAPI(version, modelPlugins, actions)
+	}
 
 	// RunnerID might have changed after registration, so fetch the config again
 	cfg = configManager.GetConfig()

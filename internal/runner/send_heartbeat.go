@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlertFlow/runner/config"
+	"github.com/v1Flows/runner/config"
 
 	log "github.com/sirupsen/logrus"
 )

@@ -1,4 +1,4 @@
-// filepath: /Users/Justin.Neubert/projects/v1flows/alertflow/runner/pkg/plugins/download.go
+// filepath: /Users/Justin.Neubert/projects/v1flows/v1Flows/runner/pkg/plugins/download.go
 package plugins
 
 import (
@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/AlertFlow/runner/config"
 	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/runner/config"
 )
 
 // DownloadAndBuildPlugins downloads and builds plugins from GitHub
