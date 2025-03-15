@@ -8,6 +8,7 @@ import (
 
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -21,13 +22,21 @@ func GetSteps(cfg config.Config, executionID string) ([]bmodels.ExecutionSteps, 
 		},
 	}
 
-	url := cfg.Alertflow.URL + "/api/v1/executions/" + executionID + "/steps"
-	req, err := http.NewRequest("GET", url, nil)
+	platform, ok := getPlatformForExecution(executionID)
+	if !ok {
+		log.Error("Failed to get platform")
+		return []bmodels.ExecutionSteps{}, fmt.Errorf("failed to get platform")
+	}
+
+	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)
+
+	parsedUrl := url + "/api/v1/executions/" + executionID + "/steps"
+	req, err := http.NewRequest("GET", parsedUrl, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
 		return []bmodels.ExecutionSteps{}, err
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", apiKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
@@ -35,12 +44,12 @@ func GetSteps(cfg config.Config, executionID string) ([]bmodels.ExecutionSteps, 
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get step data from API: %s", url)
-		err = fmt.Errorf("failed to get step data from API: %s", url)
+		log.Errorf("Failed to get step data from %s API: %s", platform, url)
+		err = fmt.Errorf("failed to get step data from %s API: %s", platform, url)
 		return []bmodels.ExecutionSteps{}, err
 	}
 
-	log.Debugf("Step data received from API: %s", url)
+	log.Debugf("Step data received from %s API: %s", platform, url)
 
 	var steps models.IncomingExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&steps)

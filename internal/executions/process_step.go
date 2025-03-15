@@ -1,4 +1,4 @@
-package common
+package internal_executions
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 
@@ -34,7 +35,7 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 		return plugins.Response{}, false, err
 	}
 
-	valid, pluginVersion := checkActionVersionAgainstPluginVersion(actions, step)
+	valid, pluginVersion := common.CheckActionVersionAgainstPluginVersion(actions, step)
 
 	if !valid {
 		// dont execute step and quit execution

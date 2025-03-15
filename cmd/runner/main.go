@@ -10,11 +10,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/alertflow"
-	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/internal/endpoints"
-	"github.com/v1Flows/runner/internal/exflow"
+	internal_executions "github.com/v1Flows/runner/internal/executions"
 	"github.com/v1Flows/runner/internal/runner"
+	"github.com/v1Flows/runner/internal/worker"
 	"github.com/v1Flows/runner/pkg/plugins"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -62,26 +61,28 @@ func main() {
 
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	actions := common.RegisterActions(actionPlugins)
-
-	if cfg.Alertflow.Enabled {
-		endpoints := endpoints.RegisterEndpoints(endpointPlugins)
-		alertflow.RegisterAtAPI(version, modelPlugins, actions, endpoints)
-	}
-
-	if cfg.exFlow.Enabled {
-		exflow.RegisterAtAPI(version, modelPlugins, actions)
-	}
+	actions := internal_executions.RegisterActions(actionPlugins)
 
 	// RunnerID might have changed after registration, so fetch the config again
 	cfg = configManager.GetConfig()
 
-	go runner.SendHeartbeat()
-
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	Init(cfg, router, actions, endpointPlugins, loadedPlugins)
+	if cfg.Alertflow.Enabled {
+		endpoints := endpoints.RegisterEndpoints(endpointPlugins)
+		log.Info("Registering at AlertFlow")
+		runner.RegisterAtAPI("alertflow", version, modelPlugins, actions, endpoints)
+		go runner.SendHeartbeat("alertflow")
+		Init("alertflow", cfg, router, actions, endpointPlugins, loadedPlugins)
+	}
+
+	if cfg.ExFlow.Enabled {
+		log.Info("Registering at ExFlow")
+		runner.RegisterAtAPI("exflow", version, modelPlugins, actions, nil)
+		go runner.SendHeartbeat("exflow")
+		Init("exflow", cfg, router, actions, endpointPlugins, loadedPlugins)
+	}
 
 	// Handle graceful shutdown
 	sigs := make(chan os.Signal, 1)
@@ -93,24 +94,28 @@ func main() {
 	log.Info("Shutdown complete")
 }
 
-func Init(cfg config.Config, router *gin.Engine, actions []models.Actions, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
+func Init(platform string, cfg config.Config, router *gin.Engine, actions []models.Actions, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(cfg, actions, loadedPlugins)
-		log.Info("Starting Alert Listener")
-		go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
+		if platform == "alertflow" || platform == "exflow" {
+			log.Info("Starting Alert Listener")
+			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+		}
 		go endpoints.ReadyEndpoint(cfg, router)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go common.StartWorker(cfg, actions, loadedPlugins)
+		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
 		go endpoints.ReadyEndpoint(cfg, router)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
-		log.Info("Starting Alert Listener")
-		go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+		if platform == "alertflow" || platform == "exflow" {
+			log.Info("Starting Alert Listener")
+			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+		}
 		go endpoints.ReadyEndpoint(cfg, router)
 	}
 }
