@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlertFlow/runner/config"
 	"github.com/google/uuid"
+	"github.com/v1Flows/runner/config"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"

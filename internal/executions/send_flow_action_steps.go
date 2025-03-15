@@ -1,9 +1,9 @@
 package internal_executions
 
 import (
-	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/executions"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/executions"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow

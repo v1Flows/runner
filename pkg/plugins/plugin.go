@@ -1,12 +1,12 @@
-// filepath: /Users/Justin.Neubert/projects/v1flows/alertflow/runner/pkg/plugins/plugin.go
+// filepath: /Users/Justin.Neubert/projects/v1flows/v1Flows/runner/pkg/plugins/plugin.go
 package plugins
 
 import (
 	"net/rpc"
 
-	"github.com/AlertFlow/runner/config"
 	"github.com/hashicorp/go-plugin"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
 )
 
 // Plugin interface that all plugins must implement

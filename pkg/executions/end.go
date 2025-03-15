@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/internal/runner"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/runner"
 
 	log "github.com/sirupsen/logrus"
 )

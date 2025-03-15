@@ -3,9 +3,9 @@ package internal_executions
 import (
 	"time"
 
-	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/executions"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/executions"
 )
 
 // SendInitialSteps sends initial steps to alertflow
