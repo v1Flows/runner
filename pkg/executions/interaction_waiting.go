@@ -21,7 +21,7 @@ func InteractionWaiting(cfg config.Config, execution bmodels.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	platform, ok := getPlatformForExecution(execution.ID.String())
+	platform, ok := GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
 	}

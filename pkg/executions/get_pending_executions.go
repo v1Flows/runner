@@ -10,7 +10,6 @@ import (
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
-	internal_executions "github.com/v1Flows/runner/internal/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 
 	log "github.com/sirupsen/logrus"
@@ -77,7 +76,7 @@ func GetPendingExecutions(platform string, cfg config.Config, actions []models.A
 				mu.Unlock()
 
 				// Process one execution at a time
-				internal_executions.StartProcessing(platform, cfg, actions, loadedPlugins, execution)
+				startProcessing(platform, cfg, actions, loadedPlugins, execution)
 			}
 
 		}
@@ -88,7 +87,7 @@ func GetPendingExecutions(platform string, cfg config.Config, actions []models.A
 }
 
 // Function to retrieve platform information for a given execution ID
-func getPlatformForExecution(executionID string) (string, bool) {
+func GetPlatformForExecution(executionID string) (string, bool) {
 	mu.Lock()
 	defer mu.Unlock()
 	platform, ok := executionPlatformMap[executionID]

@@ -22,7 +22,7 @@ func GetStep(cfg config.Config, executionID string, stepID string) (bmodels.Exec
 		},
 	}
 
-	platform, ok := getPlatformForExecution(executionID)
+	platform, ok := GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 		return bmodels.ExecutionSteps{}, fmt.Errorf("failed to get platform")

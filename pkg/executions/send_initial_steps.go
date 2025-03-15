@@ -1,15 +1,14 @@
-package internal_executions
+package executions
 
 import (
 	"time"
 
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/pkg/executions"
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(cfg config.Config, actions []models.Actions, execution models.Executions) (stepsWithIDs []models.ExecutionSteps, err error) {
+func sendInitialSteps(cfg config.Config, actions []models.Actions, execution models.Executions) (stepsWithIDs []models.ExecutionSteps, err error) {
 	var initialSteps = []models.ExecutionSteps{
 		{
 			Action: models.Actions{
@@ -81,7 +80,7 @@ func SendInitialSteps(cfg config.Config, actions []models.Actions, execution mod
 			}
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step)
+		stepID, err := SendStep(cfg, execution, step)
 		if err != nil {
 			return nil, err
 		}

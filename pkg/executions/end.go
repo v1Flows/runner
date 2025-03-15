@@ -39,7 +39,7 @@ func EndSuccess(cfg config.Config, execution bmodels.Executions) {
 }
 
 func End(cfg config.Config, execution bmodels.Executions) {
-	platform, ok := getPlatformForExecution(execution.ID.String())
+	platform, ok := GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
 		return

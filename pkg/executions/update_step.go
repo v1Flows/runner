@@ -17,7 +17,7 @@ func UpdateStep(cfg config.Config, executionID string, step bmodels.ExecutionSte
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	platform, ok := getPlatformForExecution(executionID)
+	platform, ok := GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 		return fmt.Errorf("Failed to get platform")
