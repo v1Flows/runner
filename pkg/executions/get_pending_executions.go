@@ -1,13 +1,16 @@
-package common
+package executions
 
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/common"
+	internal_executions "github.com/v1Flows/runner/internal/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 
 	log "github.com/sirupsen/logrus"
@@ -17,9 +20,13 @@ type IncomingExecutions struct {
 	Executions []bmodels.Executions `json:"executions"`
 }
 
-var executionsExecuted = make(map[string]bool)
+// Global map to store platform information for each execution
+var executionPlatformMap = make(map[string]string)
+var mu sync.Mutex
 
-func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
+func GetPendingExecutions(platform string, cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
+	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -27,12 +34,12 @@ func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[
 		},
 	}
 
-	url := cfg.Alertflow.URL + "/api/v1/runners/" + cfg.Alertflow.RunnerID + "/executions/pending"
-	req, err := http.NewRequest("GET", url, nil)
+	parsedUrl := url + "/api/v1/runners/" + runnerID + "/executions/pending"
+	req, err := http.NewRequest("GET", parsedUrl, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", apiKey)
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {
@@ -47,12 +54,12 @@ func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[
 			}
 
 			if resp.StatusCode != 200 {
-				log.Errorf("Failed to get waiting executions from API: %s, attempt %d", url, i+1)
+				log.Errorf("Failed to get waiting executions from %s API: %s, attempt %d", platform, parsedUrl, i+1)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 				continue
 			}
 
-			log.Debugf("Executions received from API: %s", url)
+			log.Debugf("Executions received from %s API: %s", platform, parsedUrl)
 
 			var executions IncomingExecutions
 			err = json.NewDecoder(resp.Body).Decode(&executions)
@@ -64,20 +71,26 @@ func StartWorker(cfg config.Config, actions []models.Actions, loadedPlugins map[
 			}
 
 			for _, execution := range executions.Executions {
-				// Check if execution is already executed
-				if _, ok := executionsExecuted[execution.ID.String()]; ok {
-					continue
-				}
-				// Add execution to executed map
-				executionsExecuted[execution.ID.String()] = true
+				// Save platform information for the execution
+				mu.Lock()
+				executionPlatformMap[execution.ID.String()] = platform
+				mu.Unlock()
 
 				// Process one execution at a time
-				startProcessing(cfg, actions, loadedPlugins, execution)
+				internal_executions.StartProcessing(platform, cfg, actions, loadedPlugins, execution)
 			}
-			break
+
 		}
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to get waiting executions from API after 3 attempts: %s", url)
+			log.Fatalf("Failed to get waiting executions from %s API after 3 attempts: %s", platform, parsedUrl)
 		}
 	}
+}
+
+// Function to retrieve platform information for a given execution ID
+func getPlatformForExecution(executionID string) (string, bool) {
+	mu.Lock()
+	defer mu.Unlock()
+	platform, ok := executionPlatformMap[executionID]
+	return platform, ok
 }

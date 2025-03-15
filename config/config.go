@@ -180,18 +180,30 @@ func (cm *ConfigurationManager) GetConfig() Config {
 	return *cm.config
 }
 
-// UpdateRunnerID updates the runner ID in the configuration
-func (cm *ConfigurationManager) UpdateRunnerID(runnerID string) {
+// UpdateRunnerID updates the runner ID in the configuration for both Alertflow and ExFlow
+func (cm *ConfigurationManager) UpdateRunnerID(platform, id string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	cm.config.Alertflow.RunnerID = runnerID
+	if platform == "alertflow" {
+		cm.config.Alertflow.RunnerID = id
+	}
+	if platform == "exflow" {
+		cm.config.ExFlow.RunnerID = id
+	}
 }
 
-// GetRunnerID returns the current runner ID
-func (cm *ConfigurationManager) GetRunnerID() string {
+// GetRunnerIDs returns the current runner IDs for both Alertflow and ExFlow
+func (cm *ConfigurationManager) GetRunnerID(platform string) string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	return cm.config.Alertflow.RunnerID
+	if platform == "alertflow" {
+		return cm.config.Alertflow.RunnerID
+	}
+	if platform == "exflow" {
+		return cm.config.ExFlow.RunnerID
+	}
+
+	return ""
 }
 
 // ReloadConfig reloads the configuration from the file
