@@ -11,9 +11,9 @@ import (
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/endpoints"
-	internal_executions "github.com/v1Flows/runner/internal/executions"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/internal/worker"
+	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -61,7 +61,7 @@ func main() {
 
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	actions := internal_executions.RegisterActions(actionPlugins)
+	actions := executions.RegisterActions(actionPlugins)
 
 	// RunnerID might have changed after registration, so fetch the config again
 	cfg = configManager.GetConfig()
@@ -84,6 +84,8 @@ func main() {
 		Init("exflow", cfg, router, actions, endpointPlugins, loadedPlugins)
 	}
 
+	go endpoints.ReadyEndpoint(cfg, router)
+
 	// Handle graceful shutdown
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -100,22 +102,19 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []mode
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
 		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
-		if platform == "alertflow" || platform == "exflow" {
+		if platform == "alertflow" {
 			log.Info("Starting Alert Listener")
 			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
 		}
-		go endpoints.ReadyEndpoint(cfg, router)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
 		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
-		go endpoints.ReadyEndpoint(cfg, router)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
-		if platform == "alertflow" || platform == "exflow" {
+		if platform == "alertflow" {
 			log.Info("Starting Alert Listener")
 			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
 		}
-		go endpoints.ReadyEndpoint(cfg, router)
 	}
 }

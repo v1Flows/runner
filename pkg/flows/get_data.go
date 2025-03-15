@@ -9,17 +9,23 @@ import (
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func GetFlowData(platform string, cfg config.Config, flowID string) (bmodels.Flows, error) {
+func GetFlowData(cfg config.Config, flowID string, executionID string) (bmodels.Flows, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
+	}
+
+	platform, ok := executions.GetPlatformForExecution(executionID)
+	if !ok {
+		log.Error("Failed to get platform")
 	}
 
 	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)

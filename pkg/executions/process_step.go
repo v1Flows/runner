@@ -1,4 +1,4 @@
-package internal_executions
+package executions
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
-	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 
 	log "github.com/sirupsen/logrus"
@@ -30,7 +29,7 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
-	if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
+	if err := UpdateStep(cfg, execution.ID.String(), step); err != nil {
 		log.Error(err)
 		return plugins.Response{}, false, err
 	}
@@ -43,7 +42,7 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
+		if err := UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, err
 		}
@@ -58,7 +57,7 @@ func processStep(cfg config.Config, actions []models.Actions, loadedPlugins map[
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
+		if err := UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, err
 		}
