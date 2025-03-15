@@ -29,14 +29,14 @@ type Config struct {
 }
 
 type AlertflowConfig struct {
-	Enabled  bool   `mapstructure:"enabled", default:"true"`
+	Enabled  bool   `mapstructure:"enabled" default:"true"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
 	APIKey   string `mapstructure:"api_key" validate:"required"`
 }
 
 type exflowConfig struct {
-	Enabled  bool   `mapstructure:"enabled", default:"true"`
+	Enabled  bool   `mapstructure:"enabled" default:"true"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
 	APIKey   string `mapstructure:"api_key" validate:"required"`

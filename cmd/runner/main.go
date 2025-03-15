@@ -10,8 +10,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/alertflow"
 	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/internal/endpoints"
+	"github.com/v1Flows/runner/internal/exflow"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/plugins"
 
@@ -61,9 +63,15 @@ func main() {
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
 	actions := common.RegisterActions(actionPlugins)
-	endpoints := endpoints.RegisterEndpoints(endpointPlugins)
 
-	runner.RegisterAtAPI(version, modelPlugins, actions, endpoints)
+	if cfg.Alertflow.Enabled {
+		endpoints := endpoints.RegisterEndpoints(endpointPlugins)
+		alertflow.RegisterAtAPI(version, modelPlugins, actions, endpoints)
+	}
+
+	if cfg.exFlow.Enabled {
+		exflow.RegisterAtAPI(version, modelPlugins, actions)
+	}
 
 	// RunnerID might have changed after registration, so fetch the config again
 	cfg = configManager.GetConfig()
