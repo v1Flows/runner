@@ -7,8 +7,8 @@ import (
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/alertflow"
 	internal_executions "github.com/v1Flows/runner/internal/executions"
-	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 
@@ -32,7 +32,7 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 	}
 
 	// set runner to busy
-	runner.Busy(cfg, true)
+	alertflow.Busy(cfg, true)
 
 	// send initial step to alertflow
 	initialSteps, err := internal_executions.SendInitialSteps(cfg, actions, execution)
@@ -194,5 +194,5 @@ func startProcessing(cfg config.Config, actions []models.Actions, loadedPlugins 
 
 	executions.EndSuccess(cfg, execution)
 
-	runner.Busy(cfg, false)
+	alertflow.Busy(cfg, false)
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/internal/endpoints"
 	"github.com/v1Flows/runner/internal/exflow"
-	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/plugins"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -66,17 +65,19 @@ func main() {
 
 	if cfg.Alertflow.Enabled {
 		endpoints := endpoints.RegisterEndpoints(endpointPlugins)
+		log.Info("Registering at AlertFlow")
 		alertflow.RegisterAtAPI(version, modelPlugins, actions, endpoints)
+		go alertflow.SendHeartbeat()
 	}
 
-	if cfg.exFlow.Enabled {
+	if cfg.ExFlow.Enabled {
+		log.Info("Registering at ExFlow")
 		exflow.RegisterAtAPI(version, modelPlugins, actions)
+		go exflow.SendHeartbeat()
 	}
 
 	// RunnerID might have changed after registration, so fetch the config again
 	cfg = configManager.GetConfig()
-
-	go runner.SendHeartbeat()
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()

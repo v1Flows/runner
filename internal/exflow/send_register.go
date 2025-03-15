@@ -20,8 +20,8 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 
 	var runnerID uuid.UUID
 	var err error
-	if cfg.exFlow.RunnerID != "" {
-		runnerID, err = uuid.Parse(cfg.exFlow.RunnerID)
+	if cfg.ExFlow.RunnerID != "" {
+		runnerID, err = uuid.Parse(cfg.ExFlow.RunnerID)
 		if err != nil {
 			log.Fatalf("Invalid RunnerID: %v", err)
 		}
@@ -39,11 +39,11 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
-	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
+	req, err := http.NewRequest("PUT", cfg.ExFlow.URL+"/api/v1/runners/register", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
 
 	for i := 0; i < 3; i++ {
 		resp, err := http.DefaultClient.Do(req)
@@ -71,7 +71,7 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 
 			runner_id := ""
 			if response.RunnerID == "" {
-				runner_id = cfg.Alertflow.RunnerID
+				runner_id = cfg.ExFlow.RunnerID
 			} else {
 				runner_id = response.RunnerID
 			}

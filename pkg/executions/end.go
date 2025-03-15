@@ -8,7 +8,7 @@ import (
 
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/runner"
+	"github.com/v1Flows/runner/internal/alertflow"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -38,7 +38,7 @@ func EndSuccess(cfg config.Config, execution bmodels.Executions) {
 }
 
 func End(cfg config.Config, execution bmodels.Executions) {
-	runner.Busy(cfg, false)
+	alertflow.Busy(cfg, false)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
