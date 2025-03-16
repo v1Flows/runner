@@ -6,24 +6,27 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/AlertFlow/runner/config"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/common"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Busy(cfg config.Config, busy bool) {
+func Busy(platform string, cfg config.Config, busy bool) {
 	payload := models.Runners{
 		ExecutingJob: busy,
 	}
 
+	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(payload)
-	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/"+cfg.Alertflow.RunnerID+"/busy", payloadBuf)
+	req, err := http.NewRequest("PUT", url+"/api/v1/runners/"+runnerID+"/busy", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", apiKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +39,7 @@ func Busy(cfg config.Config, busy bool) {
 	}
 
 	if resp.StatusCode != 201 {
-		log.Error("Failed to set runner to busy at AlertFlow")
+		log.Error("Failed to set runner to busy at %s", platform)
 		log.Error("Response: ", string(body))
 	}
 }

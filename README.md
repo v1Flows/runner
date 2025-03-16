@@ -1,5 +1,5 @@
-# AlertFlow Runner
-> This runner is the execution engine of the AlertFlow platform. Please see the [AlertFlow](https://github.com/v1Flows/AlertFlow) repo for detailed informations
+# Runner
+> This runner is the execution engine of the AlertFlow and exFlow platform. Please see the [AlertFlow](https://github.com/v1Flows/AlertFlow) or [exFlow](https://github.com/v1Flows/exFlow) repo for detailed informations
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@
 
 ## Features
 - **Modes**: The runner can be started in different modes which either offer full functionality or just be a standby listener for incoming alerts
-- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow to your needs
+- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow / exflow to your needs
 
 ## Configuration
 ```yaml
@@ -23,7 +23,14 @@ log_level: info
 mode: master
 
 alertflow:
+  enabled: true
   url: https://alertflow.org
+  runner_id: null
+  api_key: null
+
+exflow:
+  enabled: true
+  url: https://exflow.org
   runner_id: null
   api_key: null
 
@@ -53,10 +60,10 @@ The Worker mode will disable the payload receiver component. The runner will onl
 The runner will only act as a payload receiver. There will be no components enable to scan or execute any jobs.
 
 ## Self Hosting
-To run the AlertFlow Runner on your own infrastructure we provide various docker images available at 
-[Docker Hub](htthttps://hub.docker.com/r/justnz/alertflow-runner).
-- **justnz/alertflow-runner:latest** - Latest Version
-- **justnz/alertflow-runner:vx.x.x** - Versioned release
+To host the Runner on your own infrastructure we provide various docker images available at 
+[Docker Hub](htthttps://hub.docker.com/r/justnz/runner).
+- **justnz/runner:latest** - Latest Version
+- **justnz/runner:vx.x.x** - Versioned release
 
 ## Contributing
 
@@ -78,4 +85,4 @@ We welcome contributions to this project! To contribute, follow these steps:
 5. Open a pull request on GitHub.
 
 ## License
-This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](https://github.com/AlertFlow/alertflow/blob/main/LICENSE) file for details.
+This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](https://github.com/v1Flows/runner/blob/main/LICENSE) file for details.

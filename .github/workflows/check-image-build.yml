@@ -16,4 +16,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Runner Docker Image
-        run: docker build . --file Dockerfile --tag justnz/alertflow:runner-test
+        run: docker build . --file Dockerfile --tag test:runner-test

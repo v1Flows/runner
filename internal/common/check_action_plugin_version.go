@@ -5,7 +5,7 @@ import (
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func checkActionVersionAgainstPluginVersion(actions []models.Actions, step bmodels.ExecutionSteps) (valid bool, pluginVersion string) {
+func CheckActionVersionAgainstPluginVersion(actions []models.Actions, step bmodels.ExecutionSteps) (valid bool, pluginVersion string) {
 	for _, action := range actions {
 		if action.Plugin == step.Action.Plugin {
 			pluginVersion = action.Version

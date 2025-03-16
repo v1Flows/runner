@@ -7,28 +7,31 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlertFlow/runner/config"
 	"github.com/google/uuid"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/common"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 )
 
-func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Actions, alertEndpoints []models.AlertEndpoints) {
+func RegisterAtAPI(platform string, version string, plugins []models.Plugins, actions []models.Actions, alertEndpoints []models.AlertEndpoints) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	var runnerID uuid.UUID
+	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+
+	var parsedRunnerID uuid.UUID
 	var err error
-	if cfg.Alertflow.RunnerID != "" {
-		runnerID, err = uuid.Parse(cfg.Alertflow.RunnerID)
+	if runnerID != "" {
+		parsedRunnerID, err = uuid.Parse(runnerID)
 		if err != nil {
 			log.Fatalf("Invalid RunnerID: %v", err)
 		}
 	}
 
 	register := models.Runners{
-		ID:             runnerID,
+		ID:             parsedRunnerID,
 		Registered:     true,
 		LastHeartbeat:  time.Now(),
 		Version:        version,
@@ -40,11 +43,11 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(register)
-	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/runners/register", payloadBuf)
+	req, err := http.NewRequest("PUT", url+"/api/v1/runners/register", payloadBuf)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", apiKey)
 
 	for i := 0; i < 3; i++ {
 		resp, err := http.DefaultClient.Do(req)
@@ -72,20 +75,20 @@ func RegisterAtAPI(version string, plugins []models.Plugins, actions []models.Ac
 
 			runner_id := ""
 			if response.RunnerID == "" {
-				runner_id = cfg.Alertflow.RunnerID
+				runner_id = configManager.GetRunnerID(platform)
 			} else {
 				runner_id = response.RunnerID
 			}
 
-			configManager.UpdateRunnerID(runner_id)
+			configManager.UpdateRunnerID(platform, runner_id)
 
-			log.Info("Runner registered at AlertFlow. ID: ", configManager.GetRunnerID())
+			log.Info("Runner registered at "+platform+". ID: ", configManager.GetRunnerID(platform))
 			return
 		} else {
-			log.Errorf("Failed to register at AlertFlow, attempt %d", i+1)
+			log.Errorf("Failed to register at "+platform+", attempt %d", i+1)
 			log.Errorf("Response: %s", string(body))
 			time.Sleep(5 * time.Second) // Add delay before retrying
 		}
 	}
-	log.Fatalf("Failed to register at AlertFlow after 3 attempts")
+	log.Fatalf("Failed to register at " + platform + " after 3 attempts")
 }

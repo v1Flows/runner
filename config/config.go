@@ -22,12 +22,21 @@ type Config struct {
 	LogLevel       string          `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
 	Mode           string          `mapstructure:"mode" validate:"required,oneof=master worker"`
 	Alertflow      AlertflowConfig `mapstructure:"alertflow" validate:"required"`
+	ExFlow         exflowConfig    `mapstructure:"exflow" validate:"required"`
 	AlertEndpoints EndpointConfig  `mapstructure:"alert_endpoints" validate:"required"`
 	PluginDir      string          `mapstructure:"plugin_dir" validate:"dir"`
 	Plugins        []PluginConfig  `mapstructure:"plugins"`
 }
 
 type AlertflowConfig struct {
+	Enabled  bool   `mapstructure:"enabled"`
+	URL      string `mapstructure:"url" validate:"required,url"`
+	RunnerID string `mapstructure:"runner_id"`
+	APIKey   string `mapstructure:"api_key" validate:"required"`
+}
+
+type exflowConfig struct {
+	Enabled  bool   `mapstructure:"enabled"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
 	APIKey   string `mapstructure:"api_key" validate:"required"`
@@ -79,6 +88,7 @@ func (cm *ConfigurationManager) LoadConfig(configFile string) error {
 	// Bind specific environment variables
 	envBindings := map[string]string{
 		"alertflow.api_key": "RUNNER_ALERTFLOW_API_KEY",
+		"exflow.api_key":    "RUNNER_EXFLOW_API_KEY",
 		"plugin_dir":        "RUNNER_PLUGIN_DIR",
 	}
 
@@ -96,13 +106,13 @@ func (cm *ConfigurationManager) LoadConfig(configFile string) error {
 	// Create new config instance
 	var config Config
 
+	// Set defaults
+	cm.setDefaults(&config)
+
 	// Unmarshal configuration
 	if err := cm.viper.Unmarshal(&config); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-
-	// Set defaults
-	cm.setDefaults(&config)
 
 	// Validate configuration
 	if err := cm.validateConfig(&config); err != nil {
@@ -138,15 +148,28 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 		}
 		config.PluginDir = currentDir + "/plugins"
 	}
+	config.Alertflow.Enabled = true
+	config.ExFlow.Enabled = true
 }
 
 func (cm *ConfigurationManager) validateConfig(config *Config) error {
-	if config.Alertflow.APIKey == "" {
-		return fmt.Errorf("api_key is required")
+	if config.Alertflow.Enabled {
+		if config.Alertflow.APIKey == "" {
+			return fmt.Errorf("api_key is required")
+		}
+		if config.Alertflow.URL == "" {
+			return fmt.Errorf("alertflow URL is required")
+		}
 	}
-	if config.Alertflow.URL == "" {
-		return fmt.Errorf("alertflow URL is required")
+	if config.ExFlow.Enabled {
+		if config.ExFlow.APIKey == "" {
+			return fmt.Errorf("api_key is required")
+		}
+		if config.ExFlow.URL == "" {
+			return fmt.Errorf("exflow URL is required")
+		}
 	}
+
 	return nil
 }
 
@@ -157,18 +180,30 @@ func (cm *ConfigurationManager) GetConfig() Config {
 	return *cm.config
 }
 
-// UpdateRunnerID updates the runner ID in the configuration
-func (cm *ConfigurationManager) UpdateRunnerID(runnerID string) {
+// UpdateRunnerID updates the runner ID in the configuration for both Alertflow and ExFlow
+func (cm *ConfigurationManager) UpdateRunnerID(platform, id string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	cm.config.Alertflow.RunnerID = runnerID
+	if platform == "alertflow" {
+		cm.config.Alertflow.RunnerID = id
+	}
+	if platform == "exflow" {
+		cm.config.ExFlow.RunnerID = id
+	}
 }
 
-// GetRunnerID returns the current runner ID
-func (cm *ConfigurationManager) GetRunnerID() string {
+// GetRunnerIDs returns the current runner IDs for both Alertflow and ExFlow
+func (cm *ConfigurationManager) GetRunnerID(platform string) string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	return cm.config.Alertflow.RunnerID
+	if platform == "alertflow" {
+		return cm.config.Alertflow.RunnerID
+	}
+	if platform == "exflow" {
+		return cm.config.ExFlow.RunnerID
+	}
+
+	return ""
 }
 
 // ReloadConfig reloads the configuration from the file

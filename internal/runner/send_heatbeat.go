@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AlertFlow/runner/config"
+	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/common"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendHeartbeat() {
+func SendHeartbeat(platform string) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -20,12 +21,14 @@ func SendHeartbeat() {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	url := cfg.Alertflow.URL + "/api/v1/runners/" + configManager.GetRunnerID() + "/heartbeat"
-	req, err := http.NewRequest("PUT", url, nil)
+	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+
+	parsedUrl := url + "/api/v1/runners/" + runnerID + "/heartbeat"
+	req, err := http.NewRequest("PUT", parsedUrl, nil)
 	if err != nil {
 		log.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", apiKey)
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for range ticker.C {
@@ -49,16 +52,16 @@ func SendHeartbeat() {
 			resp.Body.Close()
 
 			if resp.StatusCode == 200 {
-				log.Debugf("Heartbeat sent to AlertFlow")
+				log.Debugf("Heartbeat sent to %s", platform)
 				break
 			} else {
-				log.Errorf("Failed to send heartbeat to AlertFlow, attempt %d", i+1)
+				log.Errorf("Failed to send heartbeat to %s, attempt %d", platform, i+1)
 				log.Errorf("Response: %s", body)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 			}
 		}
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to send heartbeat to AlertFlow after 3 attempts")
+			log.Fatalf("Failed to send heartbeat to %s after 3 attempts", platform)
 		}
 	}
 }

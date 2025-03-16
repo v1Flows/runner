@@ -1,13 +1,12 @@
-package internal_executions
+package executions
 
 import (
-	"github.com/AlertFlow/runner/config"
-	"github.com/AlertFlow/runner/pkg/executions"
 	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/runner/config"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
-func SendFlowActionSteps(cfg config.Config, execution bmodels.Executions, flow bmodels.Flows) (stepsWithIDs []bmodels.ExecutionSteps, err error) {
+func sendFlowActionSteps(cfg config.Config, execution bmodels.Executions, flow bmodels.Flows) (stepsWithIDs []bmodels.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
 		if !action.Active {
 			continue
@@ -24,7 +23,7 @@ func SendFlowActionSteps(cfg config.Config, execution bmodels.Executions, flow b
 			step.Action.Name = action.CustomName
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step)
+		stepID, err := SendStep(cfg, execution, step)
 		if err != nil {
 			return nil, err
 		}
