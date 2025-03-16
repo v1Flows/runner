@@ -38,9 +38,9 @@ jobs:
 
       - name: Build Release Binary
         run: |
-          GOOS=darwin GOARCH=amd64 go build -o bin/alertflow-darwin-amd64 ./cmd/runner
-          GOOS=darwin GOARCH=arm64 go build -o bin/alertflow-darwin-arm64 ./cmd/runner
-          GOOS=linux GOARCH=amd64 go build -o bin/alertflow-linux-amd64 ./cmd/runner
+          GOOS=darwin GOARCH=amd64 go build -o bin/runner-darwin-amd64 ./cmd/runner
+          GOOS=darwin GOARCH=arm64 go build -o bin/runner-darwin-arm64 ./cmd/runner
+          GOOS=linux GOARCH=amd64 go build -o bin/runner-linux-amd64 ./cmd/runner
 
       - name: Create Release
         id: create_release

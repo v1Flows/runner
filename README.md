@@ -13,7 +13,7 @@
 
 ## Features
 - **Modes**: The runner can be started in different modes which either offer full functionality or just be a standby listener for incoming alerts
-- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow to your needs
+- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow / exflow to your needs
 
 ## Configuration
 ```yaml
@@ -61,7 +61,7 @@ The runner will only act as a payload receiver. There will be no components enab
 
 ## Self Hosting
 To host the Runner on your own infrastructure we provide various docker images available at 
-[Docker Hub](htthttps://hub.docker.com/r/justnz/alertflow-runner).
+[Docker Hub](htthttps://hub.docker.com/r/justnz/runner).
 - **justnz/runner:latest** - Latest Version
 - **justnz/runner:vx.x.x** - Versioned release
 
@@ -85,4 +85,4 @@ We welcome contributions to this project! To contribute, follow these steps:
 5. Open a pull request on GitHub.
 
 ## License
-This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](https://github.com/v1Flows/AlertFlow/blob/main/LICENSE) file for details.
+This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](https://github.com/v1Flows/runner/blob/main/LICENSE) file for details.
