@@ -33,8 +33,9 @@ type ExecuteTaskRequest struct {
 }
 
 type EndpointRequest struct {
-	Config config.Config
-	Body   []byte
+	Config   config.Config
+	Body     []byte
+	Platform string
 }
 
 type Response struct {

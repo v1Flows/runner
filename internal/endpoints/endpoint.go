@@ -24,7 +24,7 @@ func RegisterEndpoints(loadedPluginEndpoints []shared_models.Plugin) (endpoints 
 	return endpoints
 }
 
-func InitEndpointRouter(cfg config.Config, router *gin.Engine, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
+func InitEndpointRouter(cfg config.Config, router *gin.Engine, platform string, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
 	log.Info("Open Alert Port: ", cfg.Endpoints.Port)
 
 	alert := router.Group("/alert")
@@ -43,8 +43,9 @@ func InitEndpointRouter(cfg config.Config, router *gin.Engine, endpointPlugins [
 			}
 
 			request := plugins.EndpointRequest{
-				Config: cfg,
-				Body:   bodyBytes,
+				Config:   cfg,
+				Body:     bodyBytes,
+				Platform: platform,
 			}
 
 			res, err := loadedPlugins[plugin.Endpoint.ID].EndpointRequest(request)
