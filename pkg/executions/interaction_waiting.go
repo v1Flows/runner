@@ -5,19 +5,19 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/platform"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToInteractionRequired(cfg config.Config, execution models.Executions) {
+func SetToInteractionRequired(cfg config.Config, execution shared_models.Executions) {
 	execution.Status = "interactionWaiting"
 	InteractionWaiting(cfg, execution)
 }
 
-func InteractionWaiting(cfg config.Config, execution models.Executions) {
+func InteractionWaiting(cfg config.Config, execution shared_models.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
