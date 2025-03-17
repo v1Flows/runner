@@ -14,7 +14,7 @@ import (
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
 	HandleAlert(request AlertHandlerRequest) (Response, error)
-	Info() (shared_models.Plugins, error)
+	Info() (shared_models.Plugin, error)
 }
 
 // PluginRPC is an implementation of net/rpc for Plugin
@@ -55,8 +55,8 @@ func (p *PluginRPC) HandleAlert(request AlertHandlerRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) Info() (shared_models.Plugins, error) {
-	var resp shared_models.Plugins
+func (p *PluginRPC) Info() (shared_models.Plugin, error) {
+	var resp shared_models.Plugin
 	err := p.Client.Call("Plugin.Info", new(interface{}), &resp)
 	return resp, err
 }
@@ -91,7 +91,7 @@ func (s *PluginRPCServer) HandleAlert(request AlertHandlerRequest, resp *Respons
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *shared_models.Plugins) error {
+func (s *PluginRPCServer) Info(args interface{}, resp *shared_models.Plugin) error {
 	result, err := s.Impl.Info()
 	*resp = result
 	return err

@@ -8,17 +8,17 @@ import (
 
 	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Busy(platform string, cfg config.Config, busy bool) {
+func Busy(targetPlatform string, cfg config.Config, busy bool) {
 	payload := models.Runners{
 		ExecutingJob: busy,
 	}
 
-	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(payload)
@@ -39,7 +39,7 @@ func Busy(platform string, cfg config.Config, busy bool) {
 	}
 
 	if resp.StatusCode != 201 {
-		log.Error("Failed to set runner to busy at %s", platform)
+		log.Error("Failed to set runner to busy at %s", targetPlatform)
 		log.Error("Response: ", string(body))
 	}
 }

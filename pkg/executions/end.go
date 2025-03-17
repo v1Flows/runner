@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/platform"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
@@ -40,15 +39,15 @@ func EndSuccess(cfg config.Config, execution shared_models.Executions) {
 }
 
 func End(cfg config.Config, execution shared_models.Executions) {
-	platform, ok := platform.GetPlatformForExecution(execution.ID.String())
+	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
 		return
 	}
 
-	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
 
-	runner.Busy(platform, cfg, false)
+	runner.Busy(targetPlatform, cfg, false)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
@@ -64,6 +63,6 @@ func End(cfg config.Config, execution shared_models.Executions) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Error("Failed to update execution at %s API", platform)
+		log.Error("Failed to update execution at %s API", targetPlatform)
 	}
 }

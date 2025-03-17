@@ -1,4 +1,4 @@
-package executions
+package internal_executions
 
 import (
 	"errors"
@@ -7,30 +7,31 @@ import (
 	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func RegisterActions(loadedPluginActions []shared_models.Plugins) (actions []shared_models.Actions) {
+func RegisterActions(loadedPluginActions []shared_models.Plugin) (actions []shared_models.Action) {
 	for _, plugin := range loadedPluginActions {
-		actions = append(actions, plugin.Actions)
+		actions = append(actions, plugin.Action)
 	}
 
 	if len(actions) == 0 {
-		actions = []shared_models.Actions{}
+		actions = []shared_models.Action{}
 	}
 
 	return actions
 }
 
-func ProcessStep(cfg config.Config, actions []shared_models.Actions, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, err error) {
+func processStep(cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, err error) {
 	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
-	if err := UpdateStep(cfg, execution.ID.String(), step); err != nil {
+	if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 		log.Error(err)
 		return plugins.Response{}, false, err
 	}
@@ -51,7 +52,7 @@ func ProcessStep(cfg config.Config, actions []shared_models.Actions, loadedPlugi
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := UpdateStep(cfg, execution.ID.String(), step); err != nil {
+		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, err
 		}
@@ -73,7 +74,7 @@ func ProcessStep(cfg config.Config, actions []shared_models.Actions, loadedPlugi
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := UpdateStep(cfg, execution.ID.String(), step); err != nil {
+		if err := executions.UpdateStep(cfg, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, err
 		}

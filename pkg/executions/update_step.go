@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/platform"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
@@ -18,13 +17,13 @@ func UpdateStep(cfg config.Config, executionID string, step shared_models.Execut
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	platform, ok := platform.GetPlatformForExecution(executionID)
+	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 		return fmt.Errorf("Failed to get platform")
 	}
 
-	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	req, err := http.NewRequest("PUT", url+"/api/v1/executions/"+executionID+"/steps/"+step.ID.String(), payloadBuf)
 	if err != nil {
@@ -39,7 +38,7 @@ func UpdateStep(cfg config.Config, executionID string, step shared_models.Execut
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Error("Failed to send execution step at %s API", platform)
+		log.Error("Failed to send execution step at %s API", targetPlatform)
 		return err
 	}
 

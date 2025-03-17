@@ -1,12 +1,13 @@
-package executions
+package internal_executions
 
 import (
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/executions"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
-func SendFlowActionSteps(cfg config.Config, execution shared_models.Executions, flow shared_models.Flows) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+func sendFlowActionSteps(cfg config.Config, execution shared_models.Executions, flow shared_models.Flows) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
 		if !action.Active {
 			continue
@@ -23,7 +24,7 @@ func SendFlowActionSteps(cfg config.Config, execution shared_models.Executions, 
 			step.Action.Name = action.CustomName
 		}
 
-		stepID, err := SendStep(cfg, execution, step)
+		stepID, err := executions.SendStep(cfg, execution, step)
 		if err != nil {
 			return nil, err
 		}

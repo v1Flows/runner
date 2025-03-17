@@ -1,4 +1,4 @@
-package executions
+package internal_executions
 
 import (
 	"encoding/json"
@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
-	"github.com/v1Flows/runner/pkg/alertflow"
-	"github.com/v1Flows/runner/pkg/exflow"
+	"github.com/v1Flows/runner/pkg/platform"
 	platformfn "github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
@@ -20,8 +18,8 @@ type IncomingExecutions struct {
 	Executions []shared_models.Executions `json:"executions"`
 }
 
-func GetPendingExecutions(platform string, cfg config.Config, actions []shared_models.Actions, loadedPlugins map[string]plugins.Plugin) {
-	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+func GetPendingExecutions(targetPlatform string, cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin) {
+	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	client := http.Client{
 		Timeout: 10 * time.Second,
@@ -50,12 +48,12 @@ func GetPendingExecutions(platform string, cfg config.Config, actions []shared_m
 			}
 
 			if resp.StatusCode != 200 {
-				log.Errorf("Failed to get waiting executions from %s API: %s, attempt %d", platform, parsedUrl, i+1)
+				log.Errorf("Failed to get waiting executions from %s API: %s, attempt %d", targetPlatform, parsedUrl, i+1)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 				continue
 			}
 
-			log.Debugf("Executions received from %s API: %s", platform, parsedUrl)
+			log.Debugf("Executions received from %s API: %s", targetPlatform, parsedUrl)
 
 			var executions IncomingExecutions
 			err = json.NewDecoder(resp.Body).Decode(&executions)
@@ -68,19 +66,14 @@ func GetPendingExecutions(platform string, cfg config.Config, actions []shared_m
 
 			for _, execution := range executions.Executions {
 				// Save platform information for the execution
-				platformfn.SetPlatformForExecution(execution.ID.String(), platform)
+				platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
 
-				if platform == "alertflow" {
-					// Process one execution at a time
-					alertflow.StartProcessing(platform, cfg, actions, loadedPlugins, execution)
-				} else if platform == "exflow" {
-					exflow.StartProcessing(platform, cfg, actions, loadedPlugins, execution)
-				}
+				startProcessing(targetPlatform, cfg, actions, loadedPlugins, execution)
 			}
 
 		}
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to get waiting executions from %s API after 3 attempts: %s", platform, parsedUrl)
+			log.Fatalf("Failed to get waiting executions from %s API after 3 attempts: %s", targetPlatform, parsedUrl)
 		}
 	}
 }

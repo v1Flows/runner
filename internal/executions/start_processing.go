@@ -1,11 +1,13 @@
-package exflow
+package internal_executions
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	internal_alertflow "github.com/v1Flows/runner/internal/alertflow"
+	internal_exflow "github.com/v1Flows/runner/internal/exflow"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
@@ -14,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func StartProcessing(platform string, cfg config.Config, actions []shared_models.Actions, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions) {
+func startProcessing(platform string, cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions) {
 	configManager := config.GetInstance()
 
 	// ensure that execution runnerid equals the config runnerid
@@ -35,22 +37,32 @@ func StartProcessing(platform string, cfg config.Config, actions []shared_models
 	// set runner to busy
 	runner.Busy(platform, cfg, true)
 
-	// send initial step to alertflow
-	initialSteps, err := sendInitialSteps(cfg, actions, execution)
-	if err != nil {
-		executions.EndWithError(cfg, execution)
-		return
+	// send initial step
+	var initialSteps []shared_models.ExecutionSteps
+	if platform == "alertflow" {
+		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution)
+		if err != nil {
+			executions.EndWithError(cfg, execution)
+			return
+		}
+	} else if platform == "exflow" {
+		initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
+		if err != nil {
+			executions.EndWithError(cfg, execution)
+			return
+		}
 	}
 
 	// process each initial step where pending is true
 	var flow shared_models.Flows
+	var alert bmodels.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			res, success, err := executions.ProcessStep(cfg, actions, loadedPlugins, flow, af_models.Alerts{}, initialSteps, step, execution)
+			res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, initialSteps, step, execution)
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
-				executions.CancelRemainingSteps(cfg, execution.ID.String())
+				cancelRemainingSteps(cfg, execution.ID.String())
 				// end execution
 				executions.EndWithError(cfg, execution)
 				return
@@ -60,33 +72,42 @@ func StartProcessing(platform string, cfg config.Config, actions []shared_models
 				flow = *res.Flow
 			} else if flow.ID == uuid.Nil {
 				log.Error("Error parsing flow")
-				executions.CancelRemainingSteps(cfg, execution.ID.String())
+				cancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndWithError(cfg, execution)
+				return
+			}
+
+			if res.Alert != nil {
+				alert = *res.Alert
+			} else if alert.ID == uuid.Nil {
+				log.Error("Error parsing alert")
+				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "noPatternMatch" {
-				executions.CancelRemainingSteps(cfg, execution.ID.String())
+				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndNoPatternMatch(cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "canceled" {
-				executions.CancelRemainingSteps(cfg, execution.ID.String())
+				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndCanceled(cfg, execution)
 				return
 			}
 
 			if !success {
-				executions.CancelRemainingSteps(cfg, execution.ID.String())
+				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution)
 				return
 			}
 		}
 	}
 
-	// send flow actions as steps to exflow
-	flowActionStepsWithIDs, err := executions.SendFlowActionSteps(cfg, execution, flow)
+	// send flow actions as steps to alertflow
+	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
 		executions.EndWithError(cfg, execution)
 		return
@@ -96,29 +117,29 @@ func StartProcessing(platform string, cfg config.Config, actions []shared_models
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				res, success, err := executions.ProcessStep(cfg, actions, loadedPlugins, flow, af_models.Alerts{}, flowActionStepsWithIDs, step, execution)
+				res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
-					executions.CancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(cfg, execution.ID.String())
 					// end execution
 					executions.EndWithError(cfg, execution)
 					return
 				}
 
 				if res.Data["status"] == "noPatternMatch" {
-					executions.CancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndNoPatternMatch(cfg, execution)
 					return
 				}
 
 				if res.Data["status"] == "canceled" {
-					executions.CancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndCanceled(cfg, execution)
 					return
 				}
 
 				if !success {
-					executions.CancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndWithError(cfg, execution)
 					return
 				}
@@ -134,7 +155,7 @@ func StartProcessing(platform string, cfg config.Config, actions []shared_models
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					res, success, err := executions.ProcessStep(cfg, actions, loadedPlugins, flow, af_models.Alerts{}, flowActionStepsWithIDs, step, execution)
+					res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, flowActionStepsWithIDs, step, execution)
 					if err != nil {
 						failedSteps++
 					}

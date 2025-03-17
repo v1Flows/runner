@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/models"
+	"github.com/v1Flows/runner/pkg/platform"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -22,12 +22,12 @@ func GetFlowData(cfg config.Config, flowID string, executionID string) (shared_m
 		},
 	}
 
-	platform, ok := common.GetPlatformForExecution(executionID)
+	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 	}
 
-	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	parsedUrl := url + "/api/v1/flows/" + flowID
 	req, err := http.NewRequest("GET", parsedUrl, nil)
@@ -43,12 +43,12 @@ func GetFlowData(cfg config.Config, flowID string, executionID string) (shared_m
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get flow data from %s API: %s", platform, url)
-		err = fmt.Errorf("failed to get flow data from %s API: %s", platform, url)
+		log.Errorf("Failed to get flow data from %s API: %s", targetPlatform, url)
+		err = fmt.Errorf("failed to get flow data from %s API: %s", targetPlatform, url)
 		return shared_models.Flows{}, err
 	}
 
-	log.Debugf("Flow data received from %s API: %s", platform, url)
+	log.Debugf("Flow data received from %s API: %s", targetPlatform, url)
 
 	var flow models.IncomingFlow
 	err = json.NewDecoder(resp.Body).Decode(&flow)

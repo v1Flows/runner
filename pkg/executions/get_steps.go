@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/models"
 	"github.com/v1Flows/runner/pkg/platform"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
@@ -23,13 +22,13 @@ func GetSteps(cfg config.Config, executionID string) ([]shared_models.ExecutionS
 		},
 	}
 
-	platform, ok := platform.GetPlatformForExecution(executionID)
+	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 		return []shared_models.ExecutionSteps{}, fmt.Errorf("failed to get platform")
 	}
 
-	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	parsedUrl := url + "/api/v1/executions/" + executionID + "/steps"
 	req, err := http.NewRequest("GET", parsedUrl, nil)
@@ -45,12 +44,12 @@ func GetSteps(cfg config.Config, executionID string) ([]shared_models.ExecutionS
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get step data from %s API: %s", platform, url)
-		err = fmt.Errorf("failed to get step data from %s API: %s", platform, url)
+		log.Errorf("Failed to get step data from %s API: %s", targetPlatform, url)
+		err = fmt.Errorf("failed to get step data from %s API: %s", targetPlatform, url)
 		return []shared_models.ExecutionSteps{}, err
 	}
 
-	log.Debugf("Step data received from %s API: %s", platform, url)
+	log.Debugf("Step data received from %s API: %s", targetPlatform, url)
 
 	var steps models.IncomingExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&steps)

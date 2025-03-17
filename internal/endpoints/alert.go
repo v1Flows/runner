@@ -4,33 +4,33 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/plugins"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
-func RegisterEndpoints(loadedPluginEndpoints []models.Plugins) (endpoints []models.AlertEndpoints) {
+func RegisterEndpoints(loadedPluginEndpoints []shared_models.Plugin) (endpoints []shared_models.Endpoint) {
 	for _, plugin := range loadedPluginEndpoints {
-		endpoints = append(endpoints, plugin.Endpoints)
+		endpoints = append(endpoints, plugin.Endpoint)
 	}
 
 	if len(endpoints) == 0 {
-		endpoints = []models.AlertEndpoints{}
+		endpoints = []shared_models.Endpoint{}
 	}
 
 	return endpoints
 }
 
-func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
+func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
 	log.Info("Open Alert Port: ", cfg.AlertEndpoints.Port)
 
 	alert := router.Group("/alert")
 	for _, plugin := range endpointPlugins {
-		log.Infof("Open %s Endpoint at /alert%s", plugin.Name, plugin.Endpoints.Endpoint)
-		alert.POST(plugin.Endpoints.Endpoint, func(c *gin.Context) {
+		log.Infof("Open %s Endpoint at /alert%s", plugin.Name, plugin.Endpoint.Path)
+		alert.POST(plugin.Endpoint.Path, func(c *gin.Context) {
 			log.Info("Received Alert for: ", plugin.Name)
 
 			bodyBytes, err := io.ReadAll(c.Request.Body)
@@ -47,7 +47,7 @@ func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []mo
 				Body:   bodyBytes,
 			}
 
-			res, err := loadedPlugins[plugin.Endpoints.ID].HandleAlert(request)
+			res, err := loadedPlugins[plugin.Endpoint.ID].HandleAlert(request)
 			if err != nil {
 				log.Error("Error in handling alert: ", err)
 				c.JSON(500, gin.H{

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 var loadedPlugins = make(map[string]Plugin)
@@ -63,7 +63,7 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 	return plugin, client, nil
 }
 
-func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.Plugins, actionPlugins []models.Plugins, endpointPlugins []models.Plugins) {
+func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
 		{Name: "collect_data", Version: "main", Repository: "https://github.com/AlertFlow/rp-collect_data"},
@@ -124,8 +124,8 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 			endpointPlugins = append(endpointPlugins, info)
 		} else if info.Type == "action" {
 
-			if info.Actions.Version == "" {
-				info.Actions.Version = info.Version
+			if info.Action.Version == "" {
+				info.Action.Version = info.Version
 			}
 
 			actionPlugins = append(actionPlugins, info)

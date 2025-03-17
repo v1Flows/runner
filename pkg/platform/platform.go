@@ -1,4 +1,4 @@
-package common
+package platform
 
 import "github.com/v1Flows/runner/config"
 

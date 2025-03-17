@@ -1,4 +1,4 @@
-package exflow
+package internal_alertflow
 
 import (
 	"time"
@@ -9,10 +9,10 @@ import (
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func sendInitialSteps(cfg config.Config, actions []shared_models.Actions, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	var initialSteps = []shared_models.ExecutionSteps{
 		{
-			Action: shared_models.Actions{
+			Action: shared_models.Action{
 				Name:        "Runner Pick Up",
 				Description: "Runner picked up the execution",
 				Version:     "1.0.0",
@@ -32,7 +32,7 @@ func sendInitialSteps(cfg config.Config, actions []shared_models.Actions, execut
 			FinishedAt: time.Now(),
 		},
 		{
-			Action: shared_models.Actions{
+			Action: shared_models.Action{
 				Plugin: "collect_data",
 				Params: []shared_models.Params{
 					{
@@ -49,7 +49,7 @@ func sendInitialSteps(cfg config.Config, actions []shared_models.Actions, execut
 			CreatedAt: time.Now(),
 		},
 		{
-			Action: shared_models.Actions{
+			Action: shared_models.Action{
 				Plugin: "actions_check",
 			},
 			Status:    "pending",

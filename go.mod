@@ -75,8 +75,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/viper v1.19.0
-	github.com/v1Flows/exFlow/services/backend v0.0.0-20250317110020-b117ccfc6888
-	github.com/v1Flows/shared-library v1.0.1
+	github.com/v1Flows/shared-library v1.0.3
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 )

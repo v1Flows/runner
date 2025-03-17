@@ -9,17 +9,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func RegisterAtAPI(platform string, version string, plugins []models.Plugins, actions []models.Actions, alertEndpoints []models.AlertEndpoints) {
+func RegisterAtAPI(targetPlatform string, version string, plugins []shared_models.Plugin, actions []shared_models.Action, alertEndpoints []shared_models.Endpoint) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	var parsedRunnerID uuid.UUID
 	var err error
@@ -30,15 +30,15 @@ func RegisterAtAPI(platform string, version string, plugins []models.Plugins, ac
 		}
 	}
 
-	register := models.Runners{
-		ID:             parsedRunnerID,
-		Registered:     true,
-		LastHeartbeat:  time.Now(),
-		Version:        version,
-		Mode:           cfg.Mode,
-		Plugins:        plugins,
-		Actions:        actions,
-		AlertEndpoints: alertEndpoints,
+	register := shared_models.Runners{
+		ID:            parsedRunnerID,
+		Registered:    true,
+		LastHeartbeat: time.Now(),
+		Version:       version,
+		Mode:          cfg.Mode,
+		Plugins:       plugins,
+		Actions:       actions,
+		Endpoints:     alertEndpoints,
 	}
 
 	payloadBuf := new(bytes.Buffer)
@@ -75,20 +75,20 @@ func RegisterAtAPI(platform string, version string, plugins []models.Plugins, ac
 
 			runner_id := ""
 			if response.RunnerID == "" {
-				runner_id = configManager.GetRunnerID(platform)
+				runner_id = configManager.GetRunnerID(targetPlatform)
 			} else {
 				runner_id = response.RunnerID
 			}
 
-			configManager.UpdateRunnerID(platform, runner_id)
+			configManager.UpdateRunnerID(targetPlatform, runner_id)
 
-			log.Info("Runner registered at "+platform+". ID: ", configManager.GetRunnerID(platform))
+			log.Info("Runner registered at "+targetPlatform+". ID: ", configManager.GetRunnerID(targetPlatform))
 			return
 		} else {
-			log.Errorf("Failed to register at "+platform+", attempt %d", i+1)
+			log.Errorf("Failed to register at "+targetPlatform+", attempt %d", i+1)
 			log.Errorf("Response: %s", string(body))
 			time.Sleep(5 * time.Second) // Add delay before retrying
 		}
 	}
-	log.Fatalf("Failed to register at " + platform + " after 3 attempts")
+	log.Fatal("Failed to register at " + targetPlatform + " after 3 attempts")
 }
