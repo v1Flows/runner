@@ -24,8 +24,8 @@ func RegisterEndpoints(loadedPluginEndpoints []shared_models.Plugin) (endpoints 
 	return endpoints
 }
 
-func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
-	log.Info("Open Alert Port: ", cfg.AlertEndpoints.Port)
+func InitEndpointRouter(cfg config.Config, router *gin.Engine, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
+	log.Info("Open Alert Port: ", cfg.Endpoints.Port)
 
 	alert := router.Group("/alert")
 	for _, plugin := range endpointPlugins {
@@ -42,19 +42,19 @@ func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []sh
 				return
 			}
 
-			request := plugins.AlertHandlerRequest{
+			request := plugins.EndpointRequest{
 				Config: cfg,
 				Body:   bodyBytes,
 			}
 
-			res, err := loadedPlugins[plugin.Endpoint.ID].HandleAlert(request)
+			res, err := loadedPlugins[plugin.Endpoint.ID].EndpointRequest(request)
 			if err != nil {
-				log.Error("Error in handling alert: ", err)
+				log.Error("Error in handling request: ", err)
 				c.JSON(500, gin.H{
 					"error": err,
 				})
 			} else {
-				log.Info("Alert handled successfully")
+				log.Info("Request handled successfully")
 				c.JSON(200, gin.H{
 					"response": res,
 				})
@@ -62,5 +62,5 @@ func InitAlertRouter(cfg config.Config, router *gin.Engine, endpointPlugins []sh
 		})
 	}
 
-	router.Run(":" + strconv.Itoa(cfg.AlertEndpoints.Port))
+	router.Run(":" + strconv.Itoa(cfg.Endpoints.Port))
 }

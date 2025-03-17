@@ -104,7 +104,7 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []shar
 		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
 		if platform == "alertflow" {
 			log.Info("Starting Alert Listener")
-			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+			go endpoints.InitEndpointRouter(cfg, router, endpointPlugins, loadedPlugins)
 		}
 	case "worker":
 		log.Info("Runner is in Worker Mode")
@@ -114,7 +114,7 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []shar
 		log.Info("Runner is in Listener Mode")
 		if platform == "alertflow" {
 			log.Info("Starting Alert Listener")
-			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+			go endpoints.InitEndpointRouter(cfg, router, endpointPlugins, loadedPlugins)
 		}
 	}
 }

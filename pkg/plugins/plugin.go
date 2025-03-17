@@ -13,7 +13,7 @@ import (
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
-	HandleAlert(request AlertHandlerRequest) (Response, error)
+	EndpointRequest(request EndpointRequest) (Response, error)
 	Info() (shared_models.Plugin, error)
 }
 
@@ -31,7 +31,7 @@ type ExecuteTaskRequest struct {
 	Alert     af_models.Alerts
 }
 
-type AlertHandlerRequest struct {
+type EndpointRequest struct {
 	Config config.Config
 	Body   []byte
 }
@@ -49,7 +49,7 @@ func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) HandleAlert(request AlertHandlerRequest) (Response, error) {
+func (p *PluginRPC) HandleAlert(request EndpointRequest) (Response, error) {
 	var resp Response
 	err := p.Client.Call("Plugin.HandleAlert", request, &resp)
 	return resp, err
@@ -85,8 +85,8 @@ func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response
 	return err
 }
 
-func (s *PluginRPCServer) HandleAlert(request AlertHandlerRequest, resp *Response) error {
-	result, err := s.Impl.HandleAlert(request)
+func (s *PluginRPCServer) EndpointRequest(request EndpointRequest, resp *Response) error {
+	result, err := s.Impl.EndpointRequest(request)
 	*resp = result
 	return err
 }
