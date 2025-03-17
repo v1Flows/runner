@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(platform string, cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions) {
+func startProcessing(platform string, cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions, alertID string) {
 	configManager := config.GetInstance()
 
 	// ensure that execution runnerid equals the config runnerid
@@ -40,7 +40,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	// send initial step
 	var initialSteps []shared_models.ExecutionSteps
 	if platform == "alertflow" {
-		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution)
+		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution, alertID)
 		if err != nil {
 			executions.EndWithError(cfg, execution)
 			return

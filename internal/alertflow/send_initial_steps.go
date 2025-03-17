@@ -9,7 +9,7 @@ import (
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions, alertID string) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	var initialSteps = []shared_models.ExecutionSteps{
 		{
 			Action: shared_models.Action{
@@ -35,6 +35,10 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 			Action: shared_models.Action{
 				Plugin: "collect_data",
 				Params: []shared_models.Params{
+					{
+						Key:   "AlertID",
+						Value: alertID,
+					},
 					{
 						Key:   "FlowID",
 						Value: execution.FlowID,

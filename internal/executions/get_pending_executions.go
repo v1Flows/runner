@@ -68,7 +68,17 @@ func GetPendingExecutions(targetPlatform string, cfg config.Config, actions []sh
 				// Save platform information for the execution
 				platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
 
-				startProcessing(targetPlatform, cfg, actions, loadedPlugins, execution)
+				var alertID string
+				if targetPlatform == "alertflow" {
+					var executionMap map[string]interface{}
+					executionBytes, _ := json.Marshal(execution)
+					json.Unmarshal(executionBytes, &executionMap)
+					if alertID, ok := executionMap["alert_id"].(string); ok {
+						log.Infof("Alert ID: %s", alertID)
+					}
+				}
+
+				startProcessing(targetPlatform, cfg, actions, loadedPlugins, execution, alertID)
 			}
 
 		}

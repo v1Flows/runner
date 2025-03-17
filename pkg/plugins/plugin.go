@@ -29,6 +29,7 @@ type ExecuteTaskRequest struct {
 	Execution shared_models.Executions
 	Step      shared_models.ExecutionSteps
 	Alert     af_models.Alerts
+	Platform  string
 }
 
 type EndpointRequest struct {
