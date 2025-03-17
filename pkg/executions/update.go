@@ -36,7 +36,7 @@ func UpdateExecution(cfg config.Config, execution shared_models.Executions) erro
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Error("Failed to update execution at %s API", targetPlatform)
+		log.Error("Failed to update execution at " + targetPlatform + " API")
 		return err
 	}
 

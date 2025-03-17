@@ -20,7 +20,7 @@ func UpdateStep(cfg config.Config, executionID string, step shared_models.Execut
 	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
-		return fmt.Errorf("Failed to get platform")
+		return fmt.Errorf("failed to get platform")
 	}
 
 	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
@@ -38,7 +38,7 @@ func UpdateStep(cfg config.Config, executionID string, step shared_models.Execut
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Error("Failed to send execution step at %s API", targetPlatform)
+		log.Error("Failed to send execution step at " + targetPlatform + " API")
 		return err
 	}
 
