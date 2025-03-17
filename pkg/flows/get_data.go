@@ -14,17 +14,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetFlowData(cfg config.Config, flowID string, executionID string) (shared_models.Flows, error) {
+func GetFlowData(cfg config.Config, flowID string, targetPlatform string) (shared_models.Flows, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
-	}
-
-	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
-	if !ok {
-		log.Error("Failed to get platform")
 	}
 
 	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)

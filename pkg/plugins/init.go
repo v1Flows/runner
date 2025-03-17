@@ -67,13 +67,13 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
 		{Name: "collect_data", Version: "main", Repository: "https://github.com/AlertFlow/rp-collect_data"},
-		{Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
-		{Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
-		{Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
-		{Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
-		{Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},
-		{Name: "ping", Version: "main", Repository: "https://github.com/AlertFlow/rp-ping"},
-		{Name: "port_checker", Version: "main", Repository: "https://github.com/AlertFlow/rp-port_checker"},
+		// {Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
+		// {Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
+		// {Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
+		// {Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
+		// {Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},
+		// {Name: "ping", Version: "main", Repository: "https://github.com/AlertFlow/rp-ping"},
+		// {Name: "port_checker", Version: "main", Repository: "https://github.com/AlertFlow/rp-port_checker"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts

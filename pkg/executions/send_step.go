@@ -3,6 +3,7 @@ package executions
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/v1Flows/runner/config"
@@ -36,6 +37,7 @@ func SendStep(cfg config.Config, execution shared_models.Executions, step shared
 	defer resp.Body.Close()
 	if resp.StatusCode != 201 {
 		log.Error("Failed to send execution step at " + targetPlatform + " API")
+		return shared_models.ExecutionSteps{}, fmt.Errorf("failed to send execution step at " + targetPlatform + " api")
 	}
 
 	var stepResponse shared_models.ExecutionSteps

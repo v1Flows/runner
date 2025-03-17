@@ -50,9 +50,9 @@ func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) HandleAlert(request EndpointRequest) (Response, error) {
+func (p *PluginRPC) EndpointRequest(request EndpointRequest) (Response, error) {
 	var resp Response
-	err := p.Client.Call("Plugin.HandleAlert", request, &resp)
+	err := p.Client.Call("Plugin.EndpointRequest", request, &resp)
 	return resp, err
 }
 
