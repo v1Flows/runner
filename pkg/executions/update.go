@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"net/http"
 
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/platform"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Update(cfg config.Config, execution bmodels.Executions) error {
+func UpdateExecution(cfg config.Config, execution shared_models.Executions) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	platform, ok := GetPlatformForExecution(execution.ID.String())
+	platform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
 	}

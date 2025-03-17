@@ -1,11 +1,13 @@
 package models
 
-import bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+import (
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
+)
 
 type IncomingExecutionSteps struct {
-	StepsData []bmodels.ExecutionSteps `json:"steps"`
+	StepsData []shared_models.ExecutionSteps `json:"steps"`
 }
 
 type IncomingExecutionStep struct {
-	StepData bmodels.ExecutionSteps `json:"step"`
+	StepData shared_models.ExecutionSteps `json:"step"`
 }

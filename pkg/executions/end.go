@@ -6,40 +6,41 @@ import (
 	"net/http"
 	"time"
 
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/internal/runner"
+	"github.com/v1Flows/runner/pkg/platform"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func EndCanceled(cfg config.Config, execution bmodels.Executions) {
+func EndCanceled(cfg config.Config, execution shared_models.Executions) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "canceled"
 	End(cfg, execution)
 }
 
-func EndNoPatternMatch(cfg config.Config, execution bmodels.Executions) {
+func EndNoPatternMatch(cfg config.Config, execution shared_models.Executions) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "noPatternMatch"
 	End(cfg, execution)
 }
 
-func EndWithError(cfg config.Config, execution bmodels.Executions) {
+func EndWithError(cfg config.Config, execution shared_models.Executions) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "error"
 	End(cfg, execution)
 }
 
-func EndSuccess(cfg config.Config, execution bmodels.Executions) {
+func EndSuccess(cfg config.Config, execution shared_models.Executions) {
 	execution.Status = "success"
 	execution.FinishedAt = time.Now()
 	End(cfg, execution)
 }
 
-func End(cfg config.Config, execution bmodels.Executions) {
-	platform, ok := GetPlatformForExecution(execution.ID.String())
+func End(cfg config.Config, execution shared_models.Executions) {
+	platform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
 		return

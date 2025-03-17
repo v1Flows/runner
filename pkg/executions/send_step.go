@@ -5,21 +5,22 @@ import (
 	"encoding/json"
 	"net/http"
 
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/platform"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendStep(cfg config.Config, execution bmodels.Executions, step bmodels.ExecutionSteps) (bmodels.ExecutionSteps, error) {
+func SendStep(cfg config.Config, execution shared_models.Executions, step shared_models.ExecutionSteps) (shared_models.ExecutionSteps, error) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	platform, ok := GetPlatformForExecution(execution.ID.String())
+	platform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
-		return bmodels.ExecutionSteps{}, nil
+		return shared_models.ExecutionSteps{}, nil
 	}
 
 	url, apiKey, _ := common.GetPlatformConfig(platform, cfg)
@@ -35,14 +36,14 @@ func SendStep(cfg config.Config, execution bmodels.Executions, step bmodels.Exec
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 201 {
-		log.Error("Failed to send execution step at %s API", platform)
+		log.Error("Failed to send execution step at " + platform + " API")
 	}
 
-	var stepResponse bmodels.ExecutionSteps
+	var stepResponse shared_models.ExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&stepResponse)
 	if err != nil {
 		log.Error(err)
-		return bmodels.ExecutionSteps{}, err
+		return shared_models.ExecutionSteps{}, err
 	}
 
 	return stepResponse, nil

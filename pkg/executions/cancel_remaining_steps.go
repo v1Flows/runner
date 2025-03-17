@@ -8,7 +8,6 @@ import (
 )
 
 func CancelRemainingSteps(cfg config.Config, executionID string) error {
-	// get all steps where pending is true
 	steps, err := GetSteps(cfg, executionID)
 	if err != nil {
 		log.Error(err)

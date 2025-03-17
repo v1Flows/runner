@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/platform"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateStep(cfg config.Config, executionID string, step bmodels.ExecutionSteps) error {
+func UpdateStep(cfg config.Config, executionID string, step shared_models.ExecutionSteps) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	platform, ok := GetPlatformForExecution(executionID)
+	platform, ok := platform.GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 		return fmt.Errorf("Failed to get platform")

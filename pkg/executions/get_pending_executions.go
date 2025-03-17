@@ -3,27 +3,24 @@ package executions
 import (
 	"encoding/json"
 	"net/http"
-	"sync"
 	"time"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/alertflow"
+	"github.com/v1Flows/runner/pkg/exflow"
+	platformfn "github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type IncomingExecutions struct {
-	Executions []bmodels.Executions `json:"executions"`
+	Executions []shared_models.Executions `json:"executions"`
 }
 
-// Global map to store platform information for each execution
-var executionPlatformMap = make(map[string]string)
-var mu sync.Mutex
-
-func GetPendingExecutions(platform string, cfg config.Config, actions []models.Actions, loadedPlugins map[string]plugins.Plugin) {
+func GetPendingExecutions(platform string, cfg config.Config, actions []shared_models.Actions, loadedPlugins map[string]plugins.Plugin) {
 	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
 
 	client := http.Client{
@@ -71,12 +68,14 @@ func GetPendingExecutions(platform string, cfg config.Config, actions []models.A
 
 			for _, execution := range executions.Executions {
 				// Save platform information for the execution
-				mu.Lock()
-				executionPlatformMap[execution.ID.String()] = platform
-				mu.Unlock()
+				platformfn.SetPlatformForExecution(execution.ID.String(), platform)
 
-				// Process one execution at a time
-				startProcessing(platform, cfg, actions, loadedPlugins, execution)
+				if platform == "alertflow" {
+					// Process one execution at a time
+					alertflow.StartProcessing(platform, cfg, actions, loadedPlugins, execution)
+				} else if platform == "exflow" {
+					exflow.StartProcessing(platform, cfg, actions, loadedPlugins, execution)
+				}
 			}
 
 		}
@@ -84,12 +83,4 @@ func GetPendingExecutions(platform string, cfg config.Config, actions []models.A
 			log.Fatalf("Failed to get waiting executions from %s API after 3 attempts: %s", platform, parsedUrl)
 		}
 	}
-}
-
-// Function to retrieve platform information for a given execution ID
-func GetPlatformForExecution(executionID string) (string, bool) {
-	mu.Lock()
-	defer mu.Unlock()
-	platform, ok := executionPlatformMap[executionID]
-	return platform, ok
 }

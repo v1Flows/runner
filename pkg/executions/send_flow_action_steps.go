@@ -1,18 +1,18 @@
 package executions
 
 import (
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
-func sendFlowActionSteps(cfg config.Config, execution bmodels.Executions, flow bmodels.Flows) (stepsWithIDs []bmodels.ExecutionSteps, err error) {
+func SendFlowActionSteps(cfg config.Config, execution shared_models.Executions, flow shared_models.Flows) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
 		if !action.Active {
 			continue
 		}
 
-		step := bmodels.ExecutionSteps{
+		step := shared_models.ExecutionSteps{
 			Action:      action,
 			ExecutionID: execution.ID.String(),
 			Status:      "pending",

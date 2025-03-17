@@ -1,7 +1,9 @@
 package models
 
-import bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+import (
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
+)
 
 type IncomingFlow struct {
-	FlowData bmodels.Flows `json:"flow"`
+	FlowData shared_models.Flows `json:"flow"`
 }
