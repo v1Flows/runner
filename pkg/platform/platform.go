@@ -14,3 +14,14 @@ func GetPlatformConfig(platform string, cfg config.Config) (string, string, stri
 		return "", "", ""
 	}
 }
+
+func GetPlatformConfigPlain(platform string, cfg config.Config) (string, string) {
+	switch platform {
+	case "alertflow":
+		return cfg.Alertflow.URL, cfg.Alertflow.APIKey
+	case "exflow":
+		return cfg.ExFlow.URL, cfg.ExFlow.APIKey
+	default:
+		return "", ""
+	}
+}

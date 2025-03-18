@@ -23,7 +23,7 @@ func GetFlowData(cfg config.Config, flowID string, targetPlatform string) (exFlo
 		},
 	}
 
-	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
 	parsedUrl := url + "/api/v1/flows/" + flowID
 	req, err := http.NewRequest("GET", parsedUrl, nil)

@@ -1,10 +1,13 @@
 package endpoints
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 
+	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/flows"
 	"github.com/v1Flows/runner/pkg/plugins"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
@@ -41,6 +44,13 @@ func InitEndpointRouter(cfg config.Config, router *gin.Engine, platform string, 
 				})
 				return
 			}
+
+			var afFlow af_models.Flows
+			_, afFlow, err = flows.GetFlowData(cfg, "50c9ce52-0590-47a6-a4f4-cb7d3b632b47", platform)
+			if err != nil {
+				log.Error("Error getting flow data: ", err)
+			}
+			fmt.Println("AlertFlow Flow: ", afFlow.GroupAlerts)
 
 			request := plugins.EndpointRequest{
 				Config:   cfg,
