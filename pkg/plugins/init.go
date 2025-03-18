@@ -66,14 +66,14 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
-		{Name: "collect_data", Version: "main", Repository: "https://github.com/AlertFlow/rp-collect_data"},
-		{Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
-		{Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
-		{Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
-		{Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
-		{Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},
-		{Name: "ping", Version: "main", Repository: "https://github.com/AlertFlow/rp-ping"},
-		{Name: "port_checker", Version: "main", Repository: "https://github.com/AlertFlow/rp-port_checker"},
+		{Name: "collect_data", Version: "v1.2.2", Repository: "https://github.com/AlertFlow/rp-collect_data"},
+		{Name: "pattern_check", Version: "v1.2.0", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
+		{Name: "actions_check", Version: "v1.2.1", Repository: "https://github.com/AlertFlow/rp-actions_check"},
+		{Name: "log", Version: "v1.2.0", Repository: "https://github.com/AlertFlow/rp-log"},
+		{Name: "wait", Version: "v1.2.0", Repository: "https://github.com/AlertFlow/rp-wait"},
+		{Name: "interaction", Version: "v1.2.0", Repository: "https://github.com/AlertFlow/rp-interaction"},
+		{Name: "ping", Version: "v1.2.0", Repository: "https://github.com/AlertFlow/rp-ping"},
+		{Name: "port_checker", Version: "v1.2.0", Repository: "https://github.com/AlertFlow/rp-port_checker"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
