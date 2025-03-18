@@ -95,6 +95,7 @@ func processStep(cfg config.Config, actions []shared_models.Action, loadedPlugin
 		Execution: execution,
 		Step:      step,
 		Alert:     alert,
+		Platform:  targetPlatform,
 	}
 
 	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)

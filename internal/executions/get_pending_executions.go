@@ -2,9 +2,12 @@ package internal_executions
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
+	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/platform"
 	platformfn "github.com/v1Flows/runner/pkg/platform"
@@ -14,8 +17,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type IncomingExecutions struct {
+type IncomingSharedExecutions struct {
 	Executions []shared_models.Executions `json:"executions"`
+}
+
+type IncomingAfExecutions struct {
+	Executions []af_models.Executions `json:"executions"`
+}
+
+type IncomingEfExecutions struct {
+	Executions []ef_models.Executions `json:"executions"`
 }
 
 func GetPendingExecutions(targetPlatform string, cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin) {
@@ -55,30 +66,51 @@ func GetPendingExecutions(targetPlatform string, cfg config.Config, actions []sh
 
 			log.Debugf("Executions received from %s API: %s", targetPlatform, parsedUrl)
 
-			var executions IncomingExecutions
-			err = json.NewDecoder(resp.Body).Decode(&executions)
-			resp.Body.Close() // Close the body after reading
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
-				log.Errorf("Failed to decode response body: %v", err)
+				log.Error(err)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 				continue
 			}
+			resp.Body.Close() // Close the body after reading
 
-			for _, execution := range executions.Executions {
-				// Save platform information for the execution
-				platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
-
-				var alertID string
-				if targetPlatform == "alertflow" {
-					var executionMap map[string]interface{}
-					executionBytes, _ := json.Marshal(execution)
-					json.Unmarshal(executionBytes, &executionMap)
-					if alertID, ok := executionMap["alert_id"].(string); ok {
-						log.Infof("Alert ID: %s", alertID)
-					}
+			if targetPlatform == "alertflow" {
+				var executions IncomingAfExecutions
+				err := json.Unmarshal(body, &executions)
+				if err != nil {
+					log.Error(err)
+					continue
 				}
 
-				startProcessing(targetPlatform, cfg, actions, loadedPlugins, execution, alertID)
+				var sharedExecutions IncomingSharedExecutions
+				err = json.Unmarshal(body, &sharedExecutions)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+
+				for index, execution := range executions.Executions {
+					// Save platform information for the execution
+					platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
+
+					startProcessing(targetPlatform, cfg, actions, loadedPlugins, sharedExecutions.Executions[index], execution.AlertID)
+				}
+			}
+
+			if targetPlatform == "exflow" {
+				var executions IncomingSharedExecutions
+				err := json.Unmarshal(body, &executions)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+
+				for _, execution := range executions.Executions {
+					// Save platform information for the execution
+					platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
+
+					startProcessing(targetPlatform, cfg, actions, loadedPlugins, execution, "")
+				}
 			}
 
 		}
