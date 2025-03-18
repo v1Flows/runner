@@ -45,7 +45,7 @@ func End(cfg config.Config, execution shared_models.Executions) {
 		return
 	}
 
-	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
 	runner.Busy(targetPlatform, cfg, false)
 

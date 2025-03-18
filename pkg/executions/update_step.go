@@ -23,7 +23,7 @@ func UpdateStep(cfg config.Config, executionID string, step shared_models.Execut
 		return fmt.Errorf("failed to get platform")
 	}
 
-	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
 	req, err := http.NewRequest("PUT", url+"/api/v1/executions/"+executionID+"/steps/"+step.ID.String(), payloadBuf)
 	if err != nil {

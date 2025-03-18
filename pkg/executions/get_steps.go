@@ -28,7 +28,7 @@ func GetSteps(cfg config.Config, executionID string) ([]shared_models.ExecutionS
 		return []shared_models.ExecutionSteps{}, fmt.Errorf("failed to get platform")
 	}
 
-	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
 	parsedUrl := url + "/api/v1/executions/" + executionID + "/steps"
 	req, err := http.NewRequest("GET", parsedUrl, nil)

@@ -23,7 +23,7 @@ func SendStep(cfg config.Config, execution shared_models.Executions, step shared
 		return shared_models.ExecutionSteps{}, nil
 	}
 
-	url, apiKey, _ := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
 	req, err := http.NewRequest("POST", url+"/api/v1/executions/"+execution.ID.String()+"/steps", payloadBuf)
 	if err != nil {
