@@ -77,9 +77,9 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				return
 			}
 
-			if res.Alert != nil {
+			if platform == "alertflow" && res.Alert != nil {
 				alert = *res.Alert
-			} else if alert.ID == uuid.Nil {
+			} else if platform == "alertflow" && alert.ID == uuid.Nil {
 				log.Error("Error parsing alert")
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)

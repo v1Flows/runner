@@ -68,7 +68,7 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 	mandatoryPlugins := []config.PluginConfig{
 		{Name: "collect_data", Version: "main", Repository: "https://github.com/AlertFlow/rp-collect_data"},
 		// {Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
-		// {Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
+		{Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
 		// {Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
 		// {Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
 		// {Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},

@@ -57,6 +57,13 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 		},
 		{
 			Action: shared_models.Action{
+				Plugin: "pattern_check",
+			},
+			Status:    "pending",
+			CreatedAt: time.Now(),
+		},
+		{
+			Action: shared_models.Action{
 				Plugin: "actions_check",
 			},
 			Status:    "pending",
