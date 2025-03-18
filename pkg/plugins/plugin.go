@@ -26,6 +26,7 @@ type ExecuteTaskRequest struct {
 	Args      map[string]string
 	Config    config.Config
 	Flow      shared_models.Flows
+	FlowBytes []byte
 	Execution shared_models.Executions
 	Step      shared_models.ExecutionSteps
 	Alert     af_models.Alerts
@@ -39,10 +40,11 @@ type EndpointRequest struct {
 }
 
 type Response struct {
-	Data    map[string]interface{}
-	Flow    *shared_models.Flows
-	Alert   *af_models.Alerts
-	Success bool
+	Data      map[string]interface{}
+	Flow      *shared_models.Flows
+	FlowBytes []byte
+	Alert     *af_models.Alerts
+	Success   bool
 }
 
 func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
