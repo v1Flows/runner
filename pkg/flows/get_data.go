@@ -9,6 +9,7 @@ import (
 	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/models"
 	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
@@ -46,21 +47,21 @@ func GetFlowData(cfg config.Config, flowID string, targetPlatform string) (exFlo
 	log.Debugf("Flow data received from %s API: %s", targetPlatform, url)
 
 	if targetPlatform == "alertflow" {
-		var flow af_models.Flows
+		var flow models.IncomingAfFlow
 		err := json.NewDecoder(resp.Body).Decode(&flow)
 		if err != nil {
 			log.Fatal(err)
 			return ef_models.Flows{}, af_models.Flows{}, err
 		}
-		return ef_models.Flows{}, flow, nil
+		return ef_models.Flows{}, flow.FlowData, nil
 	} else if targetPlatform == "exflow" {
-		var flow ef_models.Flows
+		var flow models.IncomingEfFlow
 		err := json.NewDecoder(resp.Body).Decode(&flow)
 		if err != nil {
 			log.Fatal(err)
 			return ef_models.Flows{}, af_models.Flows{}, err
 		}
-		return flow, af_models.Flows{}, nil
+		return flow.FlowData, af_models.Flows{}, nil
 	}
 
 	return ef_models.Flows{}, af_models.Flows{}, fmt.Errorf("unknown target platform: %s", targetPlatform)
