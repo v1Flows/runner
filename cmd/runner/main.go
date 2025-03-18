@@ -8,13 +8,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/endpoints"
+	internal_executions "github.com/v1Flows/runner/internal/executions"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/internal/worker"
-	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	"github.com/alecthomas/kingpin/v2"
 )
@@ -61,7 +61,7 @@ func main() {
 
 	loadedPlugins, modelPlugins, actionPlugins, endpointPlugins := plugins.Init(cfg)
 
-	actions := executions.RegisterActions(actionPlugins)
+	actions := internal_executions.RegisterActions(actionPlugins)
 
 	// RunnerID might have changed after registration, so fetch the config again
 	cfg = configManager.GetConfig()
@@ -96,7 +96,7 @@ func main() {
 	log.Info("Shutdown complete")
 }
 
-func Init(platform string, cfg config.Config, router *gin.Engine, actions []models.Actions, endpointPlugins []models.Plugins, loadedPlugins map[string]plugins.Plugin) {
+func Init(platform string, cfg config.Config, router *gin.Engine, actions []shared_models.Action, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")
@@ -104,7 +104,7 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []mode
 		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
 		if platform == "alertflow" {
 			log.Info("Starting Alert Listener")
-			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+			go endpoints.InitEndpointRouter(cfg, router, "alertflow", endpointPlugins, loadedPlugins)
 		}
 	case "worker":
 		log.Info("Runner is in Worker Mode")
@@ -114,7 +114,7 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []mode
 		log.Info("Runner is in Listener Mode")
 		if platform == "alertflow" {
 			log.Info("Starting Alert Listener")
-			go endpoints.InitAlertRouter(cfg, router, endpointPlugins, loadedPlugins)
+			go endpoints.InitEndpointRouter(cfg, router, "alertflow", endpointPlugins, loadedPlugins)
 		}
 	}
 }

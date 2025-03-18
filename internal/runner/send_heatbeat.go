@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/common"
+	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendHeartbeat(platform string) {
+func SendHeartbeat(targetPlatform string) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -21,7 +21,7 @@ func SendHeartbeat(platform string) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	url, apiKey, runnerID := common.GetPlatformConfig(platform, cfg)
+	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
 
 	parsedUrl := url + "/api/v1/runners/" + runnerID + "/heartbeat"
 	req, err := http.NewRequest("PUT", parsedUrl, nil)
@@ -52,16 +52,16 @@ func SendHeartbeat(platform string) {
 			resp.Body.Close()
 
 			if resp.StatusCode == 200 {
-				log.Debugf("Heartbeat sent to %s", platform)
+				log.Debugf("Heartbeat sent to %s", targetPlatform)
 				break
 			} else {
-				log.Errorf("Failed to send heartbeat to %s, attempt %d", platform, i+1)
+				log.Errorf("Failed to send heartbeat to %s, attempt %d", targetPlatform, i+1)
 				log.Errorf("Response: %s", body)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 			}
 		}
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to send heartbeat to %s after 3 attempts", platform)
+			log.Fatalf("Failed to send heartbeat to %s after 3 attempts", targetPlatform)
 		}
 	}
 }

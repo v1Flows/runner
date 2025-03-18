@@ -1,6 +1,6 @@
 module github.com/v1Flows/runner
 
-go 1.23.5
+go 1.24.0
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.6.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250308205151-c6c9aecb576f
+	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445
 )
 
 require (
@@ -75,6 +75,8 @@ require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/viper v1.19.0
+	github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540
+	github.com/v1Flows/shared-library v1.0.3
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 )

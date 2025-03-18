@@ -5,15 +5,16 @@ import (
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
-	HandleAlert(request AlertHandlerRequest) (Response, error)
-	Info() (models.Plugins, error)
+	EndpointRequest(request EndpointRequest) (Response, error)
+	Info() (shared_models.Plugin, error)
 }
 
 // PluginRPC is an implementation of net/rpc for Plugin
@@ -24,21 +25,23 @@ type PluginRPC struct {
 type ExecuteTaskRequest struct {
 	Args      map[string]string
 	Config    config.Config
-	Flow      models.Flows
-	Execution models.Executions
-	Step      models.ExecutionSteps
-	Alert     models.Alerts
+	Flow      shared_models.Flows
+	Execution shared_models.Executions
+	Step      shared_models.ExecutionSteps
+	Alert     af_models.Alerts
+	Platform  string
 }
 
-type AlertHandlerRequest struct {
-	Config config.Config
-	Body   []byte
+type EndpointRequest struct {
+	Config   config.Config
+	Body     []byte
+	Platform string
 }
 
 type Response struct {
 	Data    map[string]interface{}
-	Flow    *models.Flows
-	Alert   *models.Alerts
+	Flow    *shared_models.Flows
+	Alert   *af_models.Alerts
 	Success bool
 }
 
@@ -48,14 +51,14 @@ func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) HandleAlert(request AlertHandlerRequest) (Response, error) {
+func (p *PluginRPC) EndpointRequest(request EndpointRequest) (Response, error) {
 	var resp Response
-	err := p.Client.Call("Plugin.HandleAlert", request, &resp)
+	err := p.Client.Call("Plugin.EndpointRequest", request, &resp)
 	return resp, err
 }
 
-func (p *PluginRPC) Info() (models.Plugins, error) {
-	var resp models.Plugins
+func (p *PluginRPC) Info() (shared_models.Plugin, error) {
+	var resp shared_models.Plugin
 	err := p.Client.Call("Plugin.Info", new(interface{}), &resp)
 	return resp, err
 }
@@ -84,13 +87,13 @@ func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response
 	return err
 }
 
-func (s *PluginRPCServer) HandleAlert(request AlertHandlerRequest, resp *Response) error {
-	result, err := s.Impl.HandleAlert(request)
+func (s *PluginRPCServer) EndpointRequest(request EndpointRequest, resp *Response) error {
+	result, err := s.Impl.EndpointRequest(request)
 	*resp = result
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugins) error {
+func (s *PluginRPCServer) Info(args interface{}, resp *shared_models.Plugin) error {
 	result, err := s.Impl.Info()
 	*resp = result
 	return err
