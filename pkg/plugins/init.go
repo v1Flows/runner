@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 var loadedPlugins = make(map[string]Plugin)
@@ -63,17 +63,17 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 	return plugin, client, nil
 }
 
-func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.Plugins, actionPlugins []models.Plugins, endpointPlugins []models.Plugins) {
+func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
 		{Name: "collect_data", Version: "main", Repository: "https://github.com/AlertFlow/rp-collect_data"},
-		{Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
+		// {Name: "pattern_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-pattern_check"},
 		{Name: "actions_check", Version: "main", Repository: "https://github.com/AlertFlow/rp-actions_check"},
-		{Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
-		{Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
-		{Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},
-		{Name: "ping", Version: "main", Repository: "https://github.com/AlertFlow/rp-ping"},
-		{Name: "port_checker", Version: "main", Repository: "https://github.com/AlertFlow/rp-port_checker"},
+		// {Name: "log", Version: "main", Repository: "https://github.com/AlertFlow/rp-log"},
+		// {Name: "wait", Version: "main", Repository: "https://github.com/AlertFlow/rp-wait"},
+		// {Name: "interaction", Version: "main", Repository: "https://github.com/AlertFlow/rp-interaction"},
+		// {Name: "ping", Version: "main", Repository: "https://github.com/AlertFlow/rp-ping"},
+		// {Name: "port_checker", Version: "main", Repository: "https://github.com/AlertFlow/rp-port_checker"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
@@ -124,8 +124,8 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []models.P
 			endpointPlugins = append(endpointPlugins, info)
 		} else if info.Type == "action" {
 
-			if info.Actions.Version == "" {
-				info.Actions.Version = info.Version
+			if info.Action.Version == "" {
+				info.Action.Version = info.Version
 			}
 
 			actionPlugins = append(actionPlugins, info)

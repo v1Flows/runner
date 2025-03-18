@@ -148,8 +148,12 @@ github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65E
 github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 github.com/uptrace/bun v1.2.11 h1:l9dTymsdZZAoSZ1+Qo3utms0RffgkDbIv+1UGk8N1wQ=
 github.com/uptrace/bun v1.2.11/go.mod h1:ww5G8h59UrOnCHmZ8O1I/4Djc7M/Z3E+EWFS2KLB6dQ=
-github.com/v1Flows/alertFlow/services/backend v0.0.0-20250308205151-c6c9aecb576f h1:PC+f6imP5XzV+XFWqzmmcTGuZ//you8jhZpwpNuu63U=
-github.com/v1Flows/alertFlow/services/backend v0.0.0-20250308205151-c6c9aecb576f/go.mod h1:ognfZmJlk8yQVXuDnSgzhS7WlJznrxTu7Wwjs02fnkk=
+github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445 h1:o1WaAweRrGc6Yz4G3DTE9cr6sFul1TJ9k71yIbECQYQ=
+github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445/go.mod h1:wN72OUmADQ95eNYyiYM4oa6FOnvoCBRljzsGQGdvaIA=
+github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540 h1:Fu/mOZKwyRpm8QP5FfgAnDfv1XjgEJAKjHNzTVlIxW0=
+github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540/go.mod h1:63Ad53i4eEkN3C6QeTsOWvLASjn43+cEwrWAcllX8So=
+github.com/v1Flows/shared-library v1.0.3 h1:j2K026jOvQ8wW/DFXphtXKZGuRTIrIUK2hojb79aQmY=
+github.com/v1Flows/shared-library v1.0.3/go.mod h1:UVP6m6Nri6JC3L0xS3wkbqGvfQJ5fsYIJx81Gfj1TFw=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=

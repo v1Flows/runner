@@ -1,25 +1,32 @@
-package executions
+package internal_alertflow
 
 import (
 	"time"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/pkg/executions"
+	"github.com/v1Flows/runner/pkg/platform"
+	shared_models "github.com/v1Flows/shared-library/pkg/models"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func sendInitialSteps(cfg config.Config, actions []models.Actions, execution models.Executions) (stepsWithIDs []models.ExecutionSteps, err error) {
-	var initialSteps = []models.ExecutionSteps{
+func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions, alertID string) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+	var initialSteps = []shared_models.ExecutionSteps{
 		{
-			Action: models.Actions{
+			Action: shared_models.Action{
 				Name:        "Runner Pick Up",
 				Description: "Runner picked up the execution",
 				Version:     "1.0.0",
 				Icon:        "solar:rocket-2-bold-duotone",
 				Category:    "runner",
 			},
-			Messages: []string{
-				execution.RunnerID + " picked up the execution",
+			Messages: []shared_models.Message{
+				{
+					Title: "Runner Pick Up",
+					Lines: []string{execution.RunnerID + " picked up the execution"},
+				},
 			},
 			Status:     "success",
 			RunnerID:   execution.RunnerID,
@@ -28,12 +35,12 @@ func sendInitialSteps(cfg config.Config, actions []models.Actions, execution mod
 			FinishedAt: time.Now(),
 		},
 		{
-			Action: models.Actions{
+			Action: shared_models.Action{
 				Plugin: "collect_data",
-				Params: []models.Params{
+				Params: []shared_models.Params{
 					{
 						Key:   "AlertID",
-						Value: execution.AlertID,
+						Value: alertID,
 					},
 					{
 						Key:   "FlowID",
@@ -49,19 +56,25 @@ func sendInitialSteps(cfg config.Config, actions []models.Actions, execution mod
 			CreatedAt: time.Now(),
 		},
 		{
-			Action: models.Actions{
+			Action: shared_models.Action{
 				Plugin: "pattern_check",
 			},
 			Status:    "pending",
 			CreatedAt: time.Now(),
 		},
 		{
-			Action: models.Actions{
+			Action: shared_models.Action{
 				Plugin: "actions_check",
 			},
 			Status:    "pending",
 			CreatedAt: time.Now(),
 		},
+	}
+
+	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
+	if !ok {
+		log.Error("Failed to get platform")
+		return
 	}
 
 	for i, step := range initialSteps {
@@ -80,7 +93,7 @@ func sendInitialSteps(cfg config.Config, actions []models.Actions, execution mod
 			}
 		}
 
-		stepID, err := SendStep(cfg, execution, step)
+		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}
