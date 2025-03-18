@@ -78,7 +78,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				return
 			}
 
-			if res.FlowBytes != nil {
+			if len(res.FlowBytes) > 0 {
 				flowBytes = res.FlowBytes
 			}
 
