@@ -55,10 +55,11 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 
 	// process each initial step where pending is true
 	var flow shared_models.Flows
+	var flowBytes []byte
 	var alert bmodels.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, initialSteps, step, execution)
+			res, success, err := processStep(cfg, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
@@ -75,6 +76,10 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
 				return
+			}
+
+			if res.FlowBytes != nil {
+				flowBytes = res.FlowBytes
 			}
 
 			if platform == "alertflow" && res.Alert != nil {
@@ -117,7 +122,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, flowActionStepsWithIDs, step, execution)
+				res, success, err := processStep(cfg, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
@@ -155,7 +160,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					res, success, err := processStep(cfg, actions, loadedPlugins, flow, alert, flowActionStepsWithIDs, step, execution)
+					res, success, err := processStep(cfg, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 					if err != nil {
 						failedSteps++
 					}
