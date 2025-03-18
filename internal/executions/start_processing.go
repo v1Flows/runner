@@ -28,9 +28,9 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
-	err := executions.UpdateExecution(cfg, execution)
+	err := executions.UpdateExecution(cfg, execution, platform)
 	if err != nil {
-		executions.EndWithError(cfg, execution)
+		executions.EndWithError(cfg, execution, platform)
 		return
 	}
 
@@ -42,13 +42,13 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	if platform == "alertflow" {
 		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution, alertID)
 		if err != nil {
-			executions.EndWithError(cfg, execution)
+			executions.EndWithError(cfg, execution, platform)
 			return
 		}
 	} else if platform == "exflow" {
 		initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
 		if err != nil {
-			executions.EndWithError(cfg, execution)
+			executions.EndWithError(cfg, execution, platform)
 			return
 		}
 	}
@@ -64,7 +64,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				// cancel remaining steps
 				cancelRemainingSteps(cfg, execution.ID.String())
 				// end execution
-				executions.EndWithError(cfg, execution)
+				executions.EndWithError(cfg, execution, platform)
 				return
 			}
 
@@ -73,7 +73,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			} else if flow.ID == uuid.Nil {
 				log.Error("Error parsing flow")
 				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndWithError(cfg, execution)
+				executions.EndWithError(cfg, execution, platform)
 				return
 			}
 
@@ -82,25 +82,25 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			} else if alert.ID == uuid.Nil {
 				log.Error("Error parsing alert")
 				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndWithError(cfg, execution)
+				executions.EndWithError(cfg, execution, platform)
 				return
 			}
 
 			if res.Data["status"] == "noPatternMatch" {
 				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndNoPatternMatch(cfg, execution)
+				executions.EndNoPatternMatch(cfg, execution, platform)
 				return
 			}
 
 			if res.Data["status"] == "canceled" {
 				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndCanceled(cfg, execution)
+				executions.EndCanceled(cfg, execution, platform)
 				return
 			}
 
 			if !success {
 				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndWithError(cfg, execution)
+				executions.EndWithError(cfg, execution, platform)
 				return
 			}
 		}
@@ -109,7 +109,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	// send flow actions as steps to alertflow
 	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
-		executions.EndWithError(cfg, execution)
+		executions.EndWithError(cfg, execution, platform)
 		return
 	}
 
@@ -122,25 +122,25 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
 					// end execution
-					executions.EndWithError(cfg, execution)
+					executions.EndWithError(cfg, execution, platform)
 					return
 				}
 
 				if res.Data["status"] == "noPatternMatch" {
 					cancelRemainingSteps(cfg, execution.ID.String())
-					executions.EndNoPatternMatch(cfg, execution)
+					executions.EndNoPatternMatch(cfg, execution, platform)
 					return
 				}
 
 				if res.Data["status"] == "canceled" {
 					cancelRemainingSteps(cfg, execution.ID.String())
-					executions.EndCanceled(cfg, execution)
+					executions.EndCanceled(cfg, execution, platform)
 					return
 				}
 
 				if !success {
 					cancelRemainingSteps(cfg, execution.ID.String())
-					executions.EndWithError(cfg, execution)
+					executions.EndWithError(cfg, execution, platform)
 					return
 				}
 			}
@@ -189,22 +189,22 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		}
 
 		if failedSteps > 0 {
-			executions.EndWithError(cfg, execution)
+			executions.EndWithError(cfg, execution, platform)
 			return
 		}
 
 		if canceledSteps > 0 {
-			executions.EndCanceled(cfg, execution)
+			executions.EndCanceled(cfg, execution, platform)
 			return
 		}
 
 		if noPatternMatchSteps > 0 {
-			executions.EndNoPatternMatch(cfg, execution)
+			executions.EndNoPatternMatch(cfg, execution, platform)
 			return
 		}
 	}
 
-	executions.EndSuccess(cfg, execution)
+	executions.EndSuccess(cfg, execution, platform)
 
 	runner.Busy(platform, cfg, false)
 }

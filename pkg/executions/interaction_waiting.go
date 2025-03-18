@@ -12,19 +12,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToInteractionRequired(cfg config.Config, execution shared_models.Executions) {
+func SetToInteractionRequired(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "interactionWaiting"
-	InteractionWaiting(cfg, execution)
+	InteractionWaiting(cfg, execution, targetPlatform)
 }
 
-func InteractionWaiting(cfg config.Config, execution shared_models.Executions) {
+func InteractionWaiting(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
-
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-	}
 
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 

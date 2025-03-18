@@ -14,18 +14,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetStep(cfg config.Config, executionID string, stepID string) (shared_models.ExecutionSteps, error) {
+func GetStep(cfg config.Config, executionID string, stepID string, targetPlatform string) (shared_models.ExecutionSteps, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			DisableKeepAlives: true,
 		},
-	}
-
-	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
-	if !ok {
-		log.Error("Failed to get platform")
-		return shared_models.ExecutionSteps{}, fmt.Errorf("failed to get platform")
 	}
 
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)

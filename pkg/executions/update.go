@@ -12,14 +12,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateExecution(cfg config.Config, execution shared_models.Executions) error {
+func UpdateExecution(cfg config.Config, execution shared_models.Executions, targetPlatform string) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
-
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-	}
 
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 

@@ -13,15 +13,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendStep(cfg config.Config, execution shared_models.Executions, step shared_models.ExecutionSteps) (shared_models.ExecutionSteps, error) {
+func SendStep(cfg config.Config, execution shared_models.Executions, step shared_models.ExecutionSteps, targetPlatform string) (shared_models.ExecutionSteps, error) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
-
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-		return shared_models.ExecutionSteps{}, nil
-	}
 
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 

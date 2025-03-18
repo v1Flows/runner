@@ -12,19 +12,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToRunning(cfg config.Config, execution shared_models.Executions) {
+func SetToRunning(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "running"
-	Running(cfg, execution)
+	Running(cfg, execution, targetPlatform)
 }
 
-func Running(cfg config.Config, execution shared_models.Executions) {
+func Running(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
-
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-	}
 
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 

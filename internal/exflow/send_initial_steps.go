@@ -5,7 +5,10 @@ import (
 
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
+	"github.com/v1Flows/runner/pkg/platform"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // SendInitialSteps sends initial steps to alertflow
@@ -57,6 +60,12 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 		},
 	}
 
+	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
+	if !ok {
+		log.Error("Failed to get platform")
+		return
+	}
+
 	for i, step := range initialSteps {
 		step.ExecutionID = execution.ID.String()
 
@@ -73,7 +82,7 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 			}
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step)
+		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}

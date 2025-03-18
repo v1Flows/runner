@@ -3,7 +3,6 @@ package executions
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/v1Flows/runner/config"
@@ -13,15 +12,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateStep(cfg config.Config, executionID string, step shared_models.ExecutionSteps) error {
+func UpdateStep(cfg config.Config, executionID string, step shared_models.ExecutionSteps, targetPlatform string) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
-
-	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
-	if !ok {
-		log.Error("Failed to get platform")
-		return fmt.Errorf("failed to get platform")
-	}
 
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
