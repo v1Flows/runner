@@ -1,11 +1,15 @@
 package platform
 
-import "github.com/v1Flows/runner/config"
+import (
+	"strings"
+
+	"github.com/v1Flows/runner/config"
+)
 
 func GetPlatformConfig(platform string, cfg config.Config) (string, string, string) {
 	configManager := config.GetInstance()
 
-	switch platform {
+	switch strings.ToLower(platform) {
 	case "alertflow":
 		return cfg.Alertflow.URL, cfg.Alertflow.APIKey, configManager.GetRunnerID("alertflow")
 	case "exflow":
@@ -16,7 +20,7 @@ func GetPlatformConfig(platform string, cfg config.Config) (string, string, stri
 }
 
 func GetPlatformConfigPlain(platform string, cfg config.Config) (string, string) {
-	switch platform {
+	switch strings.ToLower(platform) {
 	case "alertflow":
 		return cfg.Alertflow.URL, cfg.Alertflow.APIKey
 	case "exflow":
