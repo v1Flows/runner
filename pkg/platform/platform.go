@@ -26,6 +26,6 @@ func GetPlatformConfigPlain(platform string, cfg config.Config) (string, string)
 	case "exflow":
 		return cfg.ExFlow.URL, cfg.ExFlow.APIKey
 	default:
-		return "", ""
+		return "what", "what"
 	}
 }
