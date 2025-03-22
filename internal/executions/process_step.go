@@ -27,7 +27,7 @@ func RegisterActions(loadedPluginActions []shared_models.Plugin) (actions []shar
 	return actions
 }
 
-func processStep(cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, err error) {
+func processStep(cfg config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, err error) {
 	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
@@ -97,6 +97,7 @@ func processStep(cfg config.Config, actions []shared_models.Action, loadedPlugin
 		Step:      step,
 		Alert:     alert,
 		Platform:  targetPlatform,
+		Workspace: workspace,
 	}
 
 	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)

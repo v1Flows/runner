@@ -1,6 +1,8 @@
 package internal_executions
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,10 +27,17 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		return
 	}
 
+	// create workspace dir for execution
+	workspace := fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID)
+	err := os.MkdirAll(workspace, 0755)
+	if err != nil {
+		log.Error("Error creating workspace dir: ", err)
+	}
+
 	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
-	err := executions.UpdateExecution(cfg, execution, platform)
+	err = executions.UpdateExecution(cfg, execution, platform)
 	if err != nil {
 		executions.EndWithError(cfg, execution, platform)
 		return
@@ -59,7 +68,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	var alert bmodels.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			res, success, err := processStep(cfg, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
+			res, success, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
@@ -122,7 +131,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				res, success, err := processStep(cfg, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+				res, success, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
@@ -160,7 +169,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					res, success, err := processStep(cfg, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+					res, success, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 					if err != nil {
 						failedSteps++
 					}
@@ -210,6 +219,11 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	}
 
 	executions.EndSuccess(cfg, execution, platform)
+
+	err = os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
+	if err != nil {
+		log.Error("Error deleting workspace dir: ", err)
+	}
 
 	runner.Busy(platform, cfg, false)
 }
