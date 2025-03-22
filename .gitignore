@@ -27,6 +27,7 @@ serviceAccountKey.json
 /runner
 *config*.yaml
 /plugins
+/workspace
 .plugins_temp/
 .versions
 

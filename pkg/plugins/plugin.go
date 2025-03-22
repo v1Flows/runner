@@ -31,6 +31,7 @@ type ExecuteTaskRequest struct {
 	Step      shared_models.ExecutionSteps
 	Alert     af_models.Alerts
 	Platform  string
+	Workspace string
 }
 
 type EndpointRequest struct {
