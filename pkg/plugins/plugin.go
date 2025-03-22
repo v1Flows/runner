@@ -14,12 +14,17 @@ import (
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
-	Info() (shared_models.Plugin, error)
+	Info(request InfoRequest) (shared_models.Plugin, error)
 }
 
 // PluginRPC is an implementation of net/rpc for Plugin
 type PluginRPC struct {
 	Client *rpc.Client
+}
+
+type InfoRequest struct {
+	Config    config.Config
+	Workspace string
 }
 
 type ExecuteTaskRequest struct {
@@ -96,8 +101,8 @@ func (s *PluginRPCServer) EndpointRequest(request EndpointRequest, resp *Respons
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *shared_models.Plugin) error {
-	result, err := s.Impl.Info()
+func (s *PluginRPCServer) Info(request InfoRequest, resp *shared_models.Plugin) error {
+	result, err := s.Impl.Info(request)
 	*resp = result
 	return err
 }
