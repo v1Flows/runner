@@ -114,7 +114,11 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 		pluginClients = append(pluginClients, client) // Store the client
 
 		// Get plugin info
-		info, err := plugin.Info()
+		req := InfoRequest{
+			Config:    cfg,
+			Workspace: cfg.WorkspaceDir,
+		}
+		info, err := plugin.Info(req)
 		if err != nil {
 			log.Fatalf("Error getting info for plugin %s: %v", name, err)
 		}
