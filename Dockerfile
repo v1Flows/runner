@@ -18,6 +18,13 @@ RUN mkdir -p /app/config
 RUN mkdir -p /app/plugins
 COPY config/config.yaml /app/config/config.yaml
 
+# Install Ansible in the final stage
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3 python3-pip sshpass && \
+    pip3 install --no-cache-dir ansible --break-system-packages && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 VOLUME [ "/app/config", "/app/plugins" ]
 
 EXPOSE 8081
