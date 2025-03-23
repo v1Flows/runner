@@ -25,7 +25,11 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 			Messages: []shared_models.Message{
 				{
 					Title: "Runner Pick Up",
-					Lines: []string{execution.RunnerID + " picked up the execution"},
+					Lines: []shared_models.Line{
+						{
+							Content: execution.RunnerID + " picked up the execution",
+						},
+					},
 				},
 			},
 			Status:     "success",

@@ -49,11 +49,23 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		// dont execute step and quit execution
 		step.Messages = append(step.Messages, shared_models.Message{
 			Title: "Error",
-			Lines: []string{
-				"Action not compatible with plugin version",
-				"Plugin Version: " + pluginVersion,
-				"Action Version: " + step.Action.Version,
-				"Cancel execution",
+			Lines: []shared_models.Line{
+				{
+					Content: "Action not compatible with plugin version",
+					Color:   "danger",
+				},
+				{
+					Content: "Plugin Version: " + pluginVersion,
+					Color:   "danger",
+				},
+				{
+					Content: "Action Version: " + step.Action.Version,
+					Color:   "danger",
+				},
+				{
+					Content: "Cancel execution",
+					Color:   "danger",
+				},
 			},
 		})
 		step.Status = "error"
@@ -72,10 +84,19 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 
 		step.Messages = append(step.Messages, shared_models.Message{
 			Title: "Error",
-			Lines: []string{
-				"Action not found in loaded plugins",
-				"Target plugin: " + step.Action.Plugin,
-				"Cancel execution",
+			Lines: []shared_models.Line{
+				{
+					Content: "Action not found in loaded plugins",
+					Color:   "danger",
+				},
+				{
+					Content: "Target plugin: " + step.Action.Plugin,
+					Color:   "danger",
+				},
+				{
+					Content: "Cancel execution",
+					Color:   "danger",
+				},
 			},
 		})
 		step.Status = "error"
@@ -103,6 +124,32 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)
 	if err != nil {
 		log.Error(err)
+
+		step.Messages = append(step.Messages, shared_models.Message{
+			Title: "Error",
+			Lines: []shared_models.Line{
+				{
+					Content: "Failed to execute action",
+					Color:   "danger",
+				},
+				{
+					Content: "Error: " + err.Error(),
+					Color:   "danger",
+				},
+				{
+					Content: "Cancel execution",
+					Color:   "danger",
+				},
+			},
+		})
+		step.Status = "error"
+		step.FinishedAt = time.Now()
+
+		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
+			log.Error(err)
+			return plugins.Response{}, false, err
+		}
+
 		return plugins.Response{}, false, err
 	}
 
