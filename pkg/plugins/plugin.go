@@ -65,9 +65,9 @@ func (p *PluginRPC) EndpointRequest(request EndpointRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) Info() (shared_models.Plugin, error) {
+func (p *PluginRPC) Info(request InfoRequest) (shared_models.Plugin, error) {
 	var resp shared_models.Plugin
-	err := p.Client.Call("Plugin.Info", new(interface{}), &resp)
+	err := p.Client.Call("Plugin.Info", request, &resp)
 	return resp, err
 }
 
