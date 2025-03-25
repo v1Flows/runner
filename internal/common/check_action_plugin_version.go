@@ -21,5 +21,9 @@ func CheckActionVersionAgainstPluginVersion(actions []shared_models.Action, step
 		return true, pluginVersion
 	}
 
-	return pluginVersion == step.Action.Version, pluginVersion
+	if pluginVersion < step.Action.Version {
+		return false, pluginVersion
+	}
+
+	return true, pluginVersion
 }
