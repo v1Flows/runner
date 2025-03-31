@@ -3,31 +3,19 @@ package plugins
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/v1Flows/runner/config"
 )
 
 // DownloadAndBuildPlugins downloads and builds plugins from GitHub
-func DownloadAndBuildPlugins(pluginRepos []config.PluginConfig, buildDir string, pluginDir string) (map[string]string, error) {
+func DownloadPlugins(pluginRepos []config.PluginConfig, buildDir string, pluginDir string) (map[string]string, error) {
 	pluginPaths := make(map[string]string)
-
-	// Delete the build directory if it already exists
-	if _, err := os.Stat(buildDir); !os.IsNotExist(err) {
-		err := os.RemoveAll(buildDir)
-		if err != nil {
-			return nil, fmt.Errorf("failed to remove existing build directory: %v", err)
-		}
-	}
-
-	// Create the build directory
-	err := os.MkdirAll(buildDir, 0755)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create build directory: %v", err)
-	}
 
 	// Create the pluginDir directory if it doesn't exist
 	if _, err := os.Stat(pluginDir); os.IsNotExist(err) {
@@ -48,42 +36,44 @@ func DownloadAndBuildPlugins(pluginRepos []config.PluginConfig, buildDir string,
 			continue
 		}
 
-		// Clone the plugin repository
-		log.Info("Cloning plugin ", plugin.Name)
-		repoDir := filepath.Join(buildDir, plugin.Name)
-		cmd := exec.Command("git", "clone", plugin.Repository, repoDir)
-		output, err := cmd.CombinedOutput()
+		// Create the plugin file
+		pluginFile, err := os.Create(pluginPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to clone plugin %s: %v\nOutput: %s", plugin.Name, err, string(output))
+			return nil, fmt.Errorf("failed to create plugin file: %v", err)
+		}
+		defer pluginFile.Close()
+
+		// set default plugin url if not provided
+		if plugin.Url == "" {
+			plugin.Url = fmt.Sprintf("https://github.com/v1Flows/runner-plugins/releases/download/%s-%s/%s-%s-%s-%s", plugin.Name, plugin.Version, plugin.Name, plugin.Version, runtime.GOOS, runtime.GOARCH)
 		}
 
-		// Check out the specified version if provided
-		if plugin.Version != "" {
-			cmd = exec.Command("git", "checkout", plugin.Version)
-			cmd.Dir = repoDir
-			output, err = cmd.CombinedOutput()
-			if err != nil {
-				return nil, fmt.Errorf("failed to checkout version %s for plugin %s: %v\nOutput: %s", plugin.Version, plugin.Name, err, string(output))
-			}
+		// Download the plugin
+		log.Info("Downloading plugin ", plugin.Name+" | Version "+plugin.Version)
+		resp, err := http.Get(plugin.Url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download plugin %s: %v", plugin.Name, err)
+		}
+		defer resp.Body.Close()
+
+		// Check server response
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("bad status: %s", resp.Status)
 		}
 
-		// Build the plugin
-		log.Info("Building plugin ", plugin.Name)
-		cmd = exec.Command("go", "build", "-o", pluginPath)
-		cmd.Env = append(os.Environ(), "GO111MODULE=on")
-		cmd.Dir = repoDir
-		output, err = cmd.CombinedOutput()
+		// Writer the body to file
+		_, err = io.Copy(pluginFile, resp.Body)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build plugin %s: %v\nOutput: %s", plugin.Name, err, string(output))
+			return nil, err
+		}
+
+		// change the file permissions
+		err = os.Chmod(pluginPath, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("failed to change plugin file permissions: %v", err)
 		}
 
 		pluginPaths[plugin.Name] = pluginPath
-	}
-
-	// remove the buildDir directory
-	err = os.RemoveAll(buildDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to remove build directory: %v", err)
 	}
 
 	return pluginPaths, nil

@@ -40,6 +40,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	err = executions.UpdateExecution(cfg, execution, platform)
 	if err != nil {
 		executions.EndWithError(cfg, execution, platform)
+		finishProcessing(platform, cfg, execution)
 		return
 	}
 
@@ -52,12 +53,14 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution, alertID)
 		if err != nil {
 			executions.EndWithError(cfg, execution, platform)
+			finishProcessing(platform, cfg, execution)
 			return
 		}
 	} else if platform == "exflow" {
 		initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
 		if err != nil {
 			executions.EndWithError(cfg, execution, platform)
+			finishProcessing(platform, cfg, execution)
 			return
 		}
 	}
@@ -75,6 +78,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				cancelRemainingSteps(cfg, execution.ID.String())
 				// end execution
 				executions.EndWithError(cfg, execution, platform)
+				finishProcessing(platform, cfg, execution)
 				return
 			}
 
@@ -84,6 +88,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				log.Error("Error parsing flow")
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
+				finishProcessing(platform, cfg, execution)
 				return
 			}
 
@@ -97,24 +102,28 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				log.Error("Error parsing alert")
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
+				finishProcessing(platform, cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "noPatternMatch" {
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndNoPatternMatch(cfg, execution, platform)
+				finishProcessing(platform, cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "canceled" {
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndCanceled(cfg, execution, platform)
+				finishProcessing(platform, cfg, execution)
 				return
 			}
 
 			if !success {
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
+				finishProcessing(platform, cfg, execution)
 				return
 			}
 		}
@@ -124,6 +133,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
 		executions.EndWithError(cfg, execution, platform)
+		finishProcessing(platform, cfg, execution)
 		return
 	}
 
@@ -137,24 +147,28 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 					cancelRemainingSteps(cfg, execution.ID.String())
 					// end execution
 					executions.EndWithError(cfg, execution, platform)
+					finishProcessing(platform, cfg, execution)
 					return
 				}
 
 				if res.Data["status"] == "noPatternMatch" {
 					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndNoPatternMatch(cfg, execution, platform)
+					finishProcessing(platform, cfg, execution)
 					return
 				}
 
 				if res.Data["status"] == "canceled" {
 					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndCanceled(cfg, execution, platform)
+					finishProcessing(platform, cfg, execution)
 					return
 				}
 
 				if !success {
 					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndWithError(cfg, execution, platform)
+					finishProcessing(platform, cfg, execution)
 					return
 				}
 			}
@@ -204,23 +218,30 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 
 		if failedSteps > 0 {
 			executions.EndWithError(cfg, execution, platform)
+			finishProcessing(platform, cfg, execution)
 			return
 		}
 
 		if canceledSteps > 0 {
 			executions.EndCanceled(cfg, execution, platform)
+			finishProcessing(platform, cfg, execution)
 			return
 		}
 
 		if noPatternMatchSteps > 0 {
 			executions.EndNoPatternMatch(cfg, execution, platform)
+			finishProcessing(platform, cfg, execution)
 			return
 		}
 	}
 
 	executions.EndSuccess(cfg, execution, platform)
 
-	err = os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
+	finishProcessing(platform, cfg, execution)
+}
+
+func finishProcessing(platform string, cfg config.Config, execution shared_models.Executions) {
+	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
 	if err != nil {
 		log.Error("Error deleting workspace dir: ", err)
 	}
