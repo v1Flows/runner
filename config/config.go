@@ -48,10 +48,9 @@ type EndpointConfig struct {
 }
 
 type PluginConfig struct {
-	Name       string            `mapstructure:"name" validate:"required"`
-	Repository string            `mapstructure:"repository" validate:"required,url"`
-	Version    string            `mapstructure:"version" validate:"required"`
-	Config     map[string]string `mapstructure:"config"`
+	Name    string `mapstructure:"name" validate:"required"`
+	Url     string `mapstructure:"url" validate:"required,url"`
+	Version string `mapstructure:"version" validate:"required"`
 }
 
 const (
