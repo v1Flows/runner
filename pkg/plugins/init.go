@@ -73,7 +73,7 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 		{Name: "wait", Version: "v1.2.3"},
 		{Name: "interaction", Version: "v1.2.3"},
 		{Name: "ping", Version: "v1.2.3"},
-		{Name: "port_checker", Version: "v1.2.3"},
+		{Name: "port_checker", Version: "v1.2.4"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
