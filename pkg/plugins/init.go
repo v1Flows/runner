@@ -66,14 +66,15 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
-		{Name: "collect_data", Version: "v1.2.6"},
-		{Name: "actions_check", Version: "v1.2.4"},
-		{Name: "pattern_check", Version: "v1.2.3"},
-		{Name: "log", Version: "v1.2.3"},
-		{Name: "wait", Version: "v1.2.3"},
-		{Name: "interaction", Version: "v1.2.3"},
-		{Name: "ping", Version: "v1.2.3"},
-		{Name: "port_checker", Version: "v1.2.4"},
+		{Name: "collect_data", Version: "v1.2.7"},
+		{Name: "actions_check", Version: "v1.2.5"},
+		{Name: "pattern_check", Version: "v1.2.4"},
+		{Name: "log", Version: "v1.2.5"},
+		{Name: "wait", Version: "v1.2.4"},
+		{Name: "interaction", Version: "v1.2.4"},
+		{Name: "ping", Version: "v1.3.0"},
+		{Name: "port_checker", Version: "v1.2.5"},
+		{Name: "step_analysis", Version: "v1.0.1"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
@@ -120,7 +121,7 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 		}
 		info, err := plugin.Info(req)
 		if err != nil {
-			log.Fatalf("Error getting info for plugin %s: %v", name, err)
+			log.Fatalf("Error receiving info for plugin %s: %v", name, err)
 		}
 
 		plugins = append(plugins, info)

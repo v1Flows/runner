@@ -49,7 +49,7 @@ func DownloadPlugins(pluginRepos []config.PluginConfig, buildDir string, pluginD
 		}
 
 		// Download the plugin
-		log.Info("Downloading plugin ", plugin.Name+" | Version "+plugin.Version)
+		log.Info("Downloading plugin ", plugin.Name+" | Version "+plugin.Version+" | URL: "+plugin.Url)
 		resp, err := http.Get(plugin.Url)
 		if err != nil {
 			return nil, fmt.Errorf("failed to download plugin %s: %v", plugin.Name, err)
