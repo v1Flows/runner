@@ -2,6 +2,8 @@ module github.com/v1Flows/runner
 
 go 1.24.0
 
+toolchain go1.24.1
+
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/google/uuid v1.6.0
@@ -56,7 +58,7 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b // indirect
 	google.golang.org/grpc v1.70.0 // indirect
@@ -68,9 +70,9 @@ require (
 require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/gin-gonic/gin v1.10.0
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540
-	github.com/v1Flows/shared-library v1.0.7
+	github.com/v1Flows/shared-library v1.0.10
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 )

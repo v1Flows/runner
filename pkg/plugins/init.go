@@ -66,7 +66,7 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
-		{Name: "collect_data", Version: "v1.2.5"},
+		{Name: "collect_data", Version: "v1.2.6"},
 		{Name: "actions_check", Version: "v1.2.4"},
 		{Name: "pattern_check", Version: "v1.2.3"},
 		{Name: "log", Version: "v1.2.3"},
