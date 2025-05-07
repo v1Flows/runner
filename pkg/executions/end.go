@@ -32,6 +32,12 @@ func EndWithError(cfg config.Config, execution shared_models.Executions, targetP
 	End(cfg, execution, targetPlatform)
 }
 
+func EndWithRecovered(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+	execution.FinishedAt = time.Now()
+	execution.Status = "recovered"
+	End(cfg, execution, targetPlatform)
+}
+
 func EndSuccess(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "success"
 	execution.FinishedAt = time.Now()

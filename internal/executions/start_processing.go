@@ -145,6 +145,18 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				if err != nil {
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
+
+					// start failure pipeline
+					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
+						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+						if err != nil {
+							// end execution with recovered status
+							executions.EndWithRecovered(cfg, execution, platform)
+							finishProcessing(platform, cfg, execution)
+							return
+						}
+					}
+
 					// end execution
 					executions.EndWithError(cfg, execution, platform)
 					finishProcessing(platform, cfg, execution)
@@ -167,6 +179,16 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 
 				if !success {
 					cancelRemainingSteps(cfg, execution.ID.String())
+
+					// start failure pipeline if enabled
+					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
+						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+						// end execution with recovered status
+						executions.EndWithRecovered(cfg, execution, platform)
+						finishProcessing(platform, cfg, execution)
+						return
+					}
+
 					executions.EndWithError(cfg, execution, platform)
 					finishProcessing(platform, cfg, execution)
 					return
