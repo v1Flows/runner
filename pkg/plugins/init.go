@@ -69,7 +69,7 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 		{Name: "collect_data", Version: "v1.2.7"},
 		{Name: "actions_check", Version: "v1.2.5"},
 		{Name: "pattern_check", Version: "v1.2.4"},
-		{Name: "log", Version: "v1.2.5"},
+		{Name: "log", Version: "v1.2.6"},
 		{Name: "wait", Version: "v1.2.4"},
 		{Name: "interaction", Version: "v1.2.4"},
 		{Name: "ping", Version: "v1.3.0"},
