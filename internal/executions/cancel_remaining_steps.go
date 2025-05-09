@@ -35,8 +35,9 @@ func cancelRemainingSteps(cfg config.Config, executionID string) error {
 					Title: "Canceled",
 					Lines: []shared_models.Line{
 						{
-							Content: "Canceled by runner due to previous step failure/interaction/timeout",
-							Color:   "danger",
+							Content:   "Canceled by runner due to previous step failure/interaction/timeout",
+							Color:     "danger",
+							Timestamp: time.Now(),
 						},
 					},
 				},

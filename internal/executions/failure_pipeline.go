@@ -31,8 +31,9 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 				Title: "Failure Pipeline",
 				Lines: []shared_models.Line{
 					{
-						Content: "Execution failed, starting failure pipeline",
-						Color:   "warning",
+						Content:   "Execution failed, starting failure pipeline",
+						Color:     "warning",
+						Timestamp: time.Now(),
 					},
 				},
 			},
@@ -52,11 +53,13 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 			Title: "Failure Pipeline",
 			Lines: []shared_models.Line{
 				{
-					Content: "Flow has a failure pipeline assigned, this pipeline will be used",
-					Color:   "warning",
+					Content:   "Flow has a failure pipeline assigned, this pipeline will be used",
+					Color:     "warning",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Pipeline ID: " + flow.FailurePipelineID,
+					Content:   "Pipeline ID: " + flow.FailurePipelineID,
+					Timestamp: time.Now(),
 				},
 			},
 		})
@@ -67,17 +70,21 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 			Title: "Failure Pipeline",
 			Lines: []shared_models.Line{
 				{
-					Content: "The failed step has a failure pipeline assigned, this pipeline will be used",
-					Color:   "warning",
+					Content:   "The failed step has a failure pipeline assigned, this pipeline will be used",
+					Color:     "warning",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Step ID: " + failedStep.ID.String(),
+					Content:   "Step ID: " + failedStep.ID.String(),
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Step Name: " + failedStep.Action.Name,
+					Content:   "Step Name: " + failedStep.Action.Name,
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Pipeline ID: " + failedStep.Action.FailurePipelineID,
+					Content:   "Pipeline ID: " + failedStep.Action.FailurePipelineID,
+					Timestamp: time.Now(),
 				},
 			},
 		})
