@@ -21,7 +21,7 @@ import (
 
 var (
 	log        = logrus.New()
-	version    = "1.0.7"
+	version    = "1.1.0-beta1"
 	configFile = kingpin.Flag("config", "Path to configuration file").Short('c').String()
 )
 
