@@ -2,6 +2,7 @@
 package plugins
 
 import (
+	"context"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
@@ -12,7 +13,7 @@ import (
 
 // Plugin interface that all plugins must implement
 type Plugin interface {
-	ExecuteTask(request ExecuteTaskRequest) (Response, error)
+	ExecuteTask(ctx context.Context, request ExecuteTaskRequest) (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
 	Info(request InfoRequest) (shared_models.Plugin, error)
 }
@@ -89,8 +90,8 @@ type PluginRPCServer struct {
 	Impl Plugin
 }
 
-func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response) error {
-	result, err := s.Impl.ExecuteTask(request)
+func (s *PluginRPCServer) ExecuteTask(ctx context.Context, request ExecuteTaskRequest, resp *Response) error {
+	result, err := s.Impl.ExecuteTask(ctx, request)
 	*resp = result
 	return err
 }
