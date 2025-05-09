@@ -6,6 +6,7 @@ import (
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
+	"github.com/v1Flows/shared-library/pkg/models"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -14,30 +15,6 @@ import (
 // SendInitialSteps sends initial steps to alertflow
 func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	var initialSteps = []shared_models.ExecutionSteps{
-		{
-			Action: shared_models.Action{
-				Name:        "Runner Pick Up",
-				Description: "Runner picked up the execution",
-				Version:     "1.0.0",
-				Icon:        "solar:rocket-2-bold-duotone",
-				Category:    "runner",
-			},
-			Messages: []shared_models.Message{
-				{
-					Title: "Runner Pick Up",
-					Lines: []shared_models.Line{
-						{
-							Content: execution.RunnerID + " picked up the execution",
-						},
-					},
-				},
-			},
-			Status:     "success",
-			RunnerID:   execution.RunnerID,
-			CreatedAt:  time.Now(),
-			StartedAt:  time.Now(),
-			FinishedAt: time.Now(),
-		},
 		{
 			Action: shared_models.Action{
 				Plugin: "collect_data",
@@ -68,6 +45,37 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 	if !ok {
 		log.Error("Failed to get platform")
 		return
+	}
+
+	// get all current steps to modify the pickup step
+	steps, err := executions.GetSteps(cfg, execution.ID.String(), targetPlatform)
+	if err != nil {
+		log.Error("Failed to get steps for execution: ", err)
+		return
+	}
+	if len(steps) == 1 {
+		// modify the pickup step
+		err = executions.UpdateStep(cfg, execution.ID.String(), models.ExecutionSteps{
+			ID: steps[0].ID,
+			Messages: []models.Message{
+				{
+					Title: "Pick Up",
+					Lines: []models.Line{
+						{
+							Content:   execution.RunnerID + " picked up the execution",
+							Timestamp: time.Now(),
+							Color:     "success",
+						},
+					},
+				},
+			},
+			Status:     "success",
+			RunnerID:   execution.RunnerID,
+			FinishedAt: time.Now(),
+		}, targetPlatform)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for i, step := range initialSteps {

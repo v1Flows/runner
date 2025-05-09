@@ -10,6 +10,7 @@ import (
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
+	"github.com/v1Flows/shared-library/pkg/models"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -43,7 +44,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		return plugins.Response{}, false, err
 	}
 
-	valid, pluginVersion := common.CheckActionVersionAgainstPluginVersion(actions, step)
+	valid, danger, pluginVersion := common.CheckActionVersionAgainstPluginVersion(actions, step)
 
 	if !valid {
 		// dont execute step and quit execution
@@ -51,20 +52,24 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 			Title: "Error",
 			Lines: []shared_models.Line{
 				{
-					Content: "Action not compatible with plugin version",
-					Color:   "danger",
+					Content:   "Action not compatible with plugin version",
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Plugin Version: " + pluginVersion,
-					Color:   "danger",
+					Content:   "Plugin Version: " + pluginVersion,
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Action Version: " + step.Action.Version,
-					Color:   "danger",
+					Content:   "Action Version: " + step.Action.Version,
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Cancel execution",
-					Color:   "danger",
+					Content:   "Cancel execution",
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 			},
 		})
@@ -79,6 +84,29 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		return plugins.Response{}, false, nil
 	}
 
+	if danger {
+		// modify the pickup step
+		err = executions.UpdateStep(cfg, execution.ID.String(), models.ExecutionSteps{
+			ID: steps[0].ID,
+			Messages: []models.Message{
+				{
+					Title: "Caution",
+					Lines: []models.Line{
+						{
+							Content:   "Plugin version is higher than action version. This may cause issues but execution will still be processed.",
+							Timestamp: time.Now(),
+							Color:     "warning",
+						},
+					},
+				},
+			},
+			Status: "running",
+		}, targetPlatform)
+		if err != nil {
+			return plugins.Response{}, false, err
+		}
+	}
+
 	if _, ok := loadedPlugins[step.Action.Plugin]; !ok {
 		log.Warnf("Action %s not found", step.Action.Plugin)
 
@@ -86,16 +114,19 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 			Title: "Error",
 			Lines: []shared_models.Line{
 				{
-					Content: "Action not found in loaded plugins",
-					Color:   "danger",
+					Content:   "Action not found in loaded plugins",
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Target plugin: " + step.Action.Plugin,
-					Color:   "danger",
+					Content:   "Target plugin: " + step.Action.Plugin,
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Cancel execution",
-					Color:   "danger",
+					Content:   "Cancel execution",
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 			},
 		})
@@ -129,16 +160,19 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 			Title: "Error",
 			Lines: []shared_models.Line{
 				{
-					Content: "Failed to execute action",
-					Color:   "danger",
+					Content:   "Failed to execute action",
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Error: " + err.Error(),
-					Color:   "danger",
+					Content:   "Error: " + err.Error(),
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 				{
-					Content: "Cancel execution",
-					Color:   "danger",
+					Content:   "Cancel execution",
+					Color:     "danger",
+					Timestamp: time.Now(),
 				},
 			},
 		})
