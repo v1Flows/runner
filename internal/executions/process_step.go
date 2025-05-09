@@ -1,7 +1,6 @@
 package internal_executions
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -153,10 +152,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		Workspace: workspace,
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(ctx, req)
+	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)
 	if err != nil {
 		log.Error(err)
 

@@ -2,7 +2,6 @@
 package plugins
 
 import (
-	"context"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
@@ -13,7 +12,8 @@ import (
 
 // Plugin interface that all plugins must implement
 type Plugin interface {
-	ExecuteTask(ctx context.Context, request ExecuteTaskRequest) (Response, error)
+	ExecuteTask(request ExecuteTaskRequest) (Response, error)
+	CancelTask() (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
 	Info(request InfoRequest) (shared_models.Plugin, error)
 }
@@ -60,6 +60,12 @@ func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	return resp, err
 }
 
+func (p *PluginRPC) CancelTask() (Response, error) {
+	var resp Response
+	err := p.Client.Call("Plugin.CancelTask", nil, &resp)
+	return resp, err
+}
+
 func (p *PluginRPC) EndpointRequest(request EndpointRequest) (Response, error) {
 	var resp Response
 	err := p.Client.Call("Plugin.EndpointRequest", request, &resp)
@@ -90,8 +96,14 @@ type PluginRPCServer struct {
 	Impl Plugin
 }
 
-func (s *PluginRPCServer) ExecuteTask(ctx context.Context, request ExecuteTaskRequest, resp *Response) error {
-	result, err := s.Impl.ExecuteTask(ctx, request)
+func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response) error {
+	result, err := s.Impl.ExecuteTask(request)
+	*resp = result
+	return err
+}
+
+func (s *PluginRPCServer) CancelTask(request ExecuteTaskRequest, resp *Response) error {
+	result, err := s.Impl.CancelTask()
 	*resp = result
 	return err
 }
