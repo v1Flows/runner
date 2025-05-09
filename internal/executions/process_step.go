@@ -1,6 +1,7 @@
 package internal_executions
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -142,6 +143,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 	}
 
 	req := plugins.ExecuteTaskRequest{
+		Context:   context.Background(),
 		Config:    cfg,
 		Flow:      flow,
 		FlowBytes: flowBytes,
