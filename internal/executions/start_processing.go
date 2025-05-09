@@ -27,6 +27,23 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		return
 	}
 
+	// Start sending heartbeats
+	doneHeartbeat := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-doneHeartbeat:
+				// Stop sending heartbeats when done
+				return
+			default:
+				// Send a heartbeat
+				executions.SendHeartbeat(cfg, execution, platform)
+				// Wait for a short interval before sending the next heartbeat
+				time.Sleep(5 * time.Second) // Adjust the interval as needed
+			}
+		}
+	}()
+
 	// create workspace dir for execution
 	workspace := fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID)
 	err := os.MkdirAll(workspace, 0755)
@@ -40,6 +57,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	err = executions.UpdateExecution(cfg, execution, platform)
 	if err != nil {
 		executions.EndWithError(cfg, execution, platform)
+		// Stop heartbeats and finish processing
+		close(doneHeartbeat)
 		finishProcessing(platform, cfg, execution)
 		return
 	}
@@ -53,6 +72,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution, alertID)
 		if err != nil {
 			executions.EndWithError(cfg, execution, platform)
+			// Stop heartbeats and finish processing
+			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
 			return
 		}
@@ -60,6 +81,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
 		if err != nil {
 			executions.EndWithError(cfg, execution, platform)
+			// Stop heartbeats and finish processing
+			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
 			return
 		}
@@ -78,6 +101,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				cancelRemainingSteps(cfg, execution.ID.String())
 				// end execution
 				executions.EndWithError(cfg, execution, platform)
+				// Stop heartbeats and finish processing
+				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
 				return
 			}
@@ -88,6 +113,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				log.Error("Error parsing flow")
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
+				// Stop heartbeats and finish processing
+				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
 				return
 			}
@@ -102,6 +129,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				log.Error("Error parsing alert")
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
+				// Stop heartbeats and finish processing
+				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
 				return
 			}
@@ -116,6 +145,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			if res.Data["status"] == "canceled" {
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndCanceled(cfg, execution, platform)
+				// Stop heartbeats and finish processing
+				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
 				return
 			}
@@ -123,6 +154,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			if !success {
 				cancelRemainingSteps(cfg, execution.ID.String())
 				executions.EndWithError(cfg, execution, platform)
+				// Stop heartbeats and finish processing
+				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
 				return
 			}
@@ -133,6 +166,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
 		executions.EndWithError(cfg, execution, platform)
+		// Stop heartbeats and finish processing
+		close(doneHeartbeat)
 		finishProcessing(platform, cfg, execution)
 		return
 	}
@@ -151,14 +186,18 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
 							// end execution with recovered status
-							executions.EndWithRecovered(cfg, execution, platform)
+							executions.EndWithError(cfg, execution, platform)
+							// Stop heartbeats and finish processing
+							close(doneHeartbeat)
 							finishProcessing(platform, cfg, execution)
 							return
 						}
 					}
 
 					// end execution
-					executions.EndWithError(cfg, execution, platform)
+					executions.EndWithRecovered(cfg, execution, platform)
+					// Stop heartbeats and finish processing
+					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
 					return
 				}
@@ -166,6 +205,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				if res.Data["status"] == "noPatternMatch" {
 					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndNoPatternMatch(cfg, execution, platform)
+					// Stop heartbeats and finish processing
+					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
 					return
 				}
@@ -173,6 +214,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				if res.Data["status"] == "canceled" {
 					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndCanceled(cfg, execution, platform)
+					// Stop heartbeats and finish processing
+					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
 					return
 				}
@@ -183,13 +226,25 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 					// start failure pipeline if enabled
 					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+						if err != nil {
+							executions.EndWithError(cfg, execution, platform)
+							// Stop heartbeats and finish processing
+							close(doneHeartbeat)
+							finishProcessing(platform, cfg, execution)
+							return
+						}
+
 						// end execution with recovered status
 						executions.EndWithRecovered(cfg, execution, platform)
+						// Stop heartbeats and finish processing
+						close(doneHeartbeat)
 						finishProcessing(platform, cfg, execution)
 						return
 					}
 
 					executions.EndWithError(cfg, execution, platform)
+					// Stop heartbeats and finish processing
+					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
 					return
 				}
@@ -240,18 +295,24 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 
 		if failedSteps > 0 {
 			executions.EndWithError(cfg, execution, platform)
+			// Stop heartbeats and finish processing
+			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
 			return
 		}
 
 		if canceledSteps > 0 {
 			executions.EndCanceled(cfg, execution, platform)
+			// Stop heartbeats and finish processing
+			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
 			return
 		}
 
 		if noPatternMatchSteps > 0 {
 			executions.EndNoPatternMatch(cfg, execution, platform)
+			// Stop heartbeats and finish processing
+			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
 			return
 		}
@@ -259,6 +320,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 
 	executions.EndSuccess(cfg, execution, platform)
 
+	// Stop heartbeats and finish processing
+	close(doneHeartbeat)
 	finishProcessing(platform, cfg, execution)
 }
 
