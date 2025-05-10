@@ -21,7 +21,7 @@ import (
 
 var (
 	log        = logrus.New()
-	version    = "1.1.0-beta3"
+	version    = "1.1.0-beta4"
 	configFile = kingpin.Flag("config", "Path to configuration file").Short('c').String()
 )
 
@@ -102,19 +102,15 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []shar
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
 		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
-		if platform == "alertflow" {
-			log.Info("Starting Alert Listener")
-			go endpoints.InitEndpointRouter(cfg, router, "alertflow", endpointPlugins, loadedPlugins)
-		}
+		log.Info("Starting Router")
+		go endpoints.InitRouter(cfg, router, platform, endpointPlugins, loadedPlugins)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
 		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
-		if platform == "alertflow" {
-			log.Info("Starting Alert Listener")
-			go endpoints.InitEndpointRouter(cfg, router, "alertflow", endpointPlugins, loadedPlugins)
-		}
+		log.Info("Starting Router")
+		go endpoints.InitRouter(cfg, router, platform, endpointPlugins, loadedPlugins)
 	}
 }

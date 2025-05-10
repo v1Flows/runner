@@ -14,6 +14,7 @@ import (
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
+	CancelTask() (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
 	Info(request InfoRequest) (shared_models.Plugin, error)
 }
@@ -99,6 +100,12 @@ type PluginRPCServer struct {
 
 func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response) error {
 	result, err := s.Impl.ExecuteTask(request)
+	*resp = result
+	return err
+}
+
+func (s *PluginRPCServer) CancelTask(resp *Response) error {
+	result, err := s.Impl.CancelTask()
 	*resp = result
 	return err
 }

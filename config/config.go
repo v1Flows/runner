@@ -19,14 +19,14 @@ type ConfigurationManager struct {
 
 // Config represents the application configuration
 type Config struct {
-	LogLevel     string          `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
-	Mode         string          `mapstructure:"mode" validate:"required,oneof=master worker"`
-	Alertflow    AlertflowConfig `mapstructure:"alertflow" validate:"required"`
-	ExFlow       exflowConfig    `mapstructure:"exflow" validate:"required"`
-	Endpoints    EndpointConfig  `mapstructure:"alert_endpoints" validate:"required"`
-	WorkspaceDir string          `mapstructure:"workspace_dir" validate:"dir"`
-	PluginDir    string          `mapstructure:"plugin_dir" validate:"dir"`
-	Plugins      []PluginConfig  `mapstructure:"plugins"`
+	LogLevel     string            `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
+	Mode         string            `mapstructure:"mode" validate:"required,oneof=master worker"`
+	Alertflow    AlertflowConfig   `mapstructure:"alertflow" validate:"required"`
+	ExFlow       exflowConfig      `mapstructure:"exflow" validate:"required"`
+	ApiEndpoint  ApiEndpointConfig `mapstructure:"api_endpoint" validate:"required"`
+	WorkspaceDir string            `mapstructure:"workspace_dir" validate:"dir"`
+	PluginDir    string            `mapstructure:"plugin_dir" validate:"dir"`
+	Plugins      []PluginConfig    `mapstructure:"plugins"`
 }
 
 type AlertflowConfig struct {
@@ -43,7 +43,7 @@ type exflowConfig struct {
 	APIKey   string `mapstructure:"api_key" validate:"required"`
 }
 
-type EndpointConfig struct {
+type ApiEndpointConfig struct {
 	Port int `mapstructure:"port" validate:"required,min=1024,max=65535"`
 }
 
@@ -137,8 +137,8 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 	if config.Mode == "" {
 		config.Mode = defaultMode
 	}
-	if config.Endpoints.Port == 0 {
-		config.Endpoints.Port = defaultPort
+	if config.ApiEndpoint.Port == 0 {
+		config.ApiEndpoint.Port = defaultPort
 	}
 	if config.WorkspaceDir == "" {
 		// get the current working directory and add plugins folder
