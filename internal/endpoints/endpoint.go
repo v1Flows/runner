@@ -24,44 +24,55 @@ func RegisterEndpoints(loadedPluginEndpoints []shared_models.Plugin) (endpoints 
 	return endpoints
 }
 
-func InitEndpointRouter(cfg config.Config, router *gin.Engine, platform string, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
-	log.Info("Open Alert Port: ", cfg.Endpoints.Port)
+func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
+	// enable api endpoint for backend -> runner communication
+	log.Info("Router Listening on Port: ", cfg.ApiEndpoint.Port)
+	v1 := router.Group("/api/v1")
 
-	alert := router.Group("/alert")
-	for _, plugin := range endpointPlugins {
-		log.Infof("Open %s Endpoint at /alert%s", plugin.Name, plugin.Endpoint.Path)
-		alert.POST(plugin.Endpoint.Path, func(c *gin.Context) {
-			log.Info("Received Alert for: ", plugin.Name)
+	v1.POST("/execution/:executionID/cancel", func(c *gin.Context) {
+		log.Info("Received Cancel Request for Execution ID: ", c.Param("executionID"))
+	})
 
-			bodyBytes, err := io.ReadAll(c.Request.Body)
-			if err != nil {
-				log.Error("Error reading request body: ", err)
-				c.JSON(500, gin.H{
-					"error": "Error reading request body",
-				})
-				return
-			}
+	// handle incoming alert requests for alertflow
+	if platform == "alertflow" && (cfg.Mode == "listener" || cfg.Mode == "master") {
+		log.Info("Open Alert Port: ", cfg.ApiEndpoint.Port)
 
-			request := plugins.EndpointRequest{
-				Config:   cfg,
-				Body:     bodyBytes,
-				Platform: platform,
-			}
+		alert := v1.Group("/alert")
+		for _, plugin := range endpointPlugins {
+			log.Infof("Open %s Endpoint at /alert%s", plugin.Name, plugin.Endpoint.Path)
+			alert.POST(plugin.Endpoint.Path, func(c *gin.Context) {
+				log.Info("Received Alert for: ", plugin.Name)
 
-			res, err := loadedPlugins[plugin.Endpoint.ID].EndpointRequest(request)
-			if err != nil {
-				log.Error("Error in handling request: ", err)
-				c.JSON(500, gin.H{
-					"error": err,
-				})
-			} else {
-				log.Info("Request handled successfully")
-				c.JSON(200, gin.H{
-					"response": res,
-				})
-			}
-		})
+				bodyBytes, err := io.ReadAll(c.Request.Body)
+				if err != nil {
+					log.Error("Error reading request body: ", err)
+					c.JSON(500, gin.H{
+						"error": "Error reading request body",
+					})
+					return
+				}
+
+				request := plugins.EndpointRequest{
+					Config:   cfg,
+					Body:     bodyBytes,
+					Platform: platform,
+				}
+
+				res, err := loadedPlugins[plugin.Endpoint.ID].EndpointRequest(request)
+				if err != nil {
+					log.Error("Error in handling request: ", err)
+					c.JSON(500, gin.H{
+						"error": err,
+					})
+				} else {
+					log.Info("Request handled successfully")
+					c.JSON(200, gin.H{
+						"response": res,
+					})
+				}
+			})
+		}
 	}
 
-	router.Run(":" + strconv.Itoa(cfg.Endpoints.Port))
+	router.Run(":" + strconv.Itoa(cfg.ApiEndpoint.Port))
 }
