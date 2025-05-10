@@ -2,7 +2,6 @@
 package plugins
 
 import (
-	"context"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
@@ -14,7 +13,7 @@ import (
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
-	CancelTask() (Response, error)
+	CancelTask(req CancelTaskRequest) (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
 	Info(request InfoRequest) (shared_models.Plugin, error)
 }
@@ -30,7 +29,6 @@ type InfoRequest struct {
 }
 
 type ExecuteTaskRequest struct {
-	Context   context.Context
 	Args      map[string]string
 	Config    config.Config
 	Flow      shared_models.Flows
@@ -40,6 +38,13 @@ type ExecuteTaskRequest struct {
 	Alert     af_models.Alerts
 	Platform  string
 	Workspace string
+}
+
+type CancelTaskRequest struct {
+	Args      map[string]string
+	Config    config.Config
+	Execution shared_models.Executions
+	Step      *shared_models.ExecutionSteps
 }
 
 type EndpointRequest struct {
@@ -62,9 +67,9 @@ func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) CancelTask() (Response, error) {
+func (p *PluginRPC) CancelTask(request CancelTaskRequest) (Response, error) {
 	var resp Response
-	err := p.Client.Call("Plugin.CancelTask", nil, &resp)
+	err := p.Client.Call("Plugin.CancelTask", request, &resp)
 	return resp, err
 }
 
@@ -104,8 +109,8 @@ func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response
 	return err
 }
 
-func (s *PluginRPCServer) CancelTask(resp *Response) error {
-	result, err := s.Impl.CancelTask()
+func (s *PluginRPCServer) CancelTask(request CancelTaskRequest, resp *Response) error {
+	result, err := s.Impl.CancelTask(request)
 	*resp = result
 	return err
 }
