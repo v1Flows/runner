@@ -1,4 +1,4 @@
-package endpoints
+package api
 
 import (
 	"io"
@@ -29,7 +29,8 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 	log.Info("Router Listening on Port: ", cfg.ApiEndpoint.Port)
 	v1 := router.Group("/api/v1")
 
-	v1.POST("/execution/:executionID/cancel", func(c *gin.Context) {
+	executions := v1.Group("/executions").Use(Auth())
+	executions.POST("/:executionID/cancel", func(c *gin.Context) {
 		log.Info("Received Cancel Request for Execution ID: ", c.Param("executionID"))
 	})
 

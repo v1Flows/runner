@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/token"
 	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
@@ -38,6 +39,9 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		log.Fatalf("Failed to get local IPv4 address: %v", err)
 	}
 
+	// generate an random token for ApiToken
+	token := token.GenerateToken()
+
 	register := shared_models.Runners{
 		ID:            parsedRunnerID,
 		Registered:    true,
@@ -48,6 +52,7 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		Actions:       actions,
 		Endpoints:     alertEndpoints,
 		ApiURL:        "http://" + ip + ":" + strconv.Itoa(cfg.ApiEndpoint.Port) + "/api/v1",
+		ApiToken:      token,
 	}
 
 	payloadBuf := new(bytes.Buffer)
