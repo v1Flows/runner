@@ -4,6 +4,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
@@ -51,21 +52,18 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 			return
 		}
 
-		var currentStep *shared_models.ExecutionSteps
+		var currentStep shared_models.ExecutionSteps
 		for _, step := range steps {
 			if step.Status == "running" {
-				currentStep = &step
+				currentStep = step
 				break
 			}
 		}
-		if currentStep == nil {
+		if currentStep.ID == uuid.Nil {
 			log.Error("No running step found for execution: ", executionID)
 			c.JSON(404, gin.H{"error": "No running step found"})
 			return
 		}
-
-		log.Info("Current Step ID: ", currentStep.ID)
-		log.Info("Current Step Plugin: ", currentStep.Action.Plugin)
 
 		// Locate the plugin responsible for the current step
 		plugin, ok := loadedPlugins[currentStep.Action.Plugin]
@@ -77,9 +75,7 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 
 		// Call the CancelTask method of the plugin
 		cancelReq := plugins.CancelTaskRequest{
-			Config:    cfg,
-			Execution: execution,
-			Step:      currentStep,
+			Step: currentStep,
 		}
 		resp, err := plugin.CancelTask(cancelReq)
 		if err != nil {

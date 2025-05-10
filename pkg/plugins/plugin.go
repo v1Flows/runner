@@ -41,10 +41,7 @@ type ExecuteTaskRequest struct {
 }
 
 type CancelTaskRequest struct {
-	Args      map[string]string
-	Config    config.Config
-	Execution shared_models.Executions
-	Step      *shared_models.ExecutionSteps
+	Step shared_models.ExecutionSteps
 }
 
 type EndpointRequest struct {
@@ -59,6 +56,7 @@ type Response struct {
 	FlowBytes []byte
 	Alert     *af_models.Alerts
 	Success   bool
+	Canceled  bool
 }
 
 func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
