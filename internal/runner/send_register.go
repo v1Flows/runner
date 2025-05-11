@@ -3,12 +3,16 @@ package runner
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/v1Flows/runner/config"
+	"github.com/v1Flows/runner/internal/token"
 	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
@@ -30,6 +34,14 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		}
 	}
 
+	ip, err := GetLocalIPv4()
+	if err != nil {
+		log.Fatalf("Failed to get local IPv4 address: %v", err)
+	}
+
+	// generate an random token for ApiToken
+	token := token.GenerateToken()
+
 	register := shared_models.Runners{
 		ID:            parsedRunnerID,
 		Registered:    true,
@@ -39,6 +51,8 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		Plugins:       plugins,
 		Actions:       actions,
 		Endpoints:     alertEndpoints,
+		ApiURL:        "http://" + ip + ":" + strconv.Itoa(cfg.ApiEndpoint.Port) + "/api/v1",
+		ApiToken:      token,
 	}
 
 	payloadBuf := new(bytes.Buffer)
@@ -91,4 +105,41 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		}
 	}
 	log.Fatal("Failed to register at " + targetPlatform + " after 3 attempts")
+}
+
+func GetLocalIPv4() (string, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", fmt.Errorf("failed to get network interfaces: %v", err)
+	}
+
+	for _, iface := range interfaces {
+		// Skip interfaces that are down or not loopback
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", fmt.Errorf("failed to get addresses for interface %s: %v", iface.Name, err)
+		}
+
+		for _, addr := range addrs {
+			var ip net.IP
+
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			// Check if it's an IPv4 address
+			if ip != nil && ip.To4() != nil {
+				return ip.String(), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no IPv4 address found")
 }

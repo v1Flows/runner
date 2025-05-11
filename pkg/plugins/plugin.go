@@ -13,6 +13,7 @@ import (
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
+	CancelTask(req CancelTaskRequest) (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
 	Info(request InfoRequest) (shared_models.Plugin, error)
 }
@@ -39,6 +40,10 @@ type ExecuteTaskRequest struct {
 	Workspace string
 }
 
+type CancelTaskRequest struct {
+	Step shared_models.ExecutionSteps
+}
+
 type EndpointRequest struct {
 	Config   config.Config
 	Body     []byte
@@ -51,11 +56,18 @@ type Response struct {
 	FlowBytes []byte
 	Alert     *af_models.Alerts
 	Success   bool
+	Canceled  bool
 }
 
 func (p *PluginRPC) ExecuteTask(request ExecuteTaskRequest) (Response, error) {
 	var resp Response
 	err := p.Client.Call("Plugin.ExecuteTask", request, &resp)
+	return resp, err
+}
+
+func (p *PluginRPC) CancelTask(request CancelTaskRequest) (Response, error) {
+	var resp Response
+	err := p.Client.Call("Plugin.CancelTask", request, &resp)
 	return resp, err
 }
 
@@ -91,6 +103,12 @@ type PluginRPCServer struct {
 
 func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response) error {
 	result, err := s.Impl.ExecuteTask(request)
+	*resp = result
+	return err
+}
+
+func (s *PluginRPCServer) CancelTask(request CancelTaskRequest, resp *Response) error {
+	result, err := s.Impl.CancelTask(request)
 	*resp = result
 	return err
 }
