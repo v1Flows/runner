@@ -28,7 +28,7 @@ func RegisterActions(loadedPluginActions []shared_models.Plugin) (actions []shar
 	return actions
 }
 
-func processStep(cfg config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, err error) {
+func processStep(cfg config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, canceled bool, err error) {
 	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
@@ -41,7 +41,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 
 	if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
 		log.Error(err)
-		return plugins.Response{}, false, err
+		return plugins.Response{}, false, false, err
 	}
 
 	valid, danger, pluginVersion := common.CheckActionVersionAgainstPluginVersion(actions, step)
@@ -78,10 +78,10 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
 			log.Error(err)
-			return plugins.Response{}, false, err
+			return plugins.Response{}, false, false, err
 		}
 
-		return plugins.Response{}, false, nil
+		return plugins.Response{}, false, false, nil
 	}
 
 	if danger {
@@ -103,7 +103,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 			Status: "running",
 		}, targetPlatform)
 		if err != nil {
-			return plugins.Response{}, false, err
+			return plugins.Response{}, false, false, err
 		}
 	}
 
@@ -135,10 +135,10 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
 			log.Error(err)
-			return plugins.Response{}, false, err
+			return plugins.Response{}, false, false, err
 		}
 
-		return plugins.Response{}, false, errors.New("plugin not found")
+		return plugins.Response{}, false, false, errors.New("plugin not found")
 	}
 
 	req := plugins.ExecuteTaskRequest{
@@ -181,16 +181,18 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 
 		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
 			log.Error(err)
-			return plugins.Response{}, false, err
+			return plugins.Response{}, false, false, err
 		}
 
-		return plugins.Response{}, false, err
+		return plugins.Response{}, false, false, err
 	}
 
-	if res.Success {
-		return res, true, nil
+	if res.Canceled {
+		return res, false, true, nil
+	} else if res.Success {
+		return res, true, false, nil
 	} else {
-		return res, false, nil
+		return res, false, false, nil
 	}
 
 	// return data, true, false, false, false, nil

@@ -94,13 +94,22 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	var alert bmodels.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			res, success, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
+			res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
 				cancelRemainingSteps(cfg, execution.ID.String())
 				// end execution
 				executions.EndWithError(cfg, execution, platform)
+				// Stop heartbeats and finish processing
+				close(doneHeartbeat)
+				finishProcessing(platform, cfg, execution)
+				return
+			}
+
+			if canceled {
+				cancelRemainingSteps(cfg, execution.ID.String())
+				executions.EndCanceled(cfg, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -176,7 +185,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				res, success, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
@@ -212,6 +221,15 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				}
 
 				if res.Data["status"] == "canceled" {
+					cancelRemainingSteps(cfg, execution.ID.String())
+					executions.EndCanceled(cfg, execution, platform)
+					// Stop heartbeats and finish processing
+					close(doneHeartbeat)
+					finishProcessing(platform, cfg, execution)
+					return
+				}
+
+				if canceled {
 					cancelRemainingSteps(cfg, execution.ID.String())
 					executions.EndCanceled(cfg, execution, platform)
 					// Stop heartbeats and finish processing
@@ -260,7 +278,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					res, success, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+					res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 					if err != nil {
 						failedSteps++
 					}
@@ -272,6 +290,10 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 					}
 
 					if res.Data["status"] == "canceled" {
+						canceledSteps++
+					}
+
+					if canceled {
 						canceledSteps++
 					}
 
