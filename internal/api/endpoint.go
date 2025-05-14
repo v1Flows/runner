@@ -54,7 +54,7 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 
 		var currentStep shared_models.ExecutionSteps
 		for _, step := range steps {
-			if step.Status == "running" {
+			if step.Status == "running" || step.Status == "pending" || step.Status == "paused" || step.Status == "interactionWaiting" {
 				currentStep = step
 				break
 			}
