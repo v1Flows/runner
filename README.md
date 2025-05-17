@@ -16,6 +16,9 @@
 - **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow / exflow to your needs
 
 ## Configuration
+
+To conntect an runner to exFlow or AlertFlow you first have to set them up and copy the runner_id and or the api key from the created project. As an Admin you can copy the Global Share Runner token from the admin view.
+
 ```yaml
 ---
 
@@ -36,10 +39,15 @@ exflow:
 
 plugins:
   - name: alertmanager
-    repository: https://github.com/AlertFlow/rp-alertmanager
-    version: v1.0.2
+    version: v1.2.4
+  - name: git
+    version: v1.2.0
+  - name: ansible
+    version: v1.3.2
+  - name: ssh
+    version: v1.4.0
 
-alert_endpoints:
+api_endpoint:
   port: 8081
 ```
 
