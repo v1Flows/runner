@@ -6,7 +6,6 @@ import (
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
-	"github.com/v1Flows/shared-library/pkg/models"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -53,28 +52,30 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 		log.Error("Failed to get steps for execution: ", err)
 		return
 	}
-	if len(steps) == 1 {
-		// modify the pickup step
-		err = executions.UpdateStep(cfg, execution.ID.String(), models.ExecutionSteps{
-			ID: steps[0].ID,
-			Messages: []models.Message{
-				{
-					Title: "Pick Up",
-					Lines: []models.Line{
-						{
-							Content:   execution.RunnerID + " picked up the execution",
-							Timestamp: time.Now(),
-							Color:     "success",
+	for _, step := range steps {
+		if step.Action.Name == "Pick Up" {
+			// modify the pickup step
+			err = executions.UpdateStep(cfg, execution.ID.String(), shared_models.ExecutionSteps{
+				ID: step.ID,
+				Messages: []shared_models.Message{
+					{
+						Title: "Pick Up",
+						Lines: []shared_models.Line{
+							{
+								Content:   execution.RunnerID + " picked up the execution",
+								Timestamp: time.Now(),
+								Color:     "success",
+							},
 						},
 					},
 				},
-			},
-			Status:     "success",
-			RunnerID:   execution.RunnerID,
-			FinishedAt: time.Now(),
-		}, targetPlatform)
-		if err != nil {
-			return nil, err
+				Status:     "success",
+				RunnerID:   execution.RunnerID,
+				FinishedAt: time.Now(),
+			}, targetPlatform)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
