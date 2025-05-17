@@ -6,7 +6,6 @@ import (
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
-	"github.com/v1Flows/shared-library/pkg/models"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -56,12 +55,12 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 	for _, step := range steps {
 		if step.Action.Name == "Pick Up" {
 			// modify the pickup step
-			err = executions.UpdateStep(cfg, execution.ID.String(), models.ExecutionSteps{
+			err = executions.UpdateStep(cfg, execution.ID.String(), shared_models.ExecutionSteps{
 				ID: step.ID,
-				Messages: []models.Message{
+				Messages: []shared_models.Message{
 					{
 						Title: "Pick Up",
-						Lines: []models.Line{
+						Lines: []shared_models.Line{
 							{
 								Content:   execution.RunnerID + " picked up the execution",
 								Timestamp: time.Now(),
