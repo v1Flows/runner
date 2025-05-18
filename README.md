@@ -52,9 +52,9 @@ api_endpoint:
 ```
 
 ## Plugins
-The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be seen [here](https://github.com/orgs/AlertFlow/repositories) (all the repos that start with rp-).
+The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be found [here](https://github.com/v1Flows/runner-plugins).
 
-To develop your own plugin you can start right away with this [template](https://github.com/AlertFlow/rp-template)
+To develop your own plugin you can start right away with this [template](https://github.com/v1Flows/runner-plugins/tree/develop/template)
 
 ## Modes
 
@@ -72,6 +72,10 @@ To host the Runner on your own infrastructure we provide various docker images a
 [Docker Hub](htthttps://hub.docker.com/r/justnz/runner).
 - **justnz/runner:latest** - Latest Version
 - **justnz/runner:vx.x.x** - Versioned release
+
+```sh
+docker run -p 8081:8081 -v /your/config/path/config.yaml:/app/config/config.yaml justnz/runner:latest
+```
 
 ## Contributing
 
