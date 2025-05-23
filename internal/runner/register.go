@@ -82,6 +82,7 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		if resp.StatusCode == 201 {
 			var response struct {
 				RunnerID string `json:"runner_id"`
+				Token    string `json:"token"`
 			}
 			if err := json.Unmarshal(body, &response); err != nil {
 				log.Fatal(err)
@@ -93,6 +94,8 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 			} else {
 				runner_id = response.RunnerID
 			}
+
+			fmt.Println(response.Token)
 
 			configManager.UpdateRunnerID(targetPlatform, runner_id)
 
