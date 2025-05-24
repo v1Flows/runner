@@ -16,6 +16,9 @@
 - **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow / exflow to your needs
 
 ## Configuration
+
+To conntect an runner to exFlow or AlertFlow you first have to set them up and copy the runner_id and or the api key from the created project. As an Admin you can copy the Global Share Runner token from the admin view.
+
 ```yaml
 ---
 
@@ -36,17 +39,22 @@ exflow:
 
 plugins:
   - name: alertmanager
-    repository: https://github.com/AlertFlow/rp-alertmanager
-    version: v1.0.2
+    version: v1.2.4
+  - name: git
+    version: v1.2.0
+  - name: ansible
+    version: v1.3.2
+  - name: ssh
+    version: v1.4.0
 
-alert_endpoints:
+api_endpoint:
   port: 8081
 ```
 
 ## Plugins
-The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be seen [here](https://github.com/orgs/AlertFlow/repositories) (all the repos that start with rp-).
+The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be found [here](https://github.com/v1Flows/runner-plugins).
 
-To develop your own plugin you can start right away with this [template](https://github.com/AlertFlow/rp-template)
+To develop your own plugin you can start right away with this [template](https://github.com/v1Flows/runner-plugins/tree/develop/template)
 
 ## Modes
 
@@ -64,6 +72,10 @@ To host the Runner on your own infrastructure we provide various docker images a
 [Docker Hub](htthttps://hub.docker.com/r/justnz/runner).
 - **justnz/runner:latest** - Latest Version
 - **justnz/runner:vx.x.x** - Versioned release
+
+```sh
+docker run -p 8081:8081 -v /your/config/path/config.yaml:/app/config/config.yaml justnz/runner:latest
+```
 
 ## Contributing
 

@@ -17,8 +17,13 @@ exflow:
 
 plugins:
   - name: alertmanager
-    repository: https://github.com/AlertFlow/rp-alertmanager
-    version: v1.0.2
+    version: v1.2.4
+  - name: git
+    version: v1.3.0
+  - name: ansible
+    version: v1.4.2
+  - name: ssh
+    version: v1.5.0
 
-alert_endpoints:
+api_endpoint:
   port: 8081
