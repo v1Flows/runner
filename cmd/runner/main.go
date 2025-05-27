@@ -89,7 +89,7 @@ func main() {
 	}
 
 	if cfg.ExFlow.Enabled {
-		log.Info("Register at ExFlow...")
+		log.Info("Register at exFlow...")
 		runner.RegisterAtAPI("exflow", version, modelPlugins, actions, nil)
 		go runner.SendHeartbeat("exflow")
 		Init("exflow", cfg, router, actions, endpointPlugins, loadedPlugins)
