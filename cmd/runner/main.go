@@ -23,7 +23,7 @@ import (
 
 var (
 	log        = logrus.New()
-	version    = "1.1.3"
+	version    = "1.2.0"
 	configFile = kingpin.Flag("config", "Path to configuration file").Short('c').String()
 )
 
@@ -82,14 +82,14 @@ func main() {
 
 	if cfg.Alertflow.Enabled {
 		endpoints := api.RegisterEndpoints(endpointPlugins)
-		log.Info("Registering at AlertFlow")
+		log.Info("Register at AlertFlow...")
 		runner.RegisterAtAPI("alertflow", version, modelPlugins, actions, endpoints)
 		go runner.SendHeartbeat("alertflow")
 		Init("alertflow", cfg, router, actions, endpointPlugins, loadedPlugins)
 	}
 
 	if cfg.ExFlow.Enabled {
-		log.Info("Registering at ExFlow")
+		log.Info("Register at exFlow...")
 		runner.RegisterAtAPI("exflow", version, modelPlugins, actions, nil)
 		go runner.SendHeartbeat("exflow")
 		Init("exflow", cfg, router, actions, endpointPlugins, loadedPlugins)

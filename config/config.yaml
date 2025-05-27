@@ -11,7 +11,7 @@ alertflow:
 
 exflow:
   enabled: true
-  url: https://alertflow.org
+  url: https://exflow.org
   runner_id: null
   api_key: null
 
@@ -27,3 +27,6 @@ plugins:
 
 api_endpoint:
   port: 8081
+
+runner:
+  shared_runner_secret: null

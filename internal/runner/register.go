@@ -25,6 +25,10 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 
 	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
 
+	if apiKey == "" {
+		apiKey = cfg.Runner.SharedRunnerSecret
+	}
+
 	var parsedRunnerID uuid.UUID
 	var err error
 	if runnerID != "" {
@@ -82,6 +86,7 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 		if resp.StatusCode == 201 {
 			var response struct {
 				RunnerID string `json:"runner_id"`
+				Token    string `json:"token"`
 			}
 			if err := json.Unmarshal(body, &response); err != nil {
 				log.Fatal(err)
@@ -94,6 +99,9 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 				runner_id = response.RunnerID
 			}
 
+			if response.Token != "" {
+				configManager.UpdateRunnerApiKey(targetPlatform, response.Token)
+			}
 			configManager.UpdateRunnerID(targetPlatform, runner_id)
 
 			log.Info("Runner registered at "+targetPlatform+". ID: ", configManager.GetRunnerID(targetPlatform))
