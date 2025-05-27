@@ -68,7 +68,7 @@ require (
 require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/gin-contrib/cors v1.7.5
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540
 	github.com/v1Flows/shared-library v1.0.23
