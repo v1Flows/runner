@@ -11,36 +11,22 @@ func GetPlatformConfig(platform string, cfg config.Config) (string, string, stri
 
 	switch strings.ToLower(platform) {
 	case "alertflow":
-
-		var api_key string
-		if cfg.Alertflow.APIKey == "" && cfg.Runner.SharedRunnerSecret != "" {
-			api_key = cfg.Runner.SharedRunnerSecret
-		} else {
-			api_key = cfg.Alertflow.APIKey
-		}
-
-		return cfg.Alertflow.URL, api_key, configManager.GetRunnerID("alertflow")
+		return cfg.Alertflow.URL, configManager.GetRunnerApiKey("alertflow"), configManager.GetRunnerID("alertflow")
 	case "exflow":
-
-		var api_key string
-		if cfg.ExFlow.APIKey == "" && cfg.Runner.SharedRunnerSecret != "" {
-			api_key = cfg.Runner.SharedRunnerSecret
-		} else {
-			api_key = cfg.ExFlow.APIKey
-		}
-
-		return cfg.ExFlow.URL, api_key, configManager.GetRunnerID("exflow")
+		return cfg.ExFlow.URL, configManager.GetRunnerApiKey("exflow"), configManager.GetRunnerID("exflow")
 	default:
 		return "unknown_platform", "unknown_platform", "unknown_platform"
 	}
 }
 
 func GetPlatformConfigPlain(platform string, cfg config.Config) (string, string) {
+	configManager := config.GetInstance()
+
 	switch strings.ToLower(platform) {
 	case "alertflow":
-		return cfg.Alertflow.URL, cfg.Alertflow.APIKey
+		return cfg.Alertflow.URL, configManager.GetRunnerApiKey("alertflow")
 	case "exflow":
-		return cfg.ExFlow.URL, cfg.ExFlow.APIKey
+		return cfg.ExFlow.URL, configManager.GetRunnerApiKey("exflow")
 	default:
 		return "unknown_platform", "unknown_platform"
 	}

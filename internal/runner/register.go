@@ -25,6 +25,10 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 
 	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
 
+	if apiKey == "" {
+		apiKey = cfg.Runner.SharedRunnerSecret
+	}
+
 	var parsedRunnerID uuid.UUID
 	var err error
 	if runnerID != "" {
@@ -95,8 +99,9 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 				runner_id = response.RunnerID
 			}
 
-			fmt.Println(response.Token)
-
+			if response.Token != "" {
+				configManager.UpdateRunnerApiKey(targetPlatform, response.Token)
+			}
 			configManager.UpdateRunnerID(targetPlatform, runner_id)
 
 			log.Info("Runner registered at "+targetPlatform+". ID: ", configManager.GetRunnerID(targetPlatform))
