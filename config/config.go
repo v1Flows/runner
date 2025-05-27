@@ -27,20 +27,21 @@ type Config struct {
 	WorkspaceDir string            `mapstructure:"workspace_dir" validate:"dir"`
 	PluginDir    string            `mapstructure:"plugin_dir" validate:"dir"`
 	Plugins      []PluginConfig    `mapstructure:"plugins"`
+	Runner       RunnerConf        `mapstructure:"runner"`
 }
 
 type AlertflowConfig struct {
 	Enabled  bool   `mapstructure:"enabled"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
-	APIKey   string `mapstructure:"api_key" validate:"required"`
+	APIKey   string `mapstructure:"api_key"`
 }
 
 type exflowConfig struct {
 	Enabled  bool   `mapstructure:"enabled"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
-	APIKey   string `mapstructure:"api_key" validate:"required"`
+	APIKey   string `mapstructure:"api_key"`
 }
 
 type ApiEndpointConfig struct {
@@ -51,6 +52,10 @@ type PluginConfig struct {
 	Name    string `mapstructure:"name" validate:"required"`
 	Url     string `mapstructure:"url" validate:"required,url"`
 	Version string `mapstructure:"version" validate:"required"`
+}
+
+type RunnerConf struct {
+	SharedRunnerSecret string `mapstructure:"shared_runner_secret"`
 }
 
 const (
@@ -162,16 +167,16 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 
 func (cm *ConfigurationManager) validateConfig(config *Config) error {
 	if config.Alertflow.Enabled {
-		if config.Alertflow.APIKey == "" {
-			return fmt.Errorf("api_key is required")
+		if config.Alertflow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
+			return fmt.Errorf("alertflow.api_key or runner.shared_runner_secret is required")
 		}
 		if config.Alertflow.URL == "" {
 			return fmt.Errorf("alertflow URL is required")
 		}
 	}
 	if config.ExFlow.Enabled {
-		if config.ExFlow.APIKey == "" {
-			return fmt.Errorf("api_key is required")
+		if config.ExFlow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
+			return fmt.Errorf("exflow.api_key or runner.shared_runner_secret is required")
 		}
 		if config.ExFlow.URL == "" {
 			return fmt.Errorf("exflow URL is required")
@@ -200,6 +205,18 @@ func (cm *ConfigurationManager) UpdateRunnerID(platform, id string) {
 	}
 }
 
+// UpdateRunnerApiKey updates the runner api_key in the configuration for both Alertflow and ExFlow
+func (cm *ConfigurationManager) UpdateRunnerApiKey(platform, apiKey string) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	if platform == "alertflow" {
+		cm.config.Alertflow.APIKey = apiKey
+	}
+	if platform == "exflow" {
+		cm.config.ExFlow.APIKey = apiKey
+	}
+}
+
 // GetRunnerIDs returns the current runner IDs for both Alertflow and ExFlow
 func (cm *ConfigurationManager) GetRunnerID(platform string) string {
 	cm.mu.RLock()
@@ -209,6 +226,20 @@ func (cm *ConfigurationManager) GetRunnerID(platform string) string {
 	}
 	if platform == "exflow" {
 		return cm.config.ExFlow.RunnerID
+	}
+
+	return ""
+}
+
+// GetRunnerIDs returns the current runner apiKey for both Alertflow and ExFlow
+func (cm *ConfigurationManager) GetRunnerApiKey(platform string) string {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+	if platform == "alertflow" {
+		return cm.config.Alertflow.APIKey
+	}
+	if platform == "exflow" {
+		return cm.config.ExFlow.APIKey
 	}
 
 	return ""

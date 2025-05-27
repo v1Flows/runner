@@ -27,3 +27,6 @@ plugins:
 
 api_endpoint:
   port: 8081
+
+runner:
+  shared_runner_secret: null
