@@ -10,7 +10,6 @@ import (
 	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/platform"
-	platformfn "github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
@@ -91,7 +90,7 @@ func GetPendingExecutions(targetPlatform string, cfg config.Config, actions []sh
 
 				for index, execution := range executions.Executions {
 					// Save platform information for the execution
-					platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
+					platform.SetPlatformForExecution(execution.ID.String(), targetPlatform)
 
 					startProcessing(targetPlatform, cfg, actions, loadedPlugins, sharedExecutions.Executions[index], execution.AlertID)
 				}
@@ -107,7 +106,7 @@ func GetPendingExecutions(targetPlatform string, cfg config.Config, actions []sh
 
 				for _, execution := range executions.Executions {
 					// Save platform information for the execution
-					platformfn.SetPlatformForExecution(execution.ID.String(), targetPlatform)
+					platform.SetPlatformForExecution(execution.ID.String(), targetPlatform)
 
 					startProcessing(targetPlatform, cfg, actions, loadedPlugins, execution, "")
 				}

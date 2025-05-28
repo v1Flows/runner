@@ -27,12 +27,12 @@ type PluginRPC struct {
 
 type InfoRequest struct {
 	Workspace string
+	Broker    *plugin.MuxBroker
 	BrokerID  int
 }
 
 type ExecuteTaskRequest struct {
 	Args      map[string]string
-	BrokerID  int
 	Flow      shared_models.Flows
 	FlowBytes []byte
 	Execution shared_models.Executions
@@ -40,6 +40,8 @@ type ExecuteTaskRequest struct {
 	Alert     af_models.Alerts
 	Platform  string
 	Workspace string
+	Broker    *plugin.MuxBroker
+	BrokerID  int
 }
 
 type CancelTaskRequest struct {
