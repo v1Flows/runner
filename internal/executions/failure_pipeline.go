@@ -139,7 +139,7 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 	if !targetPipeline.ExecParallel {
 		for _, step := range failurePipelineSteps {
 			if step.Status == "pending" {
-				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, failurePipelineSteps, step, execution)
+				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, failurePipelineSteps, step, execution, plugins.GlobalBroker)
 				if err != nil {
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
@@ -178,7 +178,7 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 		for _, step := range failurePipelineSteps {
 			if step.Status == "pending" {
 				go func() {
-					res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, failurePipelineSteps, step, execution)
+					res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, failurePipelineSteps, step, execution, plugins.GlobalBroker)
 					if err != nil {
 						failedSteps++
 					}

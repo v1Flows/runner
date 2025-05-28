@@ -116,7 +116,6 @@ func Init(cfg config.Config) (loadedPlugin map[string]Plugin, plugins []shared_m
 
 		// Get plugin info
 		req := InfoRequest{
-			Config:    cfg,
 			Workspace: cfg.WorkspaceDir,
 		}
 		info, err := plugin.Info(req)

@@ -94,7 +94,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	var alert bmodels.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
-			res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
+			res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution, plugins.GlobalBroker)
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
@@ -185,7 +185,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		// process each flow action step in sequential order where pending is true
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
-				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution, plugins.GlobalBroker)
 				if err != nil {
 					// cancel remaining steps
 					cancelRemainingSteps(cfg, execution.ID.String())
@@ -278,7 +278,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		for _, step := range flowActionStepsWithIDs {
 			if step.Status == "pending" {
 				go func() {
-					res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
+					res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution, plugins.GlobalBroker)
 					if err != nil {
 						failedSteps++
 					}

@@ -2,8 +2,11 @@ package internal_executions
 
 import (
 	"errors"
+	"net"
+	"net/rpc"
 	"time"
 
+	"github.com/hashicorp/go-plugin"
 	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/common"
@@ -28,7 +31,19 @@ func RegisterActions(loadedPluginActions []shared_models.Plugin) (actions []shar
 	return actions
 }
 
-func processStep(cfg config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, canceled bool, err error) {
+func processStep(
+	cfg config.Config,
+	workspace string,
+	actions []shared_models.Action,
+	loadedPlugins map[string]plugins.Plugin,
+	flow shared_models.Flows,
+	flowBytes []byte,
+	alert af_models.Alerts,
+	steps []shared_models.ExecutionSteps,
+	step shared_models.ExecutionSteps,
+	execution shared_models.Executions,
+	broker *plugin.MuxBroker,
+) (res plugins.Response, success bool, canceled bool, err error) {
 	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
@@ -141,8 +156,14 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		return plugins.Response{}, false, false, errors.New("plugin not found")
 	}
 
+	// Register the runner RPC server and get a brokerID
+	brokerID := broker.NextId()
+	go broker.AcceptAndServe(brokerID, func(conn net.Conn) {
+		rpc.Register(&plugins.RunnerRPCServer{})
+		rpc.ServeConn(conn)
+	})
+
 	req := plugins.ExecuteTaskRequest{
-		Config:    cfg,
 		Flow:      flow,
 		FlowBytes: flowBytes,
 		Execution: execution,
@@ -150,6 +171,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		Alert:     alert,
 		Platform:  targetPlatform,
 		Workspace: workspace,
+		BrokerID:  int(brokerID),
 	}
 
 	res, err = loadedPlugins[step.Action.Plugin].ExecuteTask(req)

@@ -10,6 +10,8 @@ import (
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
+var GlobalBroker *plugin.MuxBroker
+
 // Plugin interface that all plugins must implement
 type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
@@ -24,13 +26,13 @@ type PluginRPC struct {
 }
 
 type InfoRequest struct {
-	Config    config.Config
 	Workspace string
+	BrokerID  int
 }
 
 type ExecuteTaskRequest struct {
 	Args      map[string]string
-	Config    config.Config
+	BrokerID  int
 	Flow      shared_models.Flows
 	FlowBytes []byte
 	Execution shared_models.Executions
@@ -88,8 +90,9 @@ type PluginServer struct {
 	Impl Plugin
 }
 
-func (p *PluginServer) Server(*plugin.MuxBroker) (interface{}, error) {
-	return &PluginRPCServer{Impl: p.Impl}, nil
+func (p *PluginServer) Server(b *plugin.MuxBroker) (interface{}, error) {
+	GlobalBroker = b
+	return &PluginRPCServer{Impl: p.Impl, Broker: b}, nil
 }
 
 func (p *PluginServer) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}, error) {
@@ -98,7 +101,8 @@ func (p *PluginServer) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}, 
 
 // PluginRPCServer is the RPC server for Plugin
 type PluginRPCServer struct {
-	Impl Plugin
+	Impl   Plugin
+	Broker *plugin.MuxBroker
 }
 
 func (s *PluginRPCServer) ExecuteTask(request ExecuteTaskRequest, resp *Response) error {
