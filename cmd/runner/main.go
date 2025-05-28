@@ -112,13 +112,13 @@ func Init(platform string, cfg config.Config, router *gin.Engine, actions []shar
 	case "master":
 		log.Info("Runner is in Master Mode")
 		log.Info("Starting Execution Checker")
-		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
+		go worker.StartWorker(platform, actions, loadedPlugins)
 		log.Info("Starting Router")
 		go api.InitRouter(cfg, router, platform, endpointPlugins, loadedPlugins)
 	case "worker":
 		log.Info("Runner is in Worker Mode")
 		log.Info("Starting Execution Checker")
-		go worker.StartWorker(platform, cfg, actions, loadedPlugins)
+		go worker.StartWorker(platform, actions, loadedPlugins)
 	case "listener":
 		log.Info("Runner is in Listener Mode")
 		log.Info("Starting Router")

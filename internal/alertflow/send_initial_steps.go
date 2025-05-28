@@ -97,7 +97,7 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 			}
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}

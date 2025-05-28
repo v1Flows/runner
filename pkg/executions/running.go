@@ -12,12 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToRunning(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func SetToRunning(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "running"
 	Running(cfg, execution, targetPlatform)
 }
 
-func Running(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func Running(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

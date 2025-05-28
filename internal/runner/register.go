@@ -23,7 +23,7 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, nil)
 
 	if apiKey == "" {
 		apiKey = cfg.Runner.SharedRunnerSecret

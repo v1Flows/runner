@@ -12,12 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToPaused(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func SetToPaused(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "paused"
 	Pause(cfg, execution, targetPlatform)
 }
 
-func Pause(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func Pause(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetStep(cfg config.Config, executionID string, stepID string, targetPlatform string) (shared_models.ExecutionSteps, error) {
+func GetStep(cfg *config.Config, executionID string, stepID string, targetPlatform string) (shared_models.ExecutionSteps, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{

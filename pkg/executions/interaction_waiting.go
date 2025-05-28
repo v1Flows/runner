@@ -12,12 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToInteractionRequired(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func SetToInteractionRequired(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "interactionWaiting"
 	InteractionWaiting(cfg, execution, targetPlatform)
 }
 
-func InteractionWaiting(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func InteractionWaiting(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
