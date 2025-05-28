@@ -39,7 +39,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
-	if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
+	if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
 		log.Error(err)
 		return plugins.Response{}, false, false, err
 	}
@@ -76,7 +76,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
+		if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, false, err
 		}
@@ -86,7 +86,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 
 	if danger {
 		// modify the pickup step
-		err = executions.UpdateStep(cfg, execution.ID.String(), models.ExecutionSteps{
+		err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 			ID: steps[0].ID,
 			Messages: []models.Message{
 				{
@@ -133,7 +133,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
+		if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, false, err
 		}
@@ -179,7 +179,7 @@ func processStep(cfg config.Config, workspace string, actions []shared_models.Ac
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(cfg, execution.ID.String(), step, targetPlatform); err != nil {
+		if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, false, err
 		}

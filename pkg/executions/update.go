@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateExecution(cfg config.Config, execution shared_models.Executions, targetPlatform string) error {
+func UpdateExecution(cfg *config.Config, execution shared_models.Executions, targetPlatform string) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 

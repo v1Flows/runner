@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
@@ -18,10 +17,8 @@ func SendHeartbeat(targetPlatform string) {
 			DisableKeepAlives: true,
 		},
 	}
-	configManager := config.GetInstance()
-	cfg := configManager.GetConfig()
 
-	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, cfg)
+	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, nil)
 
 	parsedUrl := url + "/api/v1/runners/" + runnerID + "/heartbeat"
 	req, err := http.NewRequest("PUT", parsedUrl, nil)

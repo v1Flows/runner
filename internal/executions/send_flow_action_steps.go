@@ -32,7 +32,7 @@ func sendFlowActionSteps(cfg config.Config, execution shared_models.Executions, 
 			step.Action.Name = action.CustomName
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}

@@ -37,7 +37,7 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 		log.Info("Received Cancel Request for Execution ID: ", executionID)
 
 		// Locate the execution (you may need to implement this function)
-		execution, err := executions.GetExecutionByID(cfg, executionID, platform)
+		execution, err := executions.GetExecutionByID(nil, executionID, platform)
 		if err != nil {
 			log.Error("Execution not found: ", err)
 			c.JSON(404, gin.H{"error": "Execution not found"})
@@ -45,7 +45,7 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 		}
 
 		// Locate the current step of the execution
-		steps, err := executions.GetSteps(cfg, executionID, platform)
+		steps, err := executions.GetSteps(nil, executionID, platform)
 		if err != nil {
 			log.Error("Failed to get steps: ", err)
 			c.JSON(500, gin.H{"error": "Failed to get steps"})
@@ -92,7 +92,7 @@ func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpoint
 
 		// Update the execution to "canceled"
 		execution.Status = "canceled"
-		err = executions.UpdateExecution(cfg, execution, platform)
+		err = executions.UpdateExecution(nil, execution, platform)
 		if err != nil {
 			log.Error("Failed to update execution status: ", err)
 			c.JSON(500, gin.H{"error": "Failed to update execution status"})

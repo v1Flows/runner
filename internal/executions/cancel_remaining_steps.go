@@ -5,20 +5,19 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func cancelRemainingSteps(cfg config.Config, executionID string) error {
+func cancelRemainingSteps(executionID string) error {
 	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
 	if !ok {
 		log.Error("Failed to get platform")
 		return errors.New("failed to get platform")
 	}
 
-	steps, err := executions.GetSteps(cfg, executionID, targetPlatform)
+	steps, err := executions.GetSteps(nil, executionID, targetPlatform)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -45,7 +44,7 @@ func cancelRemainingSteps(cfg config.Config, executionID string) error {
 			step.StartedAt = time.Now()
 			step.FinishedAt = time.Now()
 
-			err := executions.UpdateStep(cfg, executionID, step, targetPlatform)
+			err := executions.UpdateStep(nil, executionID, step, targetPlatform)
 			if err != nil {
 				log.Error(err)
 				return err
