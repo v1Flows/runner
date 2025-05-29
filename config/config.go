@@ -187,10 +187,10 @@ func (cm *ConfigurationManager) validateConfig(config *Config) error {
 }
 
 // GetConfig returns a copy of the current configuration
-func (cm *ConfigurationManager) GetConfig() Config {
+func (cm *ConfigurationManager) GetConfig() *Config {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	return *cm.config
+	return cm.config
 }
 
 // UpdateRunnerID updates the runner ID in the configuration for both Alertflow and ExFlow

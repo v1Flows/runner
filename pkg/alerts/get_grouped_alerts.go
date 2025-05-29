@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetGroupedAlerts(cfg config.Config, flowID string, groupKeyIdentifier string) ([]bmodels.Alerts, error) {
+func GetGroupedAlerts(cfg *config.Config, flowID string, groupKeyIdentifier string) ([]bmodels.Alerts, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
