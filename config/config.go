@@ -92,9 +92,20 @@ func (cm *ConfigurationManager) LoadConfig(configFile string) error {
 
 	// Bind specific environment variables
 	envBindings := map[string]string{
-		"alertflow.api_key": "RUNNER_ALERTFLOW_API_KEY",
-		"exflow.api_key":    "RUNNER_EXFLOW_API_KEY",
-		"plugin_dir":        "RUNNER_PLUGIN_DIR",
+		"log_level":                   "RUNNER_LOG_LEVEL",
+		"mode":                        "RUNNER_MODE",
+		"alertflow.enabled":           "RUNNER_ALERTFLOW_ENABLED",
+		"alertflow.url":               "RUNNER_ALERTFLOW_URL",
+		"alertflow.runner_id":         "RUNNER_ALERTFLOW_RUNNER_ID",
+		"alertflow.api_key":           "RUNNER_ALERTFLOW_API_KEY",
+		"exflow.enabled":              "RUNNER_EXFLOW_ENABLED",
+		"exflow.url":                  "RUNNER_EXFLOW_URL",
+		"exflow.runner_id":            "RUNNER_EXFLOW_RUNNER_ID",
+		"exflow.api_key":              "RUNNER_EXFLOW_API_KEY",
+		"api_endpoint.port":           "RUNNER_API_ENDPOINT_PORT",
+		"workspace_dir":               "RUNNER_WORKSPACE_DIR",
+		"plugin_dir":                  "RUNNER_PLUGIN_DIR",
+		"runner.shared_runner_secret": "RUNNER_RUNNER_SHARED_RUNNER_SECRET",
 	}
 
 	for configKey, envVar := range envBindings {
