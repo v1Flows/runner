@@ -66,15 +66,15 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 func Init(cfg *config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
-		{Name: "collect_data", Version: "v1.3.2"},
-		{Name: "actions_check", Version: "v1.4.1"},
-		{Name: "pattern_check", Version: "v1.4.1"},
-		{Name: "log", Version: "v1.4.1"},
-		{Name: "wait", Version: "v1.4.1"},
-		{Name: "interaction", Version: "v1.4.1"},
-		{Name: "ping", Version: "v1.5.1"},
-		{Name: "port_checker", Version: "v1.4.1"},
-		{Name: "step_analysis", Version: "v1.2.1"},
+		{Name: "collect_data", Version: "latest"},
+		{Name: "actions_check", Version: "latest"},
+		{Name: "pattern_check", Version: "latest"},
+		{Name: "log", Version: "latest"},
+		{Name: "wait", Version: "latest"},
+		{Name: "interaction", Version: "latest"},
+		{Name: "ping", Version: "latest"},
+		{Name: "port_checker", Version: "latest"},
+		{Name: "step_analysis", Version: "latest"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
