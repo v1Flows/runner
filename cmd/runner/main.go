@@ -107,7 +107,7 @@ func main() {
 	log.Info("Shutdown complete")
 }
 
-func Init(platform string, cfg config.Config, router *gin.Engine, actions []shared_models.Action, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
+func Init(platform string, cfg *config.Config, router *gin.Engine, actions []shared_models.Action, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
 	switch strings.ToLower(cfg.Mode) {
 	case "master":
 		log.Info("Runner is in Master Mode")

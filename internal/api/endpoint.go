@@ -26,7 +26,7 @@ func RegisterEndpoints(loadedPluginEndpoints []shared_models.Plugin) (endpoints 
 	return endpoints
 }
 
-func InitRouter(cfg config.Config, router *gin.Engine, platform string, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
+func InitRouter(cfg *config.Config, router *gin.Engine, platform string, endpointPlugins []shared_models.Plugin, loadedPlugins map[string]plugins.Plugin) {
 	// enable api endpoint for backend -> runner communication
 	log.Info("Router Listening on Port: ", cfg.ApiEndpoint.Port)
 	v1 := router.Group("/api/v1")

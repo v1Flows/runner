@@ -13,7 +13,7 @@ import (
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func startFailurePipeline(cfg config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, failedStep shared_models.ExecutionSteps, execution shared_models.Executions) error {
+func startFailurePipeline(cfg *config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, failedStep shared_models.ExecutionSteps, execution shared_models.Executions) error {
 	var failurePipelineID string
 
 	// create step which tells the user that the flow failed and the failover pipeline will start

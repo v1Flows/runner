@@ -348,7 +348,7 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 	finishProcessing(platform, cfg, execution)
 }
 
-func finishProcessing(platform string, cfg config.Config, execution shared_models.Executions) {
+func finishProcessing(platform string, cfg *config.Config, execution shared_models.Executions) {
 	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
 	if err != nil {
 		log.Error("Error deleting workspace dir: ", err)

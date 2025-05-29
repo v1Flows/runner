@@ -10,8 +10,7 @@ func GetPlatformConfig(platform string, cfg *config.Config) (string, string, str
 	configManager := config.GetInstance()
 
 	if cfg == nil {
-		cfgVal := configManager.GetConfig()
-		cfg = &cfgVal
+		cfg = configManager.GetConfig()
 	}
 
 	switch strings.ToLower(platform) {
@@ -28,8 +27,7 @@ func GetPlatformConfigPlain(platform string, cfg *config.Config) (string, string
 	configManager := config.GetInstance()
 
 	if cfg == nil {
-		cfgVal := configManager.GetConfig()
-		cfg = &cfgVal
+		cfg = configManager.GetConfig()
 	}
 
 	switch strings.ToLower(platform) {
