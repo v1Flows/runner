@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateAlert(cfg config.Config, alert models.Alerts) {
+func UpdateAlert(cfg *config.Config, alert models.Alerts) {
 	log.Info("Updating Alert")
 
 	jsonPayload, err := json.Marshal(alert)

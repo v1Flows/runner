@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetData(cfg config.Config, alertID string) (bmodels.Alerts, error) {
+func GetData(cfg *config.Config, alertID string) (bmodels.Alerts, error) {
 
 	client := http.Client{
 		Timeout: 10 * time.Second,
