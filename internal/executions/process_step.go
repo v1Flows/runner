@@ -10,7 +10,6 @@ import (
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
-	"github.com/v1Flows/shared-library/pkg/models"
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
@@ -86,12 +85,12 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 
 	if danger {
 		// modify the pickup step
-		err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
-			ID: steps[0].ID,
-			Messages: []models.Message{
+		err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+			ID: step.ID,
+			Messages: []shared_models.Message{
 				{
 					Title: "Caution",
-					Lines: []models.Line{
+					Lines: []shared_models.Line{
 						{
 							Content:   "Plugin version is higher than action version. This may cause issues but execution will still be processed.",
 							Timestamp: time.Now(),
