@@ -18,8 +18,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(platform string, cfg config.Config, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions, alertID string) {
+func startProcessing(platform string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions, alertID string) {
 	configManager := config.GetInstance()
+	cfg := configManager.GetConfig()
 
 	// ensure that execution runnerid equals the config runnerid
 	if execution.RunnerID != configManager.GetRunnerID(platform) {
@@ -37,7 +38,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				return
 			default:
 				// Send a heartbeat
-				executions.SendHeartbeat(cfg, execution, platform)
+				executions.SendHeartbeat(nil, execution, platform)
 				// Wait for a short interval before sending the next heartbeat
 				time.Sleep(5 * time.Second) // Adjust the interval as needed
 			}
@@ -54,9 +55,9 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
-	err = executions.UpdateExecution(cfg, execution, platform)
+	err = executions.UpdateExecution(nil, execution, platform)
 	if err != nil {
-		executions.EndWithError(cfg, execution, platform)
+		executions.EndWithError(nil, execution, platform)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
 		finishProcessing(platform, cfg, execution)
@@ -64,14 +65,14 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	}
 
 	// set runner to busy
-	runner.Busy(platform, cfg, true)
+	runner.Busy(platform, true)
 
 	// send initial step
 	var initialSteps []shared_models.ExecutionSteps
 	if platform == "alertflow" {
 		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution, alertID)
 		if err != nil {
-			executions.EndWithError(cfg, execution, platform)
+			executions.EndWithError(nil, execution, platform)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
@@ -80,7 +81,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	} else if platform == "exflow" {
 		initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
 		if err != nil {
-			executions.EndWithError(cfg, execution, platform)
+			executions.EndWithError(nil, execution, platform)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
@@ -98,9 +99,9 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			if err != nil {
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
-				cancelRemainingSteps(cfg, execution.ID.String())
+				cancelRemainingSteps(execution.ID.String())
 				// end execution
-				executions.EndWithError(cfg, execution, platform)
+				executions.EndWithError(nil, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -108,8 +109,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			}
 
 			if canceled {
-				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndCanceled(cfg, execution, platform)
+				cancelRemainingSteps(execution.ID.String())
+				executions.EndCanceled(nil, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -120,8 +121,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				flow = *res.Flow
 			} else if flow.ID == uuid.Nil {
 				log.Error("Error parsing flow")
-				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndWithError(cfg, execution, platform)
+				cancelRemainingSteps(execution.ID.String())
+				executions.EndWithError(nil, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -136,8 +137,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				alert = *res.Alert
 			} else if platform == "alertflow" && alert.ID == uuid.Nil {
 				log.Error("Error parsing alert")
-				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndWithError(cfg, execution, platform)
+				cancelRemainingSteps(execution.ID.String())
+				executions.EndWithError(nil, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -145,15 +146,15 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			}
 
 			if res.Data["status"] == "noPatternMatch" {
-				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndNoPatternMatch(cfg, execution, platform)
+				cancelRemainingSteps(execution.ID.String())
+				executions.EndNoPatternMatch(nil, execution, platform)
 				finishProcessing(platform, cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "canceled" {
-				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndCanceled(cfg, execution, platform)
+				cancelRemainingSteps(execution.ID.String())
+				executions.EndCanceled(nil, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -161,8 +162,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 			}
 
 			if !success {
-				cancelRemainingSteps(cfg, execution.ID.String())
-				executions.EndWithError(cfg, execution, platform)
+				cancelRemainingSteps(execution.ID.String())
+				executions.EndWithError(nil, execution, platform)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
 				finishProcessing(platform, cfg, execution)
@@ -174,7 +175,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 	// send flow actions as steps to alertflow
 	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
-		executions.EndWithError(cfg, execution, platform)
+		executions.EndWithError(nil, execution, platform)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
 		finishProcessing(platform, cfg, execution)
@@ -188,14 +189,14 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 				if err != nil {
 					// cancel remaining steps
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 
 					// start failure pipeline
 					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
 							// end execution with recovered status
-							executions.EndWithError(cfg, execution, platform)
+							executions.EndWithError(nil, execution, platform)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
 							finishProcessing(platform, cfg, execution)
@@ -204,7 +205,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 					}
 
 					// end execution
-					executions.EndWithRecovered(cfg, execution, platform)
+					executions.EndWithRecovered(nil, execution, platform)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
@@ -212,8 +213,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				}
 
 				if res.Data["status"] == "noPatternMatch" {
-					cancelRemainingSteps(cfg, execution.ID.String())
-					executions.EndNoPatternMatch(cfg, execution, platform)
+					cancelRemainingSteps(execution.ID.String())
+					executions.EndNoPatternMatch(nil, execution, platform)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
@@ -221,8 +222,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				}
 
 				if res.Data["status"] == "canceled" {
-					cancelRemainingSteps(cfg, execution.ID.String())
-					executions.EndCanceled(cfg, execution, platform)
+					cancelRemainingSteps(execution.ID.String())
+					executions.EndCanceled(nil, execution, platform)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
@@ -230,8 +231,8 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				}
 
 				if canceled {
-					cancelRemainingSteps(cfg, execution.ID.String())
-					executions.EndCanceled(cfg, execution, platform)
+					cancelRemainingSteps(execution.ID.String())
+					executions.EndCanceled(nil, execution, platform)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
@@ -239,13 +240,13 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 				}
 
 				if !success {
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 
 					// start failure pipeline if enabled
 					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
-							executions.EndWithError(cfg, execution, platform)
+							executions.EndWithError(nil, execution, platform)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
 							finishProcessing(platform, cfg, execution)
@@ -253,14 +254,14 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 						}
 
 						// end execution with recovered status
-						executions.EndWithRecovered(cfg, execution, platform)
+						executions.EndWithRecovered(nil, execution, platform)
 						// Stop heartbeats and finish processing
 						close(doneHeartbeat)
 						finishProcessing(platform, cfg, execution)
 						return
 					}
 
-					executions.EndWithError(cfg, execution, platform)
+					executions.EndWithError(nil, execution, platform)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
@@ -316,7 +317,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		}
 
 		if failedSteps > 0 {
-			executions.EndWithError(cfg, execution, platform)
+			executions.EndWithError(nil, execution, platform)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
@@ -324,7 +325,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		}
 
 		if canceledSteps > 0 {
-			executions.EndCanceled(cfg, execution, platform)
+			executions.EndCanceled(nil, execution, platform)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
@@ -332,7 +333,7 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		}
 
 		if noPatternMatchSteps > 0 {
-			executions.EndNoPatternMatch(cfg, execution, platform)
+			executions.EndNoPatternMatch(nil, execution, platform)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
 			finishProcessing(platform, cfg, execution)
@@ -340,18 +341,18 @@ func startProcessing(platform string, cfg config.Config, actions []shared_models
 		}
 	}
 
-	executions.EndSuccess(cfg, execution, platform)
+	executions.EndSuccess(nil, execution, platform)
 
 	// Stop heartbeats and finish processing
 	close(doneHeartbeat)
 	finishProcessing(platform, cfg, execution)
 }
 
-func finishProcessing(platform string, cfg config.Config, execution shared_models.Executions) {
+func finishProcessing(platform string, cfg *config.Config, execution shared_models.Executions) {
 	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
 	if err != nil {
 		log.Error("Error deleting workspace dir: ", err)
 	}
 
-	runner.Busy(platform, cfg, false)
+	runner.Busy(platform, false)
 }

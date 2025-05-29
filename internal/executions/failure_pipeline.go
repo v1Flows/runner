@@ -13,7 +13,7 @@ import (
 	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func startFailurePipeline(cfg config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, failedStep shared_models.ExecutionSteps, execution shared_models.Executions) error {
+func startFailurePipeline(cfg *config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, failedStep shared_models.ExecutionSteps, execution shared_models.Executions) error {
 	var failurePipelineID string
 
 	// create step which tells the user that the flow failed and the failover pipeline will start
@@ -96,7 +96,7 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 		return errors.New("failed to get platform")
 	}
 
-	_, err := executions.SendStep(cfg, execution, stepToSend, targetPlatform)
+	_, err := executions.SendStep(nil, execution, stepToSend, targetPlatform)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 					step.Action.Name = action.CustomName
 				}
 
-				stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
+				stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
 				if err != nil {
 					return err
 				}
@@ -142,27 +142,27 @@ func startFailurePipeline(cfg config.Config, workspace string, actions []shared_
 				res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, failurePipelineSteps, step, execution)
 				if err != nil {
 					// cancel remaining steps
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 					return err
 				}
 
 				if res.Data["status"] == "noPatternMatch" {
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 					return errors.New("no pattern match")
 				}
 
 				if res.Data["status"] == "canceled" {
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 					return errors.New("execution canceled")
 				}
 
 				if canceled {
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 					return errors.New("execution canceled")
 				}
 
 				if !success {
-					cancelRemainingSteps(cfg, execution.ID.String())
+					cancelRemainingSteps(execution.ID.String())
 					return errors.New("failed to process step")
 				}
 

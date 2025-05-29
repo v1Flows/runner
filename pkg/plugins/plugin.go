@@ -24,13 +24,13 @@ type PluginRPC struct {
 }
 
 type InfoRequest struct {
-	Config    config.Config
+	Config    *config.Config
 	Workspace string
 }
 
 type ExecuteTaskRequest struct {
 	Args      map[string]string
-	Config    config.Config
+	Config    *config.Config
 	Flow      shared_models.Flows
 	FlowBytes []byte
 	Execution shared_models.Executions
@@ -45,7 +45,7 @@ type CancelTaskRequest struct {
 }
 
 type EndpointRequest struct {
-	Config   config.Config
+	Config   *config.Config
 	Body     []byte
 	Platform string
 }

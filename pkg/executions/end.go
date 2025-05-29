@@ -14,40 +14,40 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func EndCanceled(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func EndCanceled(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "canceled"
 	End(cfg, execution, targetPlatform)
 }
 
-func EndNoPatternMatch(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func EndNoPatternMatch(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "noPatternMatch"
 	End(cfg, execution, targetPlatform)
 }
 
-func EndWithError(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func EndWithError(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "error"
 	End(cfg, execution, targetPlatform)
 }
 
-func EndWithRecovered(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func EndWithRecovered(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.FinishedAt = time.Now()
 	execution.Status = "recovered"
 	End(cfg, execution, targetPlatform)
 }
 
-func EndSuccess(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func EndSuccess(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	execution.Status = "success"
 	execution.FinishedAt = time.Now()
 	End(cfg, execution, targetPlatform)
 }
 
-func End(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func End(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
-	runner.Busy(targetPlatform, cfg, false)
+	runner.Busy(targetPlatform, false)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)

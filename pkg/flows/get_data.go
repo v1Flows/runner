@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetFlowData(cfg config.Config, flowID string, targetPlatform string) (bytes []byte, err error) {
+func GetFlowData(cfg *config.Config, flowID string, targetPlatform string) (bytes []byte, err error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{

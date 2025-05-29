@@ -12,7 +12,7 @@ import (
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions, alertID string) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execution shared_models.Executions, alertID string) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	var initialSteps = []shared_models.ExecutionSteps{
 		{
 			Action: shared_models.Action{
@@ -97,7 +97,7 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 			}
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}

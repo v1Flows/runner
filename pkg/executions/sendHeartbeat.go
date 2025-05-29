@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendHeartbeat(cfg config.Config, execution shared_models.Executions, targetPlatform string) {
+func SendHeartbeat(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
 	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
 
 	req, err := http.NewRequest("PUT", url+"/api/v1/executions/"+execution.ID.String()+"/heartbeat", nil)

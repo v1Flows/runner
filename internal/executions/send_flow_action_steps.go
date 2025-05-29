@@ -9,7 +9,7 @@ import (
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
-func sendFlowActionSteps(cfg config.Config, execution shared_models.Executions, flow shared_models.Flows) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+func sendFlowActionSteps(cfg *config.Config, execution shared_models.Executions, flow shared_models.Flows) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
 	if !ok {
 		log.Error("Failed to get platform")
@@ -32,7 +32,7 @@ func sendFlowActionSteps(cfg config.Config, execution shared_models.Executions, 
 			step.Action.Name = action.CustomName
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}

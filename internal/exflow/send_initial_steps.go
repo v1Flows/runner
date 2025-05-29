@@ -12,7 +12,7 @@ import (
 )
 
 // SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(cfg config.Config, actions []shared_models.Action, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
+func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
 	var initialSteps = []shared_models.ExecutionSteps{
 		{
 			Action: shared_models.Action{
@@ -47,7 +47,7 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 	}
 
 	// get all current steps to modify the pickup step
-	steps, err := executions.GetSteps(cfg, execution.ID.String(), targetPlatform)
+	steps, err := executions.GetSteps(nil, execution.ID.String(), targetPlatform)
 	if err != nil {
 		log.Error("Failed to get steps for execution: ", err)
 		return
@@ -55,7 +55,7 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 	for _, step := range steps {
 		if step.Action.Name == "Pick Up" {
 			// modify the pickup step
-			err = executions.UpdateStep(cfg, execution.ID.String(), shared_models.ExecutionSteps{
+			err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
 				ID: step.ID,
 				Messages: []shared_models.Message{
 					{
@@ -95,7 +95,7 @@ func SendInitialSteps(cfg config.Config, actions []shared_models.Action, executi
 			}
 		}
 
-		stepID, err := executions.SendStep(cfg, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
 		if err != nil {
 			return nil, err
 		}

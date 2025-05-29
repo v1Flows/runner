@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateStep(cfg config.Config, executionID string, step shared_models.ExecutionSteps, targetPlatform string) error {
+func UpdateStep(cfg *config.Config, executionID string, step shared_models.ExecutionSteps, targetPlatform string) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 

@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetExecutionByID(cfg config.Config, executionID string, targetPlatform string) (shared_models.Executions, error) {
+func GetExecutionByID(cfg *config.Config, executionID string, targetPlatform string) (shared_models.Executions, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
