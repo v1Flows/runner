@@ -31,9 +31,18 @@ func DownloadPlugins(pluginRepos []config.PluginConfig, buildDir string, pluginD
 
 		// Check if the plugin already exists
 		if _, err := os.Stat(pluginPath); !os.IsNotExist(err) {
-			log.Info("Plugin already exists: ", pluginPath)
-			pluginPaths[plugin.Name] = pluginPath
-			continue
+
+			// if plugin version is latest, delete the existing plugin if it exists
+			if plugin.Version == "latest" {
+				if err := os.RemoveAll(pluginPath); err != nil {
+					return nil, fmt.Errorf("failed to remove existing plugin %s: %v", plugin.Name, err)
+				}
+				log.Info("Removed existing latest plugin: ", pluginPath)
+			} else {
+				log.Info("Plugin already exists: ", pluginPath)
+				pluginPaths[plugin.Name] = pluginPath
+				continue
+			}
 		}
 
 		// Create the plugin file
