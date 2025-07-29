@@ -74,7 +74,6 @@ func Init(cfg *config.Config) (loadedPlugin map[string]Plugin, plugins []shared_
 		{Name: "interaction", Version: "latest"},
 		{Name: "ping", Version: "latest"},
 		{Name: "port_checker", Version: "latest"},
-		{Name: "step_analysis", Version: "latest"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
