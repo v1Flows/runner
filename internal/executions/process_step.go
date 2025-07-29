@@ -6,6 +6,7 @@ import (
 
 	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
+	internal_actions "github.com/v1Flows/runner/internal/actions"
 	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/platform"
@@ -25,6 +26,15 @@ func RegisterActions(loadedPluginActions []shared_models.Plugin) (actions []shar
 	}
 
 	return actions
+}
+
+func getActionByFlowActions(actions []shared_models.Action, step shared_models.ExecutionSteps) (action shared_models.Action, found bool) {
+	for _, a := range actions {
+		if a.Plugin == step.Action.Plugin {
+			return a, true
+		}
+	}
+	return shared_models.Action{}, false
 }
 
 func processStep(cfg *config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, canceled bool, err error) {
@@ -138,6 +148,62 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 		}
 
 		return plugins.Response{}, false, false, errors.New("plugin not found")
+	}
+
+	_, found := getActionByFlowActions(flow.Actions, step)
+	if found {
+		if step.Action.Condition.SelectedActionID != "" {
+			pass, err := internal_actions.CheckConditions(cfg, steps, step, execution, targetPlatform)
+			if err != nil {
+				log.Error(err)
+
+				step.Messages = append(step.Messages, shared_models.Message{
+					Title: "Error",
+					Lines: []shared_models.Line{
+						{
+							Content:   "Failed to execute action",
+							Color:     "danger",
+							Timestamp: time.Now(),
+						},
+						{
+							Content:   "Error: " + err.Error(),
+							Color:     "danger",
+							Timestamp: time.Now(),
+						},
+						{
+							Content:   "Cancel execution",
+							Color:     "danger",
+							Timestamp: time.Now(),
+						},
+					},
+				})
+				step.Status = "error"
+				step.FinishedAt = time.Now()
+
+				if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+					log.Error(err)
+					return plugins.Response{}, false, false, err
+				}
+
+				return plugins.Response{}, false, false, err
+			}
+
+			if !pass {
+				step.Status = "canceled"
+				step.FinishedAt = time.Now()
+
+				if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+					log.Error(err)
+					return plugins.Response{}, false, false, err
+				}
+
+				if step.Action.Condition.CancelExecution {
+					return plugins.Response{}, false, true, nil
+				} else {
+					return plugins.Response{}, true, false, nil
+				}
+			}
+		}
 	}
 
 	req := plugins.ExecuteTaskRequest{
