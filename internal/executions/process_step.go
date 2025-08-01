@@ -189,7 +189,11 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 			}
 
 			if !pass {
-				step.Status = "canceled"
+				if step.Action.Condition.CancelExecution {
+					step.Status = "canceled"
+				} else {
+					step.Status = "skipped"
+				}
 				step.FinishedAt = time.Now()
 
 				if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {

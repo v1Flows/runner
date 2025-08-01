@@ -74,6 +74,12 @@ func Init(cfg *config.Config) (loadedPlugin map[string]Plugin, plugins []shared_
 		{Name: "interaction", Version: "latest"},
 		{Name: "ping", Version: "latest"},
 		{Name: "port_checker", Version: "latest"},
+		{Name: "debug", Version: "latest"},
+		{Name: "git", Version: "latest"},
+		{Name: "ansible", Version: "latest"},
+		{Name: "ssh", Version: "latest"},
+		{Name: "terraform", Version: "latest"},
+		{Name: "mail", Version: "latest"},
 	}
 
 	// Merge mandatory plugins with config plugins, handling conflicts
