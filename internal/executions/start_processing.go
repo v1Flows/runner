@@ -205,7 +205,7 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 					}
 
 					// end execution
-					executions.EndWithRecovered(nil, execution, platform)
+					executions.EndWithError(nil, execution, platform)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
 					finishProcessing(platform, cfg, execution)
