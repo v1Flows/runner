@@ -142,8 +142,8 @@ github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445
 github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445/go.mod h1:wN72OUmADQ95eNYyiYM4oa6FOnvoCBRljzsGQGdvaIA=
 github.com/v1Flows/exFlow/services/backend v0.0.0-20250729085929-95657664575c h1:uHhdt6G4Atcae4QTZ0EpVfk7R0D9kq6RF5Y47ad3DCE=
 github.com/v1Flows/exFlow/services/backend v0.0.0-20250729085929-95657664575c/go.mod h1:6G9XUHVAMiY/3XFNbgYWSIVU7u+2/srGFmnbmy7s8M0=
-github.com/v1Flows/shared-library v1.0.25 h1:Rez0FNvDXdYByx3JAT8/+BXqld2vmvqUz0rPoBxt5UE=
-github.com/v1Flows/shared-library v1.0.25/go.mod h1:UVP6m6Nri6JC3L0xS3wkbqGvfQJ5fsYIJx81Gfj1TFw=
+github.com/v1Flows/shared-library v1.0.27 h1:BQMZ0hgBMhOHMelygi4Rl7XxriAEKveFarWer9SlN0Q=
+github.com/v1Flows/shared-library v1.0.27/go.mod h1:UVP6m6Nri6JC3L0xS3wkbqGvfQJ5fsYIJx81Gfj1TFw=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=

@@ -71,7 +71,7 @@ require (
 	github.com/gin-gonic/gin v1.10.1
 	github.com/spf13/viper v1.20.1
 	github.com/v1Flows/exFlow/services/backend v0.0.0-20250729085929-95657664575c
-	github.com/v1Flows/shared-library v1.0.25
+	github.com/v1Flows/shared-library v1.0.27
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 )
