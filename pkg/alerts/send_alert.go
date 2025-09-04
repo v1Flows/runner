@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendAlert(cfg *config.Config, alert models.Alerts) {
+func SendAlert(cfg *config.Config, alert models.Alerts) (err error) {
 	log.Info("Sending Alert")
 
 	jsonPayload, err := json.Marshal(alert)
@@ -38,8 +38,9 @@ func SendAlert(cfg *config.Config, alert models.Alerts) {
 
 	if res.StatusCode != 201 {
 		log.Error("Failed to send alert")
-		return
-	} else {
-		log.Info("Alert Sent")
+		return err
 	}
+
+	log.Info("Alert sent successfully")
+	return nil
 }
