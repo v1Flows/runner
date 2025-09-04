@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 
 	log "github.com/sirupsen/logrus"
