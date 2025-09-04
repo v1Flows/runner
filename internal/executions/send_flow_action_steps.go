@@ -1,27 +1,19 @@
 package internal_executions
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/platform"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 // SendFlowActionSteps sends all active flow actions to alertflow
-func sendFlowActionSteps(cfg *config.Config, execution shared_models.Executions, flow shared_models.Flows) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-		return
-	}
-
+func sendFlowActionSteps(cfg *config.Config, execution models.Executions, flow models.Flows) (stepsWithIDs []models.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
 		if !action.Active {
 			continue
 		}
 
-		step := shared_models.ExecutionSteps{
+		step := models.ExecutionSteps{
 			Action:      action,
 			ExecutionID: execution.ID.String(),
 			Status:      "pending",
@@ -32,7 +24,7 @@ func sendFlowActionSteps(cfg *config.Config, execution shared_models.Executions,
 			step.Action.Name = action.CustomName
 		}
 
-		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step)
 		if err != nil {
 			return nil, err
 		}

@@ -21,7 +21,6 @@ type ConfigurationManager struct {
 type Config struct {
 	LogLevel     string            `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
 	Mode         string            `mapstructure:"mode" validate:"required,oneof=master worker"`
-	Alertflow    AlertflowConfig   `mapstructure:"alertflow" validate:"required"`
 	ExFlow       exflowConfig      `mapstructure:"exflow" validate:"required"`
 	ApiEndpoint  ApiEndpointConfig `mapstructure:"api_endpoint" validate:"required"`
 	WorkspaceDir string            `mapstructure:"workspace_dir" validate:"dir"`
@@ -30,15 +29,7 @@ type Config struct {
 	Runner       RunnerConf        `mapstructure:"runner"`
 }
 
-type AlertflowConfig struct {
-	Enabled  bool   `mapstructure:"enabled"`
-	URL      string `mapstructure:"url" validate:"required,url"`
-	RunnerID string `mapstructure:"runner_id"`
-	APIKey   string `mapstructure:"api_key"`
-}
-
 type exflowConfig struct {
-	Enabled  bool   `mapstructure:"enabled"`
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
 	APIKey   string `mapstructure:"api_key"`
@@ -94,11 +85,6 @@ func (cm *ConfigurationManager) LoadConfig(configFile string) error {
 	envBindings := map[string]string{
 		"log_level":                   "RUNNER_LOG_LEVEL",
 		"mode":                        "RUNNER_MODE",
-		"alertflow.enabled":           "RUNNER_ALERTFLOW_ENABLED",
-		"alertflow.url":               "RUNNER_ALERTFLOW_URL",
-		"alertflow.runner_id":         "RUNNER_ALERTFLOW_RUNNER_ID",
-		"alertflow.api_key":           "RUNNER_ALERTFLOW_API_KEY",
-		"exflow.enabled":              "RUNNER_EXFLOW_ENABLED",
 		"exflow.url":                  "RUNNER_EXFLOW_URL",
 		"exflow.runner_id":            "RUNNER_EXFLOW_RUNNER_ID",
 		"exflow.api_key":              "RUNNER_EXFLOW_API_KEY",
@@ -172,26 +158,14 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 		}
 		config.PluginDir = currentDir + "/plugins"
 	}
-	config.Alertflow.Enabled = true
-	config.ExFlow.Enabled = true
 }
 
 func (cm *ConfigurationManager) validateConfig(config *Config) error {
-	if config.Alertflow.Enabled {
-		if config.Alertflow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
-			return fmt.Errorf("alertflow.api_key or runner.shared_runner_secret is required")
-		}
-		if config.Alertflow.URL == "" {
-			return fmt.Errorf("alertflow URL is required")
-		}
+	if config.ExFlow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
+		return fmt.Errorf("exflow.api_key or runner.shared_runner_secret is required")
 	}
-	if config.ExFlow.Enabled {
-		if config.ExFlow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
-			return fmt.Errorf("exflow.api_key or runner.shared_runner_secret is required")
-		}
-		if config.ExFlow.URL == "" {
-			return fmt.Errorf("exflow URL is required")
-		}
+	if config.ExFlow.URL == "" {
+		return fmt.Errorf("exflow URL is required")
 	}
 
 	return nil
@@ -205,55 +179,31 @@ func (cm *ConfigurationManager) GetConfig() *Config {
 }
 
 // UpdateRunnerID updates the runner ID in the configuration for both Alertflow and ExFlow
-func (cm *ConfigurationManager) UpdateRunnerID(platform, id string) {
+func (cm *ConfigurationManager) UpdateRunnerID(id string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	if platform == "alertflow" {
-		cm.config.Alertflow.RunnerID = id
-	}
-	if platform == "exflow" {
-		cm.config.ExFlow.RunnerID = id
-	}
+	cm.config.ExFlow.RunnerID = id
 }
 
 // UpdateRunnerApiKey updates the runner api_key in the configuration for both Alertflow and ExFlow
-func (cm *ConfigurationManager) UpdateRunnerApiKey(platform, apiKey string) {
+func (cm *ConfigurationManager) UpdateRunnerApiKey(apiKey string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	if platform == "alertflow" {
-		cm.config.Alertflow.APIKey = apiKey
-	}
-	if platform == "exflow" {
-		cm.config.ExFlow.APIKey = apiKey
-	}
+	cm.config.ExFlow.APIKey = apiKey
 }
 
 // GetRunnerIDs returns the current runner IDs for both Alertflow and ExFlow
-func (cm *ConfigurationManager) GetRunnerID(platform string) string {
+func (cm *ConfigurationManager) GetRunnerID() string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	if platform == "alertflow" {
-		return cm.config.Alertflow.RunnerID
-	}
-	if platform == "exflow" {
-		return cm.config.ExFlow.RunnerID
-	}
-
-	return ""
+	return cm.config.ExFlow.RunnerID
 }
 
 // GetRunnerIDs returns the current runner apiKey for both Alertflow and ExFlow
-func (cm *ConfigurationManager) GetRunnerApiKey(platform string) string {
+func (cm *ConfigurationManager) GetRunnerApiKey() string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	if platform == "alertflow" {
-		return cm.config.Alertflow.APIKey
-	}
-	if platform == "exflow" {
-		return cm.config.ExFlow.APIKey
-	}
-
-	return ""
+	return cm.config.ExFlow.APIKey
 }
 
 // ReloadConfig reloads the configuration from the file

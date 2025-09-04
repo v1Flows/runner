@@ -12,16 +12,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SetToRunning(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
+func SetToRunning(cfg *config.Config, execution shared_models.Executions) {
 	execution.Status = "running"
-	Running(cfg, execution, targetPlatform)
+	Running(cfg, execution)
 }
 
-func Running(cfg *config.Config, execution shared_models.Executions, targetPlatform string) {
+func Running(cfg *config.Config, execution shared_models.Executions) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(execution)
 
-	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(cfg)
 
 	req, err := http.NewRequest("PUT", url+"/api/v1/executions/"+execution.ID.String(), payloadBuf)
 	if err != nil {
@@ -34,6 +34,6 @@ func Running(cfg *config.Config, execution shared_models.Executions, targetPlatf
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Error("Failed to update execution at " + targetPlatform + " API")
+		log.Error("Failed to update execution")
 	}
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 var loadedPlugins = make(map[string]Plugin)
@@ -63,7 +63,7 @@ func connectPlugin(name, path string) (Plugin, *plugin.Client, error) {
 	return plugin, client, nil
 }
 
-func Init(cfg *config.Config) (loadedPlugin map[string]Plugin, plugins []shared_models.Plugin, actionPlugins []shared_models.Plugin, endpointPlugins []shared_models.Plugin) {
+func Init(cfg *config.Config) (loadedPlugin map[string]Plugin, plugins []models.Plugin, actionPlugins []models.Plugin, endpointPlugins []models.Plugin) {
 	// Define mandatory plugins
 	mandatoryPlugins := []config.PluginConfig{
 		{Name: "collect_data", Version: "latest"},

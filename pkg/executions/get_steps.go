@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/pkg/models"
+	internal_models "github.com/v1Flows/runner/pkg/models"
 	"github.com/v1Flows/runner/pkg/platform"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func GetSteps(cfg *config.Config, executionID string, targetPlatform string) ([]shared_models.ExecutionSteps, error) {
+func GetSteps(cfg *config.Config, executionID string) ([]models.ExecutionSteps, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -22,34 +22,34 @@ func GetSteps(cfg *config.Config, executionID string, targetPlatform string) ([]
 		},
 	}
 
-	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(cfg)
 
 	parsedUrl := url + "/api/v1/executions/" + executionID + "/steps"
 	req, err := http.NewRequest("GET", parsedUrl, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
-		return []shared_models.ExecutionSteps{}, err
+		return []models.ExecutionSteps{}, err
 	}
 	req.Header.Set("Authorization", apiKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return []shared_models.ExecutionSteps{}, err
+		return []models.ExecutionSteps{}, err
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get step data from %s API: %s", targetPlatform, url)
-		err = fmt.Errorf("failed to get step data from %s API: %s", targetPlatform, url)
-		return []shared_models.ExecutionSteps{}, err
+		log.Errorf("Failed to get step data from API: %s", url)
+		err = fmt.Errorf("failed to get step data from API: %s", url)
+		return []models.ExecutionSteps{}, err
 	}
 
-	log.Debugf("Step data received from %s API: %s", targetPlatform, url)
+	log.Debugf("Step data received from API: %s", url)
 
-	var steps models.IncomingExecutionSteps
+	var steps internal_models.IncomingExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&steps)
 	if err != nil {
 		log.Fatal(err)
-		return []shared_models.ExecutionSteps{}, err
+		return []models.ExecutionSteps{}, err
 	}
 
 	return steps.StepsData, nil

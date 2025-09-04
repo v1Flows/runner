@@ -1,23 +1,15 @@
 package internal_executions
 
 import (
-	"errors"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/platform"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 func cancelRemainingSteps(executionID string) error {
-	targetPlatform, ok := platform.GetPlatformForExecution(executionID)
-	if !ok {
-		log.Error("Failed to get platform")
-		return errors.New("failed to get platform")
-	}
-
-	steps, err := executions.GetSteps(nil, executionID, targetPlatform)
+	steps, err := executions.GetSteps(nil, executionID)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -29,10 +21,10 @@ func cancelRemainingSteps(executionID string) error {
 			step.Status = "canceled"
 			step.CanceledBy = "Runner"
 			step.CanceledAt = time.Now()
-			step.Messages = []shared_models.Message{
+			step.Messages = []models.Message{
 				{
 					Title: "Canceled",
-					Lines: []shared_models.Line{
+					Lines: []models.Line{
 						{
 							Content:   "Canceled by runner due to previous step failure/interaction/timeout",
 							Color:     "danger",
@@ -44,7 +36,7 @@ func cancelRemainingSteps(executionID string) error {
 			step.StartedAt = time.Now()
 			step.FinishedAt = time.Now()
 
-			err := executions.UpdateStep(nil, executionID, step, targetPlatform)
+			err := executions.UpdateStep(nil, executionID, step)
 			if err != nil {
 				log.Error(err)
 				return err

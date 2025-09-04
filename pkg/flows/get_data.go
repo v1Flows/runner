@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func GetFlowData(cfg *config.Config, flowID string, targetPlatform string) (bytes []byte, err error) {
+func GetFlowData(cfg *config.Config, flowID string) (bytes []byte, err error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -20,7 +20,7 @@ func GetFlowData(cfg *config.Config, flowID string, targetPlatform string) (byte
 		},
 	}
 
-	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(cfg)
 
 	parsedUrl := url + "/api/v1/flows/" + flowID
 	req, err := http.NewRequest("GET", parsedUrl, nil)
@@ -36,12 +36,12 @@ func GetFlowData(cfg *config.Config, flowID string, targetPlatform string) (byte
 	}
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Failed to get flow data from %s API: %s", targetPlatform, url)
-		err = fmt.Errorf("failed to get flow data from %s API: %s", targetPlatform, url)
+		log.Errorf("Failed to get flow data from API: %s", url)
+		err = fmt.Errorf("failed to get flow data from API: %s", url)
 		return nil, err
 	}
 
-	log.Debugf("Flow data received from %s API: %s", targetPlatform, url)
+	log.Debugf("Flow data received from API: %s", url)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

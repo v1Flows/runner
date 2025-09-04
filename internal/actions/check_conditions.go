@@ -6,20 +6,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
 
 	log "github.com/sirupsen/logrus"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions, targetPlatform string) (bool, error) {
-	err := executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+func CheckConditions(cfg *config.Config, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (bool, error) {
+	err := executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 		ID: step.ID,
-		Messages: []shared_models.Message{
+		Messages: []models.Message{
 			{
 				Title: "Condition Check",
-				Lines: []shared_models.Line{
+				Lines: []models.Line{
 					{
 						Content:   "There are conditions set for this action. Checking...",
 						Color:     "primary",
@@ -29,13 +29,13 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 			},
 		},
 		Status: "running",
-	}, targetPlatform)
+	})
 	if err != nil {
 		return false, err
 	}
 
 	// get all steps from the backend (messages are important here)
-	executionSteps, err := executions.GetSteps(cfg, execution.ID.String(), targetPlatform)
+	executionSteps, err := executions.GetSteps(cfg, execution.ID.String())
 	if err != nil {
 		log.Error(err)
 		return false, err
@@ -44,12 +44,12 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 	// search for condition selected action id in executionsSteps
 	for _, execStep := range executionSteps {
 		if execStep.Action.ID.String() == step.Action.Condition.SelectedActionID {
-			err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+			err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 				ID: step.ID,
-				Messages: []shared_models.Message{
+				Messages: []models.Message{
 					{
 						Title: "Condition Check",
-						Lines: []shared_models.Line{
+						Lines: []models.Line{
 							{
 								Content:   "Conditions apply to the following Action: " + execStep.Action.Name + " (" + execStep.Action.ID.String() + ")",
 								Timestamp: time.Now(),
@@ -58,7 +58,7 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 					},
 				},
 				Status: "running",
-			}, targetPlatform)
+			})
 			if err != nil {
 				return false, err
 			}
@@ -68,12 +68,12 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 			conditionLogic := []string{}
 
 			for i, condition := range step.Action.Condition.ConditionItems {
-				err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+				err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 					ID: step.ID,
-					Messages: []shared_models.Message{
+					Messages: []models.Message{
 						{
 							Title: "Condition Check",
-							Lines: []shared_models.Line{
+							Lines: []models.Line{
 								{
 									Content:   fmt.Sprintf("Processing condition %d: %s %s %s", i+1, condition.ConditionKey, condition.ConditionType, condition.ConditionValue),
 									Timestamp: time.Now(),
@@ -82,7 +82,7 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 						},
 					},
 					Status: "running",
-				}, targetPlatform)
+				})
 				if err != nil {
 					return false, err
 				}
@@ -148,12 +148,12 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 						if regexErr != nil {
 							log.Errorf("Invalid regex pattern '%s': %v", condition.ConditionValue, regexErr)
 							// Log the regex error
-							err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+							err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 								ID: step.ID,
-								Messages: []shared_models.Message{
+								Messages: []models.Message{
 									{
 										Title: "Condition Check",
-										Lines: []shared_models.Line{
+										Lines: []models.Line{
 											{
 												Content:   fmt.Sprintf("Invalid regex pattern '%s': %v", condition.ConditionValue, regexErr),
 												Color:     "danger",
@@ -163,7 +163,7 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 									},
 								},
 								Status: "running",
-							}, targetPlatform)
+							})
 							if err != nil {
 								return false, err
 							}
@@ -182,12 +182,12 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 					resultColor = "success"
 				}
 
-				err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+				err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 					ID: step.ID,
-					Messages: []shared_models.Message{
+					Messages: []models.Message{
 						{
 							Title: "Condition Check",
-							Lines: []shared_models.Line{
+							Lines: []models.Line{
 								{
 									Content:   fmt.Sprintf("Condition %d %s", i+1, resultMsg),
 									Color:     resultColor,
@@ -197,7 +197,7 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 						},
 					},
 					Status: "running",
-				}, targetPlatform)
+				})
 				if err != nil {
 					return false, err
 				}
@@ -231,12 +231,12 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 				finalMsg += "FAILED"
 			}
 
-			err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+			err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 				ID: step.ID,
-				Messages: []shared_models.Message{
+				Messages: []models.Message{
 					{
 						Title: "Condition Check",
-						Lines: []shared_models.Line{
+						Lines: []models.Line{
 							{
 								Content:   finalMsg,
 								Color:     finalColor,
@@ -246,7 +246,7 @@ func CheckConditions(cfg *config.Config, steps []shared_models.ExecutionSteps, s
 					},
 				},
 				Status: "running",
-			}, targetPlatform)
+			})
 			if err != nil {
 				return false, err
 			}

@@ -21,12 +21,12 @@ func SendAlert(cfg *config.Config, alert models.Alerts) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("POST", cfg.ExFlow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

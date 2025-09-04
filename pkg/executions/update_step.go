@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/platform"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateStep(cfg *config.Config, executionID string, step shared_models.ExecutionSteps, targetPlatform string) error {
+func UpdateStep(cfg *config.Config, executionID string, step models.ExecutionSteps) error {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(cfg)
 
 	req, err := http.NewRequest("PUT", url+"/api/v1/executions/"+executionID+"/steps/"+step.ID.String(), payloadBuf)
 	if err != nil {
@@ -31,7 +31,7 @@ func UpdateStep(cfg *config.Config, executionID string, step shared_models.Execu
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Error("Failed to send execution step at " + targetPlatform + " API")
+		log.Error("Failed to send execution step")
 		return err
 	}
 
