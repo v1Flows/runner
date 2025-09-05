@@ -39,15 +39,13 @@ func SendInitialSteps(cfg *config.Config, actions []models.Action, execution mod
 	}
 
 	if execution.AlertID != "" {
-		initialSteps = append([]models.ExecutionSteps{
-			{
-				Action: models.Action{
-					Plugin: "pattern_check",
-				},
-				Status:    "pending",
-				CreatedAt: time.Now(),
+		initialSteps = append(initialSteps, models.ExecutionSteps{
+			Action: models.Action{
+				Plugin: "pattern_check",
 			},
-		}, initialSteps...)
+			Status:    "pending",
+			CreatedAt: time.Now(),
+		})
 	}
 
 	// get all current steps to modify the pickup step
