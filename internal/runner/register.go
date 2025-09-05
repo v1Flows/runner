@@ -11,19 +11,19 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/internal/token"
 	"github.com/v1Flows/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func RegisterAtAPI(targetPlatform string, version string, plugins []shared_models.Plugin, actions []shared_models.Action, alertEndpoints []shared_models.Endpoint) {
+func RegisterAtAPI(version string, plugins []models.Plugin, actions []models.Action, alertEndpoints []models.Endpoint) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
-	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, nil)
+	url, apiKey, runnerID := platform.GetPlatformConfig(nil)
 
 	if apiKey == "" {
 		apiKey = cfg.Runner.SharedRunnerSecret
@@ -46,7 +46,7 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 	// generate an random token for ApiToken
 	token := token.GenerateToken()
 
-	register := shared_models.Runners{
+	register := models.Runners{
 		ID:            parsedRunnerID,
 		Registered:    true,
 		LastHeartbeat: time.Now(),
@@ -94,25 +94,25 @@ func RegisterAtAPI(targetPlatform string, version string, plugins []shared_model
 
 			runner_id := ""
 			if response.RunnerID == "" {
-				runner_id = configManager.GetRunnerID(targetPlatform)
+				runner_id = configManager.GetRunnerID()
 			} else {
 				runner_id = response.RunnerID
 			}
 
 			if response.Token != "" {
-				configManager.UpdateRunnerApiKey(targetPlatform, response.Token)
+				configManager.UpdateRunnerApiKey(response.Token)
 			}
-			configManager.UpdateRunnerID(targetPlatform, runner_id)
+			configManager.UpdateRunnerID(runner_id)
 
-			log.Info("Runner registered at "+targetPlatform+". ID: ", configManager.GetRunnerID(targetPlatform))
+			log.Info("Runner registered. ID: ", configManager.GetRunnerID())
 			return
 		} else {
-			log.Errorf("Failed to register at "+targetPlatform+", attempt %d", i+1)
+			log.Errorf("Failed to register, attempt %d", i+1)
 			log.Errorf("Response: %s", string(body))
 			time.Sleep(5 * time.Second) // Add delay before retrying
 		}
 	}
-	log.Fatal("Failed to register at " + targetPlatform + " after 3 attempts")
+	log.Fatal("Failed to register after 3 attempts")
 }
 
 func GetLocalIPv4() (string, error) {

@@ -4,51 +4,43 @@ import (
 	"errors"
 	"time"
 
-	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	internal_actions "github.com/v1Flows/runner/internal/actions"
 	"github.com/v1Flows/runner/internal/common"
 	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func RegisterActions(loadedPluginActions []shared_models.Plugin) (actions []shared_models.Action) {
+func RegisterActions(loadedPluginActions []models.Plugin) (actions []models.Action) {
 	for _, plugin := range loadedPluginActions {
 		actions = append(actions, plugin.Action)
 	}
 
 	if len(actions) == 0 {
-		actions = []shared_models.Action{}
+		actions = []models.Action{}
 	}
 
 	return actions
 }
 
-func getActionByFlowActions(actions []shared_models.Action, step shared_models.ExecutionSteps) (action shared_models.Action, found bool) {
+func getActionByFlowActions(actions []models.Action, step models.ExecutionSteps) (action models.Action, found bool) {
 	for _, a := range actions {
 		if a.Plugin == step.Action.Plugin {
 			return a, true
 		}
 	}
-	return shared_models.Action{}, false
+	return models.Action{}, false
 }
 
-func processStep(cfg *config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, step shared_models.ExecutionSteps, execution shared_models.Executions) (res plugins.Response, success bool, canceled bool, err error) {
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-		return
-	}
-
+func processStep(cfg *config.Config, workspace string, actions []models.Action, loadedPlugins map[string]plugins.Plugin, flow models.Flows, flowBytes []byte, alert models.Alerts, steps []models.ExecutionSteps, step models.ExecutionSteps, execution models.Executions) (res plugins.Response, success bool, canceled bool, err error) {
 	step.Status = "running"
 	step.StartedAt = time.Now()
 	step.RunnerID = execution.RunnerID
 
-	if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+	if err := executions.UpdateStep(nil, execution.ID.String(), step); err != nil {
 		log.Error(err)
 		return plugins.Response{}, false, false, err
 	}
@@ -57,9 +49,9 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 
 	if !valid {
 		// dont execute step and quit execution
-		step.Messages = append(step.Messages, shared_models.Message{
+		step.Messages = append(step.Messages, models.Message{
 			Title: "Error",
-			Lines: []shared_models.Line{
+			Lines: []models.Line{
 				{
 					Content:   "Action not compatible with plugin version",
 					Color:     "danger",
@@ -85,7 +77,7 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+		if err := executions.UpdateStep(nil, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, false, err
 		}
@@ -95,12 +87,12 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 
 	if danger {
 		// modify the pickup step
-		err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+		err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 			ID: step.ID,
-			Messages: []shared_models.Message{
+			Messages: []models.Message{
 				{
 					Title: "Caution",
-					Lines: []shared_models.Line{
+					Lines: []models.Line{
 						{
 							Content:   "Plugin version is higher than action version. This may cause issues but execution will still be processed.",
 							Timestamp: time.Now(),
@@ -110,7 +102,7 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 				},
 			},
 			Status: "running",
-		}, targetPlatform)
+		})
 		if err != nil {
 			return plugins.Response{}, false, false, err
 		}
@@ -119,9 +111,9 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 	if _, ok := loadedPlugins[step.Action.Plugin]; !ok {
 		log.Warnf("Action %s not found", step.Action.Plugin)
 
-		step.Messages = append(step.Messages, shared_models.Message{
+		step.Messages = append(step.Messages, models.Message{
 			Title: "Error",
-			Lines: []shared_models.Line{
+			Lines: []models.Line{
 				{
 					Content:   "Action not found in loaded plugins",
 					Color:     "danger",
@@ -142,7 +134,7 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+		if err := executions.UpdateStep(nil, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, false, err
 		}
@@ -153,13 +145,13 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 	_, found := getActionByFlowActions(flow.Actions, step)
 	if found {
 		if step.Action.Condition.SelectedActionID != "" {
-			pass, err := internal_actions.CheckConditions(cfg, steps, step, execution, targetPlatform)
+			pass, err := internal_actions.CheckConditions(cfg, steps, step, execution)
 			if err != nil {
 				log.Error(err)
 
-				step.Messages = append(step.Messages, shared_models.Message{
+				step.Messages = append(step.Messages, models.Message{
 					Title: "Error",
-					Lines: []shared_models.Line{
+					Lines: []models.Line{
 						{
 							Content:   "Failed to execute action",
 							Color:     "danger",
@@ -180,7 +172,7 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 				step.Status = "error"
 				step.FinishedAt = time.Now()
 
-				if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+				if err := executions.UpdateStep(nil, execution.ID.String(), step); err != nil {
 					log.Error(err)
 					return plugins.Response{}, false, false, err
 				}
@@ -196,7 +188,7 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 				}
 				step.FinishedAt = time.Now()
 
-				if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+				if err := executions.UpdateStep(nil, execution.ID.String(), step); err != nil {
 					log.Error(err)
 					return plugins.Response{}, false, false, err
 				}
@@ -217,7 +209,6 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 		Execution: execution,
 		Step:      step,
 		Alert:     alert,
-		Platform:  targetPlatform,
 		Workspace: workspace,
 	}
 
@@ -225,9 +216,9 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 	if err != nil {
 		log.Error(err)
 
-		step.Messages = append(step.Messages, shared_models.Message{
+		step.Messages = append(step.Messages, models.Message{
 			Title: "Error",
-			Lines: []shared_models.Line{
+			Lines: []models.Line{
 				{
 					Content:   "Failed to execute action",
 					Color:     "danger",
@@ -248,7 +239,7 @@ func processStep(cfg *config.Config, workspace string, actions []shared_models.A
 		step.Status = "error"
 		step.FinishedAt = time.Now()
 
-		if err := executions.UpdateStep(nil, execution.ID.String(), step, targetPlatform); err != nil {
+		if err := executions.UpdateStep(nil, execution.ID.String(), step); err != nil {
 			log.Error(err)
 			return plugins.Response{}, false, false, err
 		}

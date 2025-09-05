@@ -5,9 +5,8 @@ import (
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
-	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
 // Plugin interface that all plugins must implement
@@ -15,7 +14,7 @@ type Plugin interface {
 	ExecuteTask(request ExecuteTaskRequest) (Response, error)
 	CancelTask(req CancelTaskRequest) (Response, error)
 	EndpointRequest(request EndpointRequest) (Response, error)
-	Info(request InfoRequest) (shared_models.Plugin, error)
+	Info(request InfoRequest) (models.Plugin, error)
 }
 
 // PluginRPC is an implementation of net/rpc for Plugin
@@ -31,30 +30,28 @@ type InfoRequest struct {
 type ExecuteTaskRequest struct {
 	Args      map[string]string
 	Config    *config.Config
-	Flow      shared_models.Flows
+	Flow      models.Flows
 	FlowBytes []byte
-	Execution shared_models.Executions
-	Step      shared_models.ExecutionSteps
-	Alert     af_models.Alerts
-	Platform  string
+	Execution models.Executions
+	Step      models.ExecutionSteps
+	Alert     models.Alerts
 	Workspace string
 }
 
 type CancelTaskRequest struct {
-	Step shared_models.ExecutionSteps
+	Step models.ExecutionSteps
 }
 
 type EndpointRequest struct {
-	Config   *config.Config
-	Body     []byte
-	Platform string
+	Config *config.Config
+	Body   []byte
 }
 
 type Response struct {
 	Data      map[string]interface{}
-	Flow      *shared_models.Flows
+	Flow      *models.Flows
 	FlowBytes []byte
-	Alert     *af_models.Alerts
+	Alert     *models.Alerts
 	Success   bool
 	Canceled  bool
 }
@@ -77,8 +74,8 @@ func (p *PluginRPC) EndpointRequest(request EndpointRequest) (Response, error) {
 	return resp, err
 }
 
-func (p *PluginRPC) Info(request InfoRequest) (shared_models.Plugin, error) {
-	var resp shared_models.Plugin
+func (p *PluginRPC) Info(request InfoRequest) (models.Plugin, error) {
+	var resp models.Plugin
 	err := p.Client.Call("Plugin.Info", request, &resp)
 	return resp, err
 }
@@ -119,7 +116,7 @@ func (s *PluginRPCServer) EndpointRequest(request EndpointRequest, resp *Respons
 	return err
 }
 
-func (s *PluginRPCServer) Info(request InfoRequest, resp *shared_models.Plugin) error {
+func (s *PluginRPCServer) Info(request InfoRequest, resp *models.Plugin) error {
 	result, err := s.Impl.Info(request)
 	*resp = result
 	return err

@@ -6,24 +6,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	internal_alertflow "github.com/v1Flows/runner/internal/alertflow"
 	internal_exflow "github.com/v1Flows/runner/internal/exflow"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(platform string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, execution shared_models.Executions, alertID string) {
+func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugins.Plugin, execution ef_models.Executions, alertID string) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
 	// ensure that execution runnerid equals the config runnerid
-	if execution.RunnerID != configManager.GetRunnerID(platform) {
+	if execution.RunnerID != configManager.GetRunnerID() {
 		log.Warnf("Execution %s is already picked up by another runner", execution.ID)
 		return
 	}
@@ -38,7 +36,7 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 				return
 			default:
 				// Send a heartbeat
-				executions.SendHeartbeat(nil, execution, platform)
+				executions.SendHeartbeat(nil, execution)
 				// Wait for a short interval before sending the next heartbeat
 				time.Sleep(5 * time.Second) // Adjust the interval as needed
 			}
@@ -55,44 +53,33 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 	execution.Status = "running"
 	execution.ExecutedAt = time.Now()
 
-	err = executions.UpdateExecution(nil, execution, platform)
+	err = executions.UpdateExecution(nil, execution)
 	if err != nil {
-		executions.EndWithError(nil, execution, platform)
+		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
-		finishProcessing(platform, cfg, execution)
+		finishProcessing(cfg, execution)
 		return
 	}
 
 	// set runner to busy
-	runner.Busy(platform, true)
+	runner.Busy(true)
 
 	// send initial step
-	var initialSteps []shared_models.ExecutionSteps
-	if platform == "alertflow" {
-		initialSteps, err = internal_alertflow.SendInitialSteps(cfg, actions, execution, alertID)
-		if err != nil {
-			executions.EndWithError(nil, execution, platform)
-			// Stop heartbeats and finish processing
-			close(doneHeartbeat)
-			finishProcessing(platform, cfg, execution)
-			return
-		}
-	} else if platform == "exflow" {
-		initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
-		if err != nil {
-			executions.EndWithError(nil, execution, platform)
-			// Stop heartbeats and finish processing
-			close(doneHeartbeat)
-			finishProcessing(platform, cfg, execution)
-			return
-		}
+	var initialSteps []ef_models.ExecutionSteps
+	initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
+	if err != nil {
+		executions.EndWithError(nil, execution)
+		// Stop heartbeats and finish processing
+		close(doneHeartbeat)
+		finishProcessing(cfg, execution)
+		return
 	}
 
 	// process each initial step where pending is true
-	var flow shared_models.Flows
+	var flow ef_models.Flows
 	var flowBytes []byte
-	var alert bmodels.Alerts
+	var alert ef_models.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
 			res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
@@ -101,19 +88,19 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 				// cancel remaining steps
 				cancelRemainingSteps(execution.ID.String())
 				// end execution
-				executions.EndWithError(nil, execution, platform)
+				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(platform, cfg, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 
 			if canceled {
 				cancelRemainingSteps(execution.ID.String())
-				executions.EndCanceled(nil, execution, platform)
+				executions.EndCanceled(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(platform, cfg, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 
@@ -122,10 +109,10 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 			} else if flow.ID == uuid.Nil {
 				log.Error("Error parsing flow")
 				cancelRemainingSteps(execution.ID.String())
-				executions.EndWithError(nil, execution, platform)
+				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(platform, cfg, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 
@@ -133,40 +120,40 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 				flowBytes = res.FlowBytes
 			}
 
-			if platform == "alertflow" && res.Alert != nil {
+			if res.Alert != nil {
 				alert = *res.Alert
-			} else if platform == "alertflow" && alert.ID == uuid.Nil {
+			} else if flow.Type == "alert" && alert.ID == uuid.Nil {
 				log.Error("Error parsing alert")
 				cancelRemainingSteps(execution.ID.String())
-				executions.EndWithError(nil, execution, platform)
+				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(platform, cfg, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "noPatternMatch" {
 				cancelRemainingSteps(execution.ID.String())
-				executions.EndNoPatternMatch(nil, execution, platform)
-				finishProcessing(platform, cfg, execution)
+				executions.EndNoPatternMatch(nil, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 
 			if res.Data["status"] == "canceled" {
 				cancelRemainingSteps(execution.ID.String())
-				executions.EndCanceled(nil, execution, platform)
+				executions.EndCanceled(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(platform, cfg, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 
 			if !success {
 				cancelRemainingSteps(execution.ID.String())
-				executions.EndWithError(nil, execution, platform)
+				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(platform, cfg, execution)
+				finishProcessing(cfg, execution)
 				return
 			}
 		}
@@ -175,10 +162,10 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 	// send flow actions as steps to alertflow
 	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
-		executions.EndWithError(nil, execution, platform)
+		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
-		finishProcessing(platform, cfg, execution)
+		finishProcessing(cfg, execution)
 		return
 	}
 
@@ -196,46 +183,46 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
 							// end execution with recovered status
-							executions.EndWithError(nil, execution, platform)
+							executions.EndWithError(nil, execution)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
-							finishProcessing(platform, cfg, execution)
+							finishProcessing(cfg, execution)
 							return
 						}
 					}
 
 					// end execution
-					executions.EndWithError(nil, execution, platform)
+					executions.EndWithError(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(platform, cfg, execution)
+					finishProcessing(cfg, execution)
 					return
 				}
 
 				if res.Data["status"] == "noPatternMatch" {
 					cancelRemainingSteps(execution.ID.String())
-					executions.EndNoPatternMatch(nil, execution, platform)
+					executions.EndNoPatternMatch(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(platform, cfg, execution)
+					finishProcessing(cfg, execution)
 					return
 				}
 
 				if res.Data["status"] == "canceled" {
 					cancelRemainingSteps(execution.ID.String())
-					executions.EndCanceled(nil, execution, platform)
+					executions.EndCanceled(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(platform, cfg, execution)
+					finishProcessing(cfg, execution)
 					return
 				}
 
 				if canceled {
 					cancelRemainingSteps(execution.ID.String())
-					executions.EndCanceled(nil, execution, platform)
+					executions.EndCanceled(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(platform, cfg, execution)
+					finishProcessing(cfg, execution)
 					return
 				}
 
@@ -246,25 +233,25 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
-							executions.EndWithError(nil, execution, platform)
+							executions.EndWithError(nil, execution)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
-							finishProcessing(platform, cfg, execution)
+							finishProcessing(cfg, execution)
 							return
 						}
 
 						// end execution with recovered status
-						executions.EndWithRecovered(nil, execution, platform)
+						executions.EndWithRecovered(nil, execution)
 						// Stop heartbeats and finish processing
 						close(doneHeartbeat)
-						finishProcessing(platform, cfg, execution)
+						finishProcessing(cfg, execution)
 						return
 					}
 
-					executions.EndWithError(nil, execution, platform)
+					executions.EndWithError(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(platform, cfg, execution)
+					finishProcessing(cfg, execution)
 					return
 				}
 			}
@@ -317,42 +304,42 @@ func startProcessing(platform string, actions []shared_models.Action, loadedPlug
 		}
 
 		if failedSteps > 0 {
-			executions.EndWithError(nil, execution, platform)
+			executions.EndWithError(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
-			finishProcessing(platform, cfg, execution)
+			finishProcessing(cfg, execution)
 			return
 		}
 
 		if canceledSteps > 0 {
-			executions.EndCanceled(nil, execution, platform)
+			executions.EndCanceled(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
-			finishProcessing(platform, cfg, execution)
+			finishProcessing(cfg, execution)
 			return
 		}
 
 		if noPatternMatchSteps > 0 {
-			executions.EndNoPatternMatch(nil, execution, platform)
+			executions.EndNoPatternMatch(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
-			finishProcessing(platform, cfg, execution)
+			finishProcessing(cfg, execution)
 			return
 		}
 	}
 
-	executions.EndSuccess(nil, execution, platform)
+	executions.EndSuccess(nil, execution)
 
 	// Stop heartbeats and finish processing
 	close(doneHeartbeat)
-	finishProcessing(platform, cfg, execution)
+	finishProcessing(cfg, execution)
 }
 
-func finishProcessing(platform string, cfg *config.Config, execution shared_models.Executions) {
+func finishProcessing(cfg *config.Config, execution ef_models.Executions) {
 	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
 	if err != nil {
 		log.Error("Error deleting workspace dir: ", err)
 	}
 
-	runner.Busy(platform, false)
+	runner.Busy(false)
 }

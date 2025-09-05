@@ -4,32 +4,29 @@ import (
 	"errors"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 )
 
-func startFailurePipeline(cfg *config.Config, workspace string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin, flow shared_models.Flows, flowBytes []byte, alert af_models.Alerts, steps []shared_models.ExecutionSteps, failedStep shared_models.ExecutionSteps, execution shared_models.Executions) error {
+func startFailurePipeline(cfg *config.Config, workspace string, actions []models.Action, loadedPlugins map[string]plugins.Plugin, flow models.Flows, flowBytes []byte, alert models.Alerts, steps []models.ExecutionSteps, failedStep models.ExecutionSteps, execution models.Executions) error {
 	var failurePipelineID string
 
 	// create step which tells the user that the flow failed and the failover pipeline will start
-	var stepToSend = shared_models.ExecutionSteps{
+	var stepToSend = models.ExecutionSteps{
 		ExecutionID: execution.ID.String(),
-		Action: shared_models.Action{
+		Action: models.Action{
 			Name:        "Failure Pipeline",
 			Description: "Run separate pipeline for failure",
 			Version:     "1.0.0",
 			Icon:        "hugeicons:structure-fail",
 			Category:    "runner",
 		},
-		Messages: []shared_models.Message{
+		Messages: []models.Message{
 			{
 				Title: "Failure Pipeline",
-				Lines: []shared_models.Line{
+				Lines: []models.Line{
 					{
 						Content:   "Execution failed, starting failure pipeline",
 						Color:     "warning",
@@ -49,9 +46,9 @@ func startFailurePipeline(cfg *config.Config, workspace string, actions []shared
 	if flow.FailurePipelineID != "" {
 		failurePipelineID = flow.FailurePipelineID
 
-		stepToSend.Messages = append(stepToSend.Messages, shared_models.Message{
+		stepToSend.Messages = append(stepToSend.Messages, models.Message{
 			Title: "Failure Pipeline",
-			Lines: []shared_models.Line{
+			Lines: []models.Line{
 				{
 					Content:   "Flow has a failure pipeline assigned, this pipeline will be used",
 					Color:     "warning",
@@ -66,9 +63,9 @@ func startFailurePipeline(cfg *config.Config, workspace string, actions []shared
 	} else if failedStep.Action.FailurePipelineID != "" {
 		failurePipelineID = failedStep.Action.FailurePipelineID
 
-		stepToSend.Messages = append(stepToSend.Messages, shared_models.Message{
+		stepToSend.Messages = append(stepToSend.Messages, models.Message{
 			Title: "Failure Pipeline",
-			Lines: []shared_models.Line{
+			Lines: []models.Line{
 				{
 					Content:   "The failed step has a failure pipeline assigned, this pipeline will be used",
 					Color:     "warning",
@@ -90,20 +87,14 @@ func startFailurePipeline(cfg *config.Config, workspace string, actions []shared
 		})
 	}
 
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-		return errors.New("failed to get platform")
-	}
-
-	_, err := executions.SendStep(nil, execution, stepToSend, targetPlatform)
+	_, err := executions.SendStep(nil, execution, stepToSend)
 	if err != nil {
 		return err
 	}
 
 	// send failure pipeline steps
-	var targetPipeline shared_models.FailurePipeline
-	var failurePipelineSteps []shared_models.ExecutionSteps
+	var targetPipeline models.FailurePipeline
+	var failurePipelineSteps []models.ExecutionSteps
 	for _, pipeline := range flow.FailurePipelines {
 		if pipeline.ID.String() == failurePipelineID {
 			targetPipeline = pipeline
@@ -113,7 +104,7 @@ func startFailurePipeline(cfg *config.Config, workspace string, actions []shared
 					continue
 				}
 
-				step := shared_models.ExecutionSteps{
+				step := models.ExecutionSteps{
 					Action:      action,
 					ExecutionID: execution.ID.String(),
 					Status:      "pending",
@@ -124,7 +115,7 @@ func startFailurePipeline(cfg *config.Config, workspace string, actions []shared
 					step.Action.Name = action.CustomName
 				}
 
-				stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
+				stepID, err := executions.SendStep(nil, execution, step)
 				if err != nil {
 					return err
 				}

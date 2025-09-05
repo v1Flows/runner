@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 
 	log "github.com/sirupsen/logrus"
@@ -21,12 +21,12 @@ func UpdateAlert(cfg *config.Config, alert models.Alerts) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("PUT", cfg.Alertflow.URL+"/api/v1/alerts/"+alert.ID.String(), bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("PUT", cfg.ExFlow.URL+"/api/v1/alerts/"+alert.ID.String(), bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

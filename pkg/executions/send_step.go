@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/platform"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendStep(cfg *config.Config, execution shared_models.Executions, step shared_models.ExecutionSteps, targetPlatform string) (shared_models.ExecutionSteps, error) {
+func SendStep(cfg *config.Config, execution models.Executions, step models.ExecutionSteps) (models.ExecutionSteps, error) {
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(step)
 
-	url, apiKey := platform.GetPlatformConfigPlain(targetPlatform, cfg)
+	url, apiKey := platform.GetPlatformConfigPlain(cfg)
 
 	req, err := http.NewRequest("POST", url+"/api/v1/executions/"+execution.ID.String()+"/steps", payloadBuf)
 	if err != nil {
@@ -30,15 +30,15 @@ func SendStep(cfg *config.Config, execution shared_models.Executions, step share
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 201 {
-		log.Error("Failed to send execution step at " + targetPlatform + " API")
-		return shared_models.ExecutionSteps{}, fmt.Errorf("failed to send execution step at " + targetPlatform + " api")
+		log.Error("Failed to send execution step")
+		return models.ExecutionSteps{}, fmt.Errorf("failed to send execution step")
 	}
 
-	var stepResponse shared_models.ExecutionSteps
+	var stepResponse models.ExecutionSteps
 	err = json.NewDecoder(resp.Body).Decode(&stepResponse)
 	if err != nil {
 		log.Error(err)
-		return shared_models.ExecutionSteps{}, err
+		return models.ExecutionSteps{}, err
 	}
 
 	return stepResponse, nil

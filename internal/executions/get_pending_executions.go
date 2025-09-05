@@ -6,29 +6,19 @@ import (
 	"net/http"
 	"time"
 
-	af_models "github.com/v1Flows/alertFlow/services/backend/pkg/models"
 	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-type IncomingSharedExecutions struct {
-	Executions []shared_models.Executions `json:"executions"`
-}
-
-type IncomingAfExecutions struct {
-	Executions []af_models.Executions `json:"executions"`
-}
-
-type IncomingEfExecutions struct {
+type IncomingExecutions struct {
 	Executions []ef_models.Executions `json:"executions"`
 }
 
-func GetPendingExecutions(targetPlatform string, actions []shared_models.Action, loadedPlugins map[string]plugins.Plugin) {
-	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, nil)
+func GetPendingExecutions(actions []ef_models.Action, loadedPlugins map[string]plugins.Plugin) {
+	url, apiKey, runnerID := platform.GetPlatformConfig(nil)
 
 	client := http.Client{
 		Timeout: 10 * time.Second,
@@ -57,12 +47,12 @@ func GetPendingExecutions(targetPlatform string, actions []shared_models.Action,
 			}
 
 			if resp.StatusCode != 200 {
-				log.Errorf("Failed to get waiting executions from %s API: %s, attempt %d", targetPlatform, parsedUrl, i+1)
+				log.Errorf("Failed to get waiting executions from API: %s, attempt %d", parsedUrl, i+1)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 				continue
 			}
 
-			log.Debugf("Executions received from %s API: %s", targetPlatform, parsedUrl)
+			log.Debugf("Executions received from API: %s", parsedUrl)
 
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
@@ -72,48 +62,24 @@ func GetPendingExecutions(targetPlatform string, actions []shared_models.Action,
 			}
 			resp.Body.Close() // Close the body after reading
 
-			if targetPlatform == "alertflow" {
-				var executions IncomingAfExecutions
-				err := json.Unmarshal(body, &executions)
-				if err != nil {
-					log.Error(err)
-					continue
-				}
-
-				var sharedExecutions IncomingSharedExecutions
-				err = json.Unmarshal(body, &sharedExecutions)
-				if err != nil {
-					log.Error(err)
-					continue
-				}
-
-				for index, execution := range executions.Executions {
-					// Save platform information for the execution
-					platform.SetPlatformForExecution(execution.ID.String(), targetPlatform)
-
-					startProcessing(targetPlatform, actions, loadedPlugins, sharedExecutions.Executions[index], execution.AlertID)
-				}
+			var executions IncomingExecutions
+			err = json.Unmarshal(body, &executions)
+			if err != nil {
+				log.Error(err)
+				continue
 			}
 
-			if targetPlatform == "exflow" {
-				var executions IncomingSharedExecutions
-				err := json.Unmarshal(body, &executions)
-				if err != nil {
-					log.Error(err)
-					continue
-				}
-
-				for _, execution := range executions.Executions {
-					// Save platform information for the execution
-					platform.SetPlatformForExecution(execution.ID.String(), targetPlatform)
-
-					startProcessing(targetPlatform, actions, loadedPlugins, execution, "")
+			for index, execution := range executions.Executions {
+				if execution.AlertID != "" {
+					startProcessing(actions, loadedPlugins, executions.Executions[index], execution.AlertID)
+				} else {
+					startProcessing(actions, loadedPlugins, execution, "")
 				}
 			}
 
 		}
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to get waiting executions from %s API after 3 attempts: %s", targetPlatform, parsedUrl)
+			log.Fatalf("Failed to get waiting executions from API after 3 attempts: %s", parsedUrl)
 		}
 	}
 }

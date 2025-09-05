@@ -3,21 +3,19 @@ package internal_exflow
 import (
 	"time"
 
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/platform"
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// SendInitialSteps sends initial steps to alertflow
-func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execution shared_models.Executions) (stepsWithIDs []shared_models.ExecutionSteps, err error) {
-	var initialSteps = []shared_models.ExecutionSteps{
+func SendInitialSteps(cfg *config.Config, actions []models.Action, execution models.Executions) (stepsWithIDs []models.ExecutionSteps, err error) {
+	var initialSteps = []models.ExecutionSteps{
 		{
-			Action: shared_models.Action{
+			Action: models.Action{
 				Plugin: "collect_data",
-				Params: []shared_models.Params{
+				Params: []models.Params{
 					{
 						Key:   "FlowID",
 						Value: execution.FlowID,
@@ -32,7 +30,7 @@ func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execut
 			CreatedAt: time.Now(),
 		},
 		{
-			Action: shared_models.Action{
+			Action: models.Action{
 				Plugin: "actions_check",
 			},
 			Status:    "pending",
@@ -40,14 +38,18 @@ func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execut
 		},
 	}
 
-	targetPlatform, ok := platform.GetPlatformForExecution(execution.ID.String())
-	if !ok {
-		log.Error("Failed to get platform")
-		return
+	if execution.AlertID != "" {
+		initialSteps = append(initialSteps, models.ExecutionSteps{
+			Action: models.Action{
+				Plugin: "pattern_check",
+			},
+			Status:    "pending",
+			CreatedAt: time.Now(),
+		})
 	}
 
 	// get all current steps to modify the pickup step
-	steps, err := executions.GetSteps(nil, execution.ID.String(), targetPlatform)
+	steps, err := executions.GetSteps(nil, execution.ID.String())
 	if err != nil {
 		log.Error("Failed to get steps for execution: ", err)
 		return
@@ -55,12 +57,12 @@ func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execut
 	for _, step := range steps {
 		if step.Action.Name == "Pick Up" {
 			// modify the pickup step
-			err = executions.UpdateStep(nil, execution.ID.String(), shared_models.ExecutionSteps{
+			err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
 				ID: step.ID,
-				Messages: []shared_models.Message{
+				Messages: []models.Message{
 					{
 						Title: "Pick Up",
-						Lines: []shared_models.Line{
+						Lines: []models.Line{
 							{
 								Content:   execution.RunnerID + " picked up the execution",
 								Timestamp: time.Now(),
@@ -72,7 +74,7 @@ func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execut
 				Status:     "success",
 				RunnerID:   execution.RunnerID,
 				FinishedAt: time.Now(),
-			}, targetPlatform)
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -95,7 +97,7 @@ func SendInitialSteps(cfg *config.Config, actions []shared_models.Action, execut
 			}
 		}
 
-		stepID, err := executions.SendStep(nil, execution, step, targetPlatform)
+		stepID, err := executions.SendStep(nil, execution, step)
 		if err != nil {
 			return nil, err
 		}

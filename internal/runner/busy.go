@@ -12,12 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Busy(targetPlatform string, busy bool) {
+func Busy(busy bool) {
 	payload := models.Runners{
 		ExecutingJob: busy,
 	}
 
-	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, nil)
+	url, apiKey, runnerID := platform.GetPlatformConfig(nil)
 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(payload)
@@ -38,7 +38,7 @@ func Busy(targetPlatform string, busy bool) {
 	}
 
 	if resp.StatusCode != 201 {
-		log.Errorf("Failed to set runner to busy at %s", targetPlatform)
+		log.Errorf("Failed to set runner to busy")
 		log.Error("Response: ", string(body))
 	}
 }

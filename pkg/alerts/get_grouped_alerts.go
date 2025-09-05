@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/pkg/models"
+	internal_models "github.com/v1Flows/runner/pkg/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func GetGroupedAlerts(cfg *config.Config, flowID string, groupKeyIdentifier string) ([]bmodels.Alerts, error) {
+func GetGroupedAlerts(cfg *config.Config, flowID string, groupKeyIdentifier string) ([]models.Alerts, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -22,7 +22,7 @@ func GetGroupedAlerts(cfg *config.Config, flowID string, groupKeyIdentifier stri
 		},
 	}
 
-	request := bmodels.IncomingGroupedAlertsRequest{
+	request := models.IncomingGroupedAlertsRequest{
 		FlowID:                flowID,
 		GroupAlertsIdentifier: groupKeyIdentifier,
 	}
@@ -30,32 +30,32 @@ func GetGroupedAlerts(cfg *config.Config, flowID string, groupKeyIdentifier stri
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(request)
 
-	url := cfg.Alertflow.URL + "/api/v1/alerts/grouped"
+	url := cfg.ExFlow.URL + "/api/v1/alerts/grouped"
 	req, err := http.NewRequest("GET", url, payloadBuf)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
-		return []bmodels.Alerts{}, err
+		return []models.Alerts{}, err
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)
-		return []bmodels.Alerts{}, err
+		return []models.Alerts{}, err
 	}
 
 	if resp.StatusCode != 200 {
 		log.Errorf("Failed to get alerts from API: %s", url)
 		err = fmt.Errorf("failed to get alerts from API: %s", url)
-		return []bmodels.Alerts{}, err
+		return []models.Alerts{}, err
 	}
 
 	log.Debugf("Alerts received from API: %s", url)
 
-	var alerts models.IncomingAlerts
+	var alerts internal_models.IncomingAlerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	if err != nil {
 		log.Fatal(err)
-		return []bmodels.Alerts{}, err
+		return []models.Alerts{}, err
 	}
 
 	return alerts.Alerts, nil

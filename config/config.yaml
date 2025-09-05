@@ -3,14 +3,7 @@
 log_level: info
 mode: master
 
-alertflow:
-  enabled: true
-  url: https://alertflow.org
-  runner_id: null
-  api_key: null
-
 exflow:
-  enabled: true
   url: https://exflow.org
   runner_id: null
   api_key: null

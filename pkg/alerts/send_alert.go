@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func SendAlert(cfg *config.Config, alert models.Alerts) {
+func SendAlert(cfg *config.Config, alert models.Alerts) (err error) {
 	log.Info("Sending Alert")
 
 	jsonPayload, err := json.Marshal(alert)
@@ -21,12 +21,12 @@ func SendAlert(cfg *config.Config, alert models.Alerts) {
 	}
 
 	// Add authorization
-	req, err := http.NewRequest("POST", cfg.Alertflow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
+	req, err := http.NewRequest("POST", cfg.ExFlow.URL+"/api/v1/alerts/", bytes.NewReader(jsonPayload))
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req.Header.Set("Authorization", cfg.Alertflow.APIKey)
+	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -38,8 +38,9 @@ func SendAlert(cfg *config.Config, alert models.Alerts) {
 
 	if res.StatusCode != 201 {
 		log.Error("Failed to send alert")
-		return
-	} else {
-		log.Info("Alert Sent")
+		return err
 	}
+
+	log.Info("Alert sent successfully")
+	return nil
 }

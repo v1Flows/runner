@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendHeartbeat(targetPlatform string) {
+func SendHeartbeat() {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -18,7 +18,7 @@ func SendHeartbeat(targetPlatform string) {
 		},
 	}
 
-	url, apiKey, runnerID := platform.GetPlatformConfig(targetPlatform, nil)
+	url, apiKey, runnerID := platform.GetPlatformConfig(nil)
 
 	parsedUrl := url + "/api/v1/runners/" + runnerID + "/heartbeat"
 	req, err := http.NewRequest("PUT", parsedUrl, nil)
@@ -49,16 +49,16 @@ func SendHeartbeat(targetPlatform string) {
 			resp.Body.Close()
 
 			if resp.StatusCode == 200 {
-				log.Debugf("Heartbeat sent to %s", targetPlatform)
+				log.Debug("Heartbeat sent")
 				break
 			} else {
-				log.Errorf("Failed to send heartbeat to %s, attempt %d", targetPlatform, i+1)
+				log.Errorf("Failed to send heartbeat, attempt %d", i+1)
 				log.Errorf("Response: %s", body)
 				time.Sleep(5 * time.Second) // Add delay before retrying
 			}
 		}
 		if resp.StatusCode != 200 {
-			log.Fatalf("Failed to send heartbeat to %s after 3 attempts", targetPlatform)
+			log.Fatalf("Failed to send heartbeat after 3 attempts")
 		}
 	}
 }

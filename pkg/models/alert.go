@@ -1,11 +1,11 @@
 package models
 
-import bmodels "github.com/v1Flows/alertFlow/services/backend/pkg/models"
+import ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 
 type IncomingAlert struct {
-	AlertData bmodels.Alerts `json:"alert"`
+	AlertData ef_models.Alerts `json:"alert"`
 }
 
 type IncomingAlerts struct {
-	Alerts []bmodels.Alerts `json:"alerts"`
+	Alerts []ef_models.Alerts `json:"alerts"`
 }

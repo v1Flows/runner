@@ -1,10 +1,8 @@
 package common
 
-import (
-	shared_models "github.com/v1Flows/shared-library/pkg/models"
-)
+import "github.com/v1Flows/exFlow/services/backend/pkg/models"
 
-func CheckActionVersionAgainstPluginVersion(actions []shared_models.Action, step shared_models.ExecutionSteps) (valid bool, danger bool, pluginVersion string) {
+func CheckActionVersionAgainstPluginVersion(actions []models.Action, step models.ExecutionSteps) (valid bool, danger bool, pluginVersion string) {
 	for _, action := range actions {
 		if action.Plugin == step.Action.Plugin {
 			pluginVersion = action.Version
