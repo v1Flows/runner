@@ -21,7 +21,7 @@ jobs:
         run: docker build . --file Dockerfile --tag ghcr.io/justlabv1/runner:latest --tag ghcr.io/justlabv1/runner:${{ github.sha }} --tag ghcr.io/justlabv1/runner:${{ github.ref_name }}
 
       - name: Build Runner Docker Image (Pre-release)
-        if: ${{ !contains(github.ref_name, '-beta') && !contains(github.ref_name, '-alpha') && !contains(github.ref_name, '-rc') }}
+        if: ${{ contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') || contains(github.ref_name, '-rc') }}
         run: docker build . --file Dockerfile --tag ghcr.io/justlabv1/runner:beta --tag ghcr.io/justlabv1/runner:${{ github.sha }} --tag ghcr.io/justlabv1/runner:${{ github.ref_name }}
       
       - name: 'Login to GitHub Container Registry'

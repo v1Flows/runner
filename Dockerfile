@@ -1,4 +1,5 @@
 FROM golang:1.24 as builder
+LABEL org.opencontainers.image.source = "https://github.com/JustLabV1/runner"
 
 WORKDIR /app
 
