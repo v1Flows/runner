@@ -2,7 +2,11 @@ name: Build and Release
 
 on:
   push:
-    tags: ['v[0-9].[0-9]+.[0-9]+']
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-beta.*'
+      - 'v*.*.*-alpha.*'
+      - 'v*.*.*-rc.*'
 
 jobs:
   build:
@@ -10,22 +14,36 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Build Runner Docker Image
-        run: docker build . --file Dockerfile --tag justnz/runner:latest --tag justnz/runner:${{ github.sha }} --tag justnz/runner:${{ github.ref_name }}
+      - name: Build Runner Docker Image (Stable)
+        if: ${{ !contains(github.ref_name, '-beta') && !contains(github.ref_name, '-alpha') && !contains(github.ref_name, '-rc') }}
+        run: docker build . --file Dockerfile --tag ghcr.io/justlabv1/runner:latest --tag ghcr.io/justlabv1/runner:${{ github.sha }} --tag ghcr.io/justlabv1/runner:${{ github.ref_name }}
 
-      - name: Login to Docker Hub
+      - name: Build Runner Docker Image (Pre-release)
+        if: ${{ !contains(github.ref_name, '-beta') && !contains(github.ref_name, '-alpha') && !contains(github.ref_name, '-rc') }}
+        run: docker build . --file Dockerfile --tag ghcr.io/justlabv1/runner:beta --tag ghcr.io/justlabv1/runner:${{ github.sha }} --tag ghcr.io/justlabv1/runner:${{ github.ref_name }}
+      
+      - name: 'Login to GitHub Container Registry'
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Push Docker Images
+      - name: Push Docker Images (Stable)
+        if: ${{ !contains(github.ref_name, '-beta') && !contains(github.ref_name, '-alpha') && !contains(github.ref_name, '-rc') }}
         run: |
-          docker push justnz/runner:latest
-          docker push justnz/runner:${{ github.sha }}
-          docker push justnz/runner:${{ github.ref_name }}
+          docker push ghcr.io/justlabv1/runner:latest
+          docker push ghcr.io/justlabv1/runner:${{ github.sha }}
+          docker push ghcr.io/justlabv1/runner:${{ github.ref_name }}
+      
+      - name: Push Docker Images (Pre-release)
+        if: ${{ contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') || contains(github.ref_name, '-rc') }}
+        run: |
+          docker push ghcr.io/justlabv1/runner:beta
+          docker push ghcr.io/justlabv1/runner:${{ github.sha }}
+          docker push ghcr.io/justlabv1/runner:${{ github.ref_name }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -45,9 +63,9 @@ jobs:
         id: create_release
         uses: ncipollo/release-action@v1
         with:
-          name: Release ${{ github.ref_name }}
+          name: ${{ contains(github.ref_name, '-beta') && format('🚧 Beta Release {0}', github.ref_name) || contains(github.ref_name, '-alpha') && format('🔬 Alpha Release {0}', github.ref_name) || contains(github.ref_name, '-rc') && format('🎯 Release Candidate {0}', github.ref_name) || format('🚀 Release {0}', github.ref_name) }}
           tag: ${{ github.ref_name }}
           artifacts: 'bin/*'
           skipIfReleaseExists: true
           generateReleaseNotes: true
-          token: ${{ secrets.ACCESS_TOKEN }}
+          prerelease: ${{ contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') || contains(github.ref_name, '-rc') }}
