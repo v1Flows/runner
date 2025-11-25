@@ -1,5 +1,5 @@
 # Runner
-> This runner is the execution engine of the AlertFlow and exFlow platform. Please see the [AlertFlow](https://github.com/v1Flows/AlertFlow) or [exFlow](https://github.com/v1Flows/exFlow) repo for detailed informations
+> This runner is the execution engine for JustFlow. Please see the [JustFlow](https://github.com/JustLABv1/justflow) repo for detailed informations
 
 ## Table of Contents
 
