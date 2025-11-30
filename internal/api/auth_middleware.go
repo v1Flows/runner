@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 
-	"github.com/v1Flows/exFlow/services/backend/functions/httperror"
+	"github.com/JustLABv1/justflow/services/backend/functions/httperror"
 	"github.com/v1Flows/runner/internal/token"
 
 	"github.com/gin-gonic/gin"

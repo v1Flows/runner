@@ -4,8 +4,8 @@ package plugins
 import (
 	"net/rpc"
 
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 	"github.com/hashicorp/go-plugin"
-	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 )
 

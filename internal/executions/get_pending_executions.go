@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
+	jf_models "github.com/JustLABv1/justflow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/pkg/platform"
 	"github.com/v1Flows/runner/pkg/plugins"
 
@@ -14,10 +14,10 @@ import (
 )
 
 type IncomingExecutions struct {
-	Executions []ef_models.Executions `json:"executions"`
+	Executions []jf_models.Executions `json:"executions"`
 }
 
-func GetPendingExecutions(actions []ef_models.Action, loadedPlugins map[string]plugins.Plugin) {
+func GetPendingExecutions(actions []jf_models.Action, loadedPlugins map[string]plugins.Plugin) {
 	url, apiKey, runnerID := platform.GetPlatformConfig(nil)
 
 	client := http.Client{
