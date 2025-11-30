@@ -18,56 +18,26 @@ func PerformWorkspaceCleanup(cfg *config.Config, execution models.Executions, fl
 			return err
 		}
 
-		err = os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
-		if err != nil {
-			log.Error("Error deleting workspace dir: ", err)
-
-			err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
-				ID: cleanupStep.ID,
-				Messages: []models.Message{
-					{
-						Title: "Cleanup Workspace",
-						Lines: []models.Line{
-							{
-								Content:   "Failed to delete workspace dir: " + err.Error(),
-								Timestamp: time.Now(),
-								Color:     "danger",
-							},
-						},
-					},
-				},
-				Status:     "error",
-				RunnerID:   execution.RunnerID,
-				FinishedAt: time.Now(),
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-		err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
-			ID: cleanupStep.ID,
-			Messages: []models.Message{
-				{
-					Title: "Cleanup Workspace",
-					Lines: []models.Line{
-						{
-							Content:   "Workspace directory deleted successfully.",
-							Timestamp: time.Now(),
-							Color:     "success",
-						},
-					},
-				},
-			},
-			Status:     "success",
-			RunnerID:   execution.RunnerID,
-			FinishedAt: time.Now(),
-		})
+		err = cleanup(cfg, execution, cleanupStep)
 		if err != nil {
 			return err
 		}
 
 		return nil
+	} else {
+		if execution.Status == "success" {
+			cleanupStep, err := createCleanupStep(cfg, execution)
+			if err != nil {
+				return err
+			}
+
+			err = cleanup(cfg, execution, cleanupStep)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
 	}
 
 	return nil
@@ -75,9 +45,13 @@ func PerformWorkspaceCleanup(cfg *config.Config, execution models.Executions, fl
 
 func createCleanupStep(cfg *config.Config, execution models.Executions) (models.ExecutionSteps, error) {
 	cleanupStep := models.ExecutionSteps{
+		ExecutionID: execution.ID.String(),
 		Action: models.Action{
-			Plugin: "cleanup",
-			Params: []models.Params{},
+			Name:        "Cleanup Workspace",
+			Description: "Cleanup execution workspace directory",
+			Version:     "1.0.0",
+			Icon:        "hugeicons:clean",
+			Category:    "runner",
 		},
 		Messages: []models.Message{
 			{
@@ -94,6 +68,7 @@ func createCleanupStep(cfg *config.Config, execution models.Executions) (models.
 		Status:    "running",
 		RunnerID:  execution.RunnerID,
 		CreatedAt: time.Now(),
+		StartedAt: time.Now(),
 	}
 
 	stepID, err := executions.SendStep(cfg, execution, cleanupStep)
@@ -104,4 +79,57 @@ func createCleanupStep(cfg *config.Config, execution models.Executions) (models.
 	cleanupStep.ID = stepID.ID
 
 	return cleanupStep, nil
+}
+
+func cleanup(cfg *config.Config, execution models.Executions, step models.ExecutionSteps) error {
+	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
+	if err != nil {
+		log.Error("Error deleting workspace dir: ", err)
+
+		err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
+			ID: step.ID,
+			Messages: []models.Message{
+				{
+					Title: "Cleanup Workspace",
+					Lines: []models.Line{
+						{
+							Content:   "Failed to delete workspace dir: " + err.Error(),
+							Timestamp: time.Now(),
+							Color:     "danger",
+						},
+					},
+				},
+			},
+			Status:     "error",
+			RunnerID:   execution.RunnerID,
+			FinishedAt: time.Now(),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = executions.UpdateStep(nil, execution.ID.String(), models.ExecutionSteps{
+		ID: step.ID,
+		Messages: []models.Message{
+			{
+				Title: "Cleanup Workspace",
+				Lines: []models.Line{
+					{
+						Content:   "Workspace directory deleted successfully.",
+						Timestamp: time.Now(),
+						Color:     "success",
+					},
+				},
+			},
+		},
+		Status:     "success",
+		RunnerID:   execution.RunnerID,
+		FinishedAt: time.Now(),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
