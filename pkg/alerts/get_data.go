@@ -22,13 +22,13 @@ func GetData(cfg *config.Config, alertID string) (models.Alerts, error) {
 		},
 	}
 
-	url := cfg.ExFlow.URL + "/api/v1/alerts/" + alertID
+	url := cfg.JustFlow.URL + "/api/v1/alerts/" + alertID
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
 		return models.Alerts{}, err
 	}
-	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
+	req.Header.Set("Authorization", cfg.JustFlow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)

@@ -21,7 +21,7 @@ type ConfigurationManager struct {
 type Config struct {
 	LogLevel     string            `mapstructure:"log_level" validate:"required,oneof=debug info warn error"`
 	Mode         string            `mapstructure:"mode" validate:"required,oneof=master worker"`
-	ExFlow       exflowConfig      `mapstructure:"exflow" validate:"required"`
+	JustFlow     justflowConfig    `mapstructure:"justflow" validate:"required"`
 	ApiEndpoint  ApiEndpointConfig `mapstructure:"api_endpoint" validate:"required"`
 	WorkspaceDir string            `mapstructure:"workspace_dir" validate:"dir"`
 	PluginDir    string            `mapstructure:"plugin_dir" validate:"dir"`
@@ -29,7 +29,7 @@ type Config struct {
 	Runner       RunnerConf        `mapstructure:"runner"`
 }
 
-type exflowConfig struct {
+type justflowConfig struct {
 	URL      string `mapstructure:"url" validate:"required,url"`
 	RunnerID string `mapstructure:"runner_id"`
 	APIKey   string `mapstructure:"api_key"`
@@ -161,11 +161,11 @@ func (cm *ConfigurationManager) setDefaults(config *Config) {
 }
 
 func (cm *ConfigurationManager) validateConfig(config *Config) error {
-	if config.ExFlow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
-		return fmt.Errorf("exflow.api_key or runner.shared_runner_secret is required")
+	if config.JustFlow.APIKey == "" && config.Runner.SharedRunnerSecret == "" {
+		return fmt.Errorf("justflow.api_key or runner.shared_runner_secret is required")
 	}
-	if config.ExFlow.URL == "" {
-		return fmt.Errorf("exflow URL is required")
+	if config.JustFlow.URL == "" {
+		return fmt.Errorf("justflow URL is required")
 	}
 
 	return nil
@@ -182,28 +182,28 @@ func (cm *ConfigurationManager) GetConfig() *Config {
 func (cm *ConfigurationManager) UpdateRunnerID(id string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	cm.config.ExFlow.RunnerID = id
+	cm.config.JustFlow.RunnerID = id
 }
 
 // UpdateRunnerApiKey updates the runner api_key in the configuration for both Alertflow and ExFlow
 func (cm *ConfigurationManager) UpdateRunnerApiKey(apiKey string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	cm.config.ExFlow.APIKey = apiKey
+	cm.config.JustFlow.APIKey = apiKey
 }
 
 // GetRunnerIDs returns the current runner IDs for both Alertflow and ExFlow
 func (cm *ConfigurationManager) GetRunnerID() string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	return cm.config.ExFlow.RunnerID
+	return cm.config.JustFlow.RunnerID
 }
 
 // GetRunnerIDs returns the current runner apiKey for both Alertflow and ExFlow
 func (cm *ConfigurationManager) GetRunnerApiKey() string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
-	return cm.config.ExFlow.APIKey
+	return cm.config.JustFlow.APIKey
 }
 
 // ReloadConfig reloads the configuration from the file

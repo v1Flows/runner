@@ -1,4 +1,4 @@
-package internal_exflow
+package internal_justflow
 
 import (
 	"time"
