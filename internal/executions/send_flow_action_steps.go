@@ -2,11 +2,11 @@ package internal_executions
 
 import (
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
-	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/pkg/executions"
+	"github.com/JustLABv1/runner/config"
+	"github.com/JustLABv1/runner/pkg/executions"
 )
 
-// SendFlowActionSteps sends all active flow actions to alertflow
+// SendFlowActionSteps sends all active flow actions to justflow
 func sendFlowActionSteps(cfg *config.Config, execution models.Executions, flow models.Flows) (stepsWithIDs []models.ExecutionSteps, err error) {
 	for _, action := range flow.Actions {
 		if !action.Active {

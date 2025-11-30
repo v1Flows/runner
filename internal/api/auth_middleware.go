@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/JustLABv1/justflow/services/backend/functions/httperror"
-	"github.com/v1Flows/runner/internal/token"
+	"github.com/JustLABv1/runner/internal/token"
 
 	"github.com/gin-gonic/gin"
 )

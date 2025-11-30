@@ -178,28 +178,28 @@ func (cm *ConfigurationManager) GetConfig() *Config {
 	return cm.config
 }
 
-// UpdateRunnerID updates the runner ID in the configuration for both Alertflow and ExFlow
+// UpdateRunnerID updates the runner ID in the configuration for JustFlow
 func (cm *ConfigurationManager) UpdateRunnerID(id string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	cm.config.JustFlow.RunnerID = id
 }
 
-// UpdateRunnerApiKey updates the runner api_key in the configuration for both Alertflow and ExFlow
+// UpdateRunnerApiKey updates the runner api_key in the configuration for JustFlow
 func (cm *ConfigurationManager) UpdateRunnerApiKey(apiKey string) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	cm.config.JustFlow.APIKey = apiKey
 }
 
-// GetRunnerIDs returns the current runner IDs for both Alertflow and ExFlow
+// GetRunnerIDs returns the current runner IDs for JustFlow
 func (cm *ConfigurationManager) GetRunnerID() string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
 	return cm.config.JustFlow.RunnerID
 }
 
-// GetRunnerIDs returns the current runner apiKey for both Alertflow and ExFlow
+// GetRunnerIDs returns the current runner apiKey for JustFlow
 func (cm *ConfigurationManager) GetRunnerApiKey() string {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()

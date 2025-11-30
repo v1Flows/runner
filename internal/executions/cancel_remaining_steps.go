@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
+	"github.com/JustLABv1/runner/pkg/executions"
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/runner/pkg/executions"
 )
 
 func cancelRemainingSteps(executionID string) error {

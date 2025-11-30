@@ -3,8 +3,8 @@
 log_level: info
 mode: master
 
-exflow:
-  url: https://exflow.org
+justflow:
+  url: https://justflow.app
   runner_id: null
   api_key: null
 

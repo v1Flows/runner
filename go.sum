@@ -142,10 +142,6 @@ github.com/ugorji/go/codec v1.3.0 h1:Qd2W2sQawAfG8XSvzwhBeoGq71zXOC/Q1E9y/wUcsUA
 github.com/ugorji/go/codec v1.3.0/go.mod h1:pRBVtBSKl77K30Bv8R2P+cLSGaTtex6fsA2Wjqmfxj4=
 github.com/uptrace/bun v1.2.16 h1:QlObi6ZIK5Ao7kAALnh91HWYNZUBbVwye52fmlQM9kc=
 github.com/uptrace/bun v1.2.16/go.mod h1:jMoNg2n56ckaawi/O/J92BHaECmrz6IRjuMWqlMaMTM=
-github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445 h1:o1WaAweRrGc6Yz4G3DTE9cr6sFul1TJ9k71yIbECQYQ=
-github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445/go.mod h1:wN72OUmADQ95eNYyiYM4oa6FOnvoCBRljzsGQGdvaIA=
-github.com/v1Flows/exFlow/services/backend v0.0.0-20250904092110-86db1f89ca20 h1:yfee6np8MyaFQv8JKXbNsM7CMZ/Qykg9PDYg4Cmz+Uk=
-github.com/v1Flows/exFlow/services/backend v0.0.0-20250904092110-86db1f89ca20/go.mod h1:FDHugsWJJxP5p0baCAd7YQ375DmD0zQchxZKLASJ3Cc=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=

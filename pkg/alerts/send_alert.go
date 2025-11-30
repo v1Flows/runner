@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
-	"github.com/v1Flows/runner/config"
+	"github.com/JustLABv1/runner/config"
 
 	log "github.com/sirupsen/logrus"
 )

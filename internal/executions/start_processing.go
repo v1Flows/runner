@@ -5,13 +5,15 @@ import (
 	"os"
 	"time"
 
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 	jf_models "github.com/JustLABv1/justflow/services/backend/pkg/models"
+	"github.com/JustLABv1/runner/config"
+	"github.com/JustLABv1/runner/internal/cleanup"
+	internal_justflow "github.com/JustLABv1/runner/internal/justflow"
+	"github.com/JustLABv1/runner/internal/runner"
+	"github.com/JustLABv1/runner/pkg/executions"
+	"github.com/JustLABv1/runner/pkg/plugins"
 	"github.com/google/uuid"
-	"github.com/v1Flows/runner/config"
-	internal_justflow "github.com/v1Flows/runner/internal/justflow"
-	"github.com/v1Flows/runner/internal/runner"
-	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/plugins"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -55,6 +57,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 	err = executions.UpdateExecution(nil, execution)
 	if err != nil {
+		postProcessing(cfg, execution, jf_models.Flows{})
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
@@ -69,6 +72,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 	var initialSteps []jf_models.ExecutionSteps
 	initialSteps, err = internal_justflow.SendInitialSteps(cfg, actions, execution)
 	if err != nil {
+		postProcessing(cfg, execution, jf_models.Flows{})
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
@@ -87,6 +91,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 				log.Error("Error processing initial step: ", err)
 				// cancel remaining steps
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				// end execution
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
@@ -97,6 +102,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 			if canceled {
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				executions.EndCanceled(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
@@ -109,6 +115,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 			} else if flow.ID == uuid.Nil {
 				log.Error("Error parsing flow")
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
@@ -125,6 +132,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 			} else if flow.Type == "alert" && alert.ID == uuid.Nil {
 				log.Error("Error parsing alert")
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
@@ -134,6 +142,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 			if res.Data["status"] == "noPatternMatch" {
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				executions.EndNoPatternMatch(nil, execution)
 				finishProcessing(cfg, execution, flow)
 				return
@@ -141,6 +150,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 			if res.Data["status"] == "canceled" {
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				executions.EndCanceled(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
@@ -150,6 +160,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 			if !success {
 				cancelRemainingSteps(execution.ID.String())
+				postProcessing(cfg, execution, flow)
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
@@ -159,9 +170,10 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 		}
 	}
 
-	// send flow actions as steps to alertflow
+	// send flow actions as steps to justflow
 	flowActionStepsWithIDs, err := sendFlowActionSteps(cfg, execution, flow)
 	if err != nil {
+		postProcessing(cfg, execution, flow)
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
@@ -182,6 +194,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
+							postProcessing(cfg, execution, flow)
 							// end execution with recovered status
 							executions.EndWithError(nil, execution)
 							// Stop heartbeats and finish processing
@@ -191,6 +204,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 						}
 					}
 
+					postProcessing(cfg, execution, flow)
 					// end execution
 					executions.EndWithError(nil, execution)
 					// Stop heartbeats and finish processing
@@ -201,6 +215,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 				if res.Data["status"] == "noPatternMatch" {
 					cancelRemainingSteps(execution.ID.String())
+					postProcessing(cfg, execution, flow)
 					executions.EndNoPatternMatch(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
@@ -210,6 +225,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 				if res.Data["status"] == "canceled" {
 					cancelRemainingSteps(execution.ID.String())
+					postProcessing(cfg, execution, flow)
 					executions.EndCanceled(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
@@ -219,6 +235,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 				if canceled {
 					cancelRemainingSteps(execution.ID.String())
+					postProcessing(cfg, execution, flow)
 					executions.EndCanceled(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
@@ -233,6 +250,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 					if flow.FailurePipelineID != "" || step.Action.FailurePipelineID != "" {
 						err = startFailurePipeline(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, flowActionStepsWithIDs, step, execution)
 						if err != nil {
+							postProcessing(cfg, execution, flow)
 							executions.EndWithError(nil, execution)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
@@ -240,6 +258,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 							return
 						}
 
+						postProcessing(cfg, execution, flow)
 						// end execution with recovered status
 						executions.EndWithRecovered(nil, execution)
 						// Stop heartbeats and finish processing
@@ -248,6 +267,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 						return
 					}
 
+					postProcessing(cfg, execution, flow)
 					executions.EndWithError(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
@@ -304,6 +324,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 		}
 
 		if failedSteps > 0 {
+			postProcessing(cfg, execution, flow)
 			executions.EndWithError(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
@@ -312,6 +333,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 		}
 
 		if canceledSteps > 0 {
+			postProcessing(cfg, execution, flow)
 			executions.EndCanceled(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
@@ -320,6 +342,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 		}
 
 		if noPatternMatchSteps > 0 {
+			postProcessing(cfg, execution, flow)
 			executions.EndNoPatternMatch(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
@@ -328,6 +351,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 		}
 	}
 
+	postProcessing(cfg, execution, flow)
 	executions.EndSuccess(nil, execution)
 
 	// Stop heartbeats and finish processing
@@ -335,11 +359,13 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 	finishProcessing(cfg, execution, flow)
 }
 
-func finishProcessing(cfg *config.Config, execution jf_models.Executions, flow jf_models.Flows) {
-	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
+func postProcessing(cfg *config.Config, execution models.Executions, flow models.Flows) {
+	err := cleanup.PerformWorkspaceCleanup(cfg, execution, flow)
 	if err != nil {
-		log.Error("Error deleting workspace dir: ", err)
+		log.Error("Error during workspace cleanup: ", err)
 	}
+}
 
+func finishProcessing(cfg *config.Config, execution jf_models.Executions, flow jf_models.Flows) {
 	runner.Busy(false)
 }
