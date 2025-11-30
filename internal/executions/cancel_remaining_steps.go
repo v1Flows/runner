@@ -3,8 +3,8 @@ package internal_executions
 import (
 	"time"
 
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/pkg/executions"
 )
 

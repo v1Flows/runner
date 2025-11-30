@@ -1,6 +1,6 @@
 package models
 
-import "github.com/v1Flows/exFlow/services/backend/pkg/models"
+import "github.com/JustLABv1/justflow/services/backend/pkg/models"
 
 type IncomingExecutionSteps struct {
 	StepsData []models.ExecutionSteps `json:"steps"`

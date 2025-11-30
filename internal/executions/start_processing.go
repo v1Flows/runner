@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	jf_models "github.com/JustLABv1/justflow/services/backend/pkg/models"
 	"github.com/google/uuid"
-	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	internal_exflow "github.com/v1Flows/runner/internal/exflow"
 	"github.com/v1Flows/runner/internal/runner"
@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugins.Plugin, execution ef_models.Executions, alertID string) {
+func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugins.Plugin, execution jf_models.Executions, alertID string) {
 	configManager := config.GetInstance()
 	cfg := configManager.GetConfig()
 
@@ -58,7 +58,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
-		finishProcessing(cfg, execution)
+		finishProcessing(cfg, execution, jf_models.Flows{})
 		return
 	}
 
@@ -66,20 +66,20 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 	runner.Busy(true)
 
 	// send initial step
-	var initialSteps []ef_models.ExecutionSteps
+	var initialSteps []jf_models.ExecutionSteps
 	initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
 	if err != nil {
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
-		finishProcessing(cfg, execution)
+		finishProcessing(cfg, execution, jf_models.Flows{})
 		return
 	}
 
 	// process each initial step where pending is true
-	var flow ef_models.Flows
+	var flow jf_models.Flows
 	var flowBytes []byte
-	var alert ef_models.Alerts
+	var alert jf_models.Alerts
 	for _, step := range initialSteps {
 		if step.Status == "pending" {
 			res, success, canceled, err := processStep(cfg, workspace, actions, loadedPlugins, flow, flowBytes, alert, initialSteps, step, execution)
@@ -91,7 +91,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 
@@ -100,7 +100,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 				executions.EndCanceled(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 
@@ -112,7 +112,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 
@@ -128,14 +128,14 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 
 			if res.Data["status"] == "noPatternMatch" {
 				cancelRemainingSteps(execution.ID.String())
 				executions.EndNoPatternMatch(nil, execution)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 
@@ -144,7 +144,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 				executions.EndCanceled(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 
@@ -153,7 +153,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 				executions.EndWithError(nil, execution)
 				// Stop heartbeats and finish processing
 				close(doneHeartbeat)
-				finishProcessing(cfg, execution)
+				finishProcessing(cfg, execution, flow)
 				return
 			}
 		}
@@ -165,7 +165,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
 		close(doneHeartbeat)
-		finishProcessing(cfg, execution)
+		finishProcessing(cfg, execution, flow)
 		return
 	}
 
@@ -186,7 +186,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 							executions.EndWithError(nil, execution)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
-							finishProcessing(cfg, execution)
+							finishProcessing(cfg, execution, flow)
 							return
 						}
 					}
@@ -195,7 +195,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 					executions.EndWithError(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(cfg, execution)
+					finishProcessing(cfg, execution, flow)
 					return
 				}
 
@@ -204,7 +204,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 					executions.EndNoPatternMatch(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(cfg, execution)
+					finishProcessing(cfg, execution, flow)
 					return
 				}
 
@@ -213,7 +213,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 					executions.EndCanceled(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(cfg, execution)
+					finishProcessing(cfg, execution, flow)
 					return
 				}
 
@@ -222,7 +222,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 					executions.EndCanceled(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(cfg, execution)
+					finishProcessing(cfg, execution, flow)
 					return
 				}
 
@@ -236,7 +236,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 							executions.EndWithError(nil, execution)
 							// Stop heartbeats and finish processing
 							close(doneHeartbeat)
-							finishProcessing(cfg, execution)
+							finishProcessing(cfg, execution, flow)
 							return
 						}
 
@@ -244,14 +244,14 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 						executions.EndWithRecovered(nil, execution)
 						// Stop heartbeats and finish processing
 						close(doneHeartbeat)
-						finishProcessing(cfg, execution)
+						finishProcessing(cfg, execution, flow)
 						return
 					}
 
 					executions.EndWithError(nil, execution)
 					// Stop heartbeats and finish processing
 					close(doneHeartbeat)
-					finishProcessing(cfg, execution)
+					finishProcessing(cfg, execution, flow)
 					return
 				}
 			}
@@ -307,7 +307,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 			executions.EndWithError(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
-			finishProcessing(cfg, execution)
+			finishProcessing(cfg, execution, flow)
 			return
 		}
 
@@ -315,7 +315,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 			executions.EndCanceled(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
-			finishProcessing(cfg, execution)
+			finishProcessing(cfg, execution, flow)
 			return
 		}
 
@@ -323,7 +323,7 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 			executions.EndNoPatternMatch(nil, execution)
 			// Stop heartbeats and finish processing
 			close(doneHeartbeat)
-			finishProcessing(cfg, execution)
+			finishProcessing(cfg, execution, flow)
 			return
 		}
 	}
@@ -332,10 +332,10 @@ func startProcessing(actions []ef_models.Action, loadedPlugins map[string]plugin
 
 	// Stop heartbeats and finish processing
 	close(doneHeartbeat)
-	finishProcessing(cfg, execution)
+	finishProcessing(cfg, execution, flow)
 }
 
-func finishProcessing(cfg *config.Config, execution ef_models.Executions) {
+func finishProcessing(cfg *config.Config, execution jf_models.Executions, flow jf_models.Flows) {
 	err := os.RemoveAll(fmt.Sprintf("%s/%s", cfg.WorkspaceDir, execution.ID))
 	if err != nil {
 		log.Error("Error deleting workspace dir: ", err)

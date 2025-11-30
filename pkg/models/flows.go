@@ -1,9 +1,9 @@
 package models
 
 import (
-	ef_models "github.com/v1Flows/exFlow/services/backend/pkg/models"
+	jf_models "github.com/JustLABv1/justflow/services/backend/pkg/models"
 )
 
 type IncomingFlow struct {
-	FlowData ef_models.Flows `json:"flow"`
+	FlowData jf_models.Flows `json:"flow"`
 }

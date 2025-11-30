@@ -1,6 +1,6 @@
 package common
 
-import "github.com/v1Flows/exFlow/services/backend/pkg/models"
+import "github.com/JustLABv1/justflow/services/backend/pkg/models"
 
 func CheckActionVersionAgainstPluginVersion(actions []models.Action, step models.ExecutionSteps) (valid bool, danger bool, pluginVersion string) {
 	for _, action := range actions {

@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"github.com/v1Flows/exFlow/services/backend/pkg/models"
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 	internal_executions "github.com/v1Flows/runner/internal/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
 )

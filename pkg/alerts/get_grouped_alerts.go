@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/v1Flows/exFlow/services/backend/pkg/models"
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 	"github.com/v1Flows/runner/config"
 	internal_models "github.com/v1Flows/runner/pkg/models"
 
