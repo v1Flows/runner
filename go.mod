@@ -1,4 +1,4 @@
-module github.com/v1Flows/runner
+module github.com/JustLABv1/runner
 
 go 1.24.0
 
@@ -10,7 +10,6 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.7.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445
 )
 
 require (
@@ -76,7 +75,6 @@ require (
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.11.0
 	github.com/spf13/viper v1.21.0
-	github.com/v1Flows/exFlow/services/backend v0.0.0-20250904092110-86db1f89ca20
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 )

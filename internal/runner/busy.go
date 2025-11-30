@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
-	"github.com/v1Flows/runner/pkg/platform"
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
+	"github.com/JustLABv1/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
 )

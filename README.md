@@ -46,9 +46,9 @@ api_endpoint:
 ```
 
 ## Plugins
-The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be found [here](https://github.com/v1Flows/runner-plugins).
+The runner can be extended by integrating plugins following a specific schema. A list of available plugins can be found [here](https://github.com/JustLABv1/runner-plugins).
 
-To develop your own plugin you can start right away with this [template](https://github.com/v1Flows/runner-plugins/tree/develop/template)
+To develop your own plugin you can start right away with this [template](https://github.com/JustLABv1/runner-plugins/tree/develop/template)
 
 ## Modes
 
@@ -91,4 +91,4 @@ We welcome contributions to this project! To contribute, follow these steps:
 5. Open a pull request on GitHub.
 
 ## License
-This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](https://github.com/v1Flows/runner/blob/main/LICENSE) file for details.
+This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](https://github.com/JustLABv1/runner/blob/main/LICENSE) file for details.

@@ -1,12 +1,11 @@
-// filepath: /Users/Justin.Neubert/projects/v1flows/v1Flows/runner/pkg/plugins/plugin.go
 package plugins
 
 import (
 	"net/rpc"
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
+	"github.com/JustLABv1/runner/config"
 	"github.com/hashicorp/go-plugin"
-	"github.com/v1Flows/runner/config"
 )
 
 // Plugin interface that all plugins must implement

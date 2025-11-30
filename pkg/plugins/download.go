@@ -1,4 +1,3 @@
-// filepath: /Users/Justin.Neubert/projects/v1flows/v1Flows/runner/pkg/plugins/download.go
 package plugins
 
 import (
@@ -9,8 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/JustLABv1/runner/config"
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/runner/config"
 )
 
 // DownloadAndBuildPlugins downloads and builds plugins from GitHub
@@ -54,7 +53,7 @@ func DownloadPlugins(pluginRepos []config.PluginConfig, buildDir string, pluginD
 
 		// set default plugin url if not provided
 		if plugin.Url == "" {
-			plugin.Url = fmt.Sprintf("https://github.com/v1Flows/runner-plugins/releases/download/%s-%s/%s-%s-%s-%s", plugin.Name, plugin.Version, plugin.Name, plugin.Version, runtime.GOOS, runtime.GOARCH)
+			plugin.Url = fmt.Sprintf("https://github.com/JustLABv1/runner-plugins/releases/download/%s-%s/%s-%s-%s-%s", plugin.Name, plugin.Version, plugin.Name, plugin.Version, runtime.GOOS, runtime.GOARCH)
 		}
 
 		// Download the plugin

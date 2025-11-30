@@ -1,4 +1,3 @@
-// filepath: /Users/Justin.Neubert/projects/v1flows/v1Flows/runner/pkg/plugins/init.go
 package plugins
 
 import (
@@ -8,10 +7,10 @@ import (
 	"time"
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
+	"github.com/JustLABv1/runner/config"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	log "github.com/sirupsen/logrus"
-	"github.com/v1Flows/runner/config"
 )
 
 var loadedPlugins = make(map[string]Plugin)

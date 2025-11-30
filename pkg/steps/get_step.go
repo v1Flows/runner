@@ -1,7 +1,7 @@
 package steps
 
 import (
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
+	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 )
 
 func GetStepByActionName(steps []models.ExecutionSteps, actionName string) models.ExecutionSteps {

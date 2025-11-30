@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
+	"github.com/JustLABv1/runner/config"
+	"github.com/JustLABv1/runner/internal/api"
+	internal_executions "github.com/JustLABv1/runner/internal/executions"
+	"github.com/JustLABv1/runner/internal/runner"
+	"github.com/JustLABv1/runner/internal/worker"
+	"github.com/JustLABv1/runner/pkg/plugins"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/v1Flows/runner/config"
-	"github.com/v1Flows/runner/internal/api"
-	internal_executions "github.com/v1Flows/runner/internal/executions"
-	"github.com/v1Flows/runner/internal/runner"
-	"github.com/v1Flows/runner/internal/worker"
-	"github.com/v1Flows/runner/pkg/plugins"
 
 	"github.com/alecthomas/kingpin/v2"
 )
@@ -48,7 +48,7 @@ func main() {
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
-	log.Info("Starting v1Flows Runner. Version: ", version)
+	log.Info("Starting JustLAB Runner. Version: ", version)
 
 	log.Info("Loading config")
 	configManager := config.GetInstance()
@@ -72,7 +72,7 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://exflow.org", "https://alertflow.org", "http://localhost:8080", "http://localhost:3000", "http://localhost:4000", "http://localhost:8081"},
+		AllowOrigins:     []string{"https://justflow.app", "http://localhost:8080", "http://localhost:3000", "http://localhost:4000", "http://localhost:8081"},
 		AllowMethods:     []string{"GET", "HEAD", "POST", "PUT", "OPTIONS", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Authorization", "X-Requested-With", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},

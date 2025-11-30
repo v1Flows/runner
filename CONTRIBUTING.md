@@ -17,7 +17,7 @@ We welcome contributions to the Runner project! By contributing, you help make t
 1. Fork the repository on GitHub.
 2. Clone your forked repository:
     ```sh
-    git clone git@github.com:v1Flows/runner.git
+    git clone git@github.com:JustLABv1/runner.git
     cd runner
     ```
 3. Create a new branch for your changes:

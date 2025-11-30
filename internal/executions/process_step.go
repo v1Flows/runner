@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
-	"github.com/v1Flows/runner/config"
-	internal_actions "github.com/v1Flows/runner/internal/actions"
-	"github.com/v1Flows/runner/internal/common"
-	"github.com/v1Flows/runner/pkg/executions"
-	"github.com/v1Flows/runner/pkg/plugins"
+	"github.com/JustLABv1/runner/config"
+	internal_actions "github.com/JustLABv1/runner/internal/actions"
+	"github.com/JustLABv1/runner/internal/common"
+	"github.com/JustLABv1/runner/pkg/executions"
+	"github.com/JustLABv1/runner/pkg/plugins"
 
 	log "github.com/sirupsen/logrus"
 )

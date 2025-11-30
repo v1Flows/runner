@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"github.com/v1Flows/runner/config"
+	"github.com/JustLABv1/runner/config"
 )
 
 func GetPlatformConfig(cfg *config.Config) (string, string, string) {

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	jf_models "github.com/JustLABv1/justflow/services/backend/pkg/models"
-	"github.com/v1Flows/runner/pkg/platform"
-	"github.com/v1Flows/runner/pkg/plugins"
+	"github.com/JustLABv1/runner/pkg/platform"
+	"github.com/JustLABv1/runner/pkg/plugins"
 
 	log "github.com/sirupsen/logrus"
 )
