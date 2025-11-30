@@ -30,13 +30,13 @@ func GetGroupedAlerts(cfg *config.Config, flowID string, groupKeyIdentifier stri
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(request)
 
-	url := cfg.ExFlow.URL + "/api/v1/alerts/grouped"
+	url := cfg.JustFlow.URL + "/api/v1/alerts/grouped"
 	req, err := http.NewRequest("GET", url, payloadBuf)
 	if err != nil {
 		log.Errorf("Failed to create request: %v", err)
 		return []models.Alerts{}, err
 	}
-	req.Header.Set("Authorization", cfg.ExFlow.APIKey)
+	req.Header.Set("Authorization", cfg.JustFlow.APIKey)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error(err)

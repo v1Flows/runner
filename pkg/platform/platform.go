@@ -11,7 +11,7 @@ func GetPlatformConfig(cfg *config.Config) (string, string, string) {
 		cfg = configManager.GetConfig()
 	}
 
-	return cfg.ExFlow.URL, cfg.ExFlow.APIKey, cfg.ExFlow.RunnerID
+	return cfg.JustFlow.URL, cfg.JustFlow.APIKey, cfg.JustFlow.RunnerID
 }
 
 func GetPlatformConfigPlain(cfg *config.Config) (string, string) {
@@ -21,5 +21,5 @@ func GetPlatformConfigPlain(cfg *config.Config) (string, string) {
 		cfg = configManager.GetConfig()
 	}
 
-	return cfg.ExFlow.URL, cfg.ExFlow.APIKey
+	return cfg.JustFlow.URL, cfg.JustFlow.APIKey
 }

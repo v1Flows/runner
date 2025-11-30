@@ -13,11 +13,11 @@
 
 ## Features
 - **Modes**: The runner can be started in different modes which either offer full functionality or just be a standby listener for incoming alerts
-- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this runner and alertflow / exflow to your needs
+- **Plugins**: Develop your own plugins or use our existing ones to extend the functionality of this Runner and JustFlow to your needs
 
 ## Configuration
 
-To conntect an runner to exFlow or AlertFlow you first have to set them up and copy the runner_id and or the api key from the created project. As an Admin you can copy the Global Share Runner token from the admin view.
+To conntect an runner to JustFlow you first have to set them up and copy the runner_id and or the api key from the created project. As an Admin you can copy the Global Share Runner token from the admin view.
 
 ```yaml
 ---
@@ -25,15 +25,9 @@ To conntect an runner to exFlow or AlertFlow you first have to set them up and c
 log_level: info
 mode: master
 
-alertflow:
+justflow:
   enabled: true
-  url: https://alertflow.org
-  runner_id: null
-  api_key: null
-
-exflow:
-  enabled: true
-  url: https://exflow.org
+  url: https://justflow.app
   runner_id: null
   api_key: null
 

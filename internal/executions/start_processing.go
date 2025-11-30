@@ -8,7 +8,7 @@ import (
 	jf_models "github.com/JustLABv1/justflow/services/backend/pkg/models"
 	"github.com/google/uuid"
 	"github.com/v1Flows/runner/config"
-	internal_exflow "github.com/v1Flows/runner/internal/exflow"
+	internal_justflow "github.com/v1Flows/runner/internal/justflow"
 	"github.com/v1Flows/runner/internal/runner"
 	"github.com/v1Flows/runner/pkg/executions"
 	"github.com/v1Flows/runner/pkg/plugins"
@@ -67,7 +67,7 @@ func startProcessing(actions []jf_models.Action, loadedPlugins map[string]plugin
 
 	// send initial step
 	var initialSteps []jf_models.ExecutionSteps
-	initialSteps, err = internal_exflow.SendInitialSteps(cfg, actions, execution)
+	initialSteps, err = internal_justflow.SendInitialSteps(cfg, actions, execution)
 	if err != nil {
 		executions.EndWithError(nil, execution)
 		// Stop heartbeats and finish processing
