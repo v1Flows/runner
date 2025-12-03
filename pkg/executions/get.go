@@ -8,6 +8,7 @@ import (
 
 	"github.com/JustLABv1/justflow/services/backend/pkg/models"
 	"github.com/JustLABv1/runner/config"
+	internal_models "github.com/JustLABv1/runner/pkg/models"
 	"github.com/JustLABv1/runner/pkg/platform"
 
 	log "github.com/sirupsen/logrus"
@@ -42,14 +43,12 @@ func GetExecutionByID(cfg *config.Config, executionID string) (models.Executions
 		return models.Executions{}, err
 	}
 
-	log.Debugf("Step data received from API: %s", url)
-
-	var execution models.Executions
+	var execution internal_models.IncomingExecution
 	err = json.NewDecoder(resp.Body).Decode(&execution)
 	if err != nil {
 		log.Fatal(err)
 		return models.Executions{}, err
 	}
 
-	return execution, nil
+	return execution.ExecutionData, nil
 }
