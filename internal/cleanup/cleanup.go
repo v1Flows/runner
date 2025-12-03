@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func PerformWorkspaceCleanup(cfg *config.Config, execution models.Executions, flow models.Flows) error {
+func PerformWorkspaceCleanup(cfg *config.Config, execution models.Executions, flow models.Flows, execStatus string) error {
 	if flow.AlwaysCleanupWorkspace {
 		cleanupStep, err := createCleanupStep(cfg, execution)
 		if err != nil {
@@ -25,7 +25,7 @@ func PerformWorkspaceCleanup(cfg *config.Config, execution models.Executions, fl
 
 		return nil
 	} else {
-		if execution.Status == "success" {
+		if execStatus == "success" {
 			cleanupStep, err := createCleanupStep(cfg, execution)
 			if err != nil {
 				return err

@@ -36,7 +36,7 @@ func InitRouter(cfg *config.Config, router *gin.Engine, endpointPlugins []models
 		executionID := c.Param("executionID")
 		log.Info("Received Cancel Request for Execution ID: ", executionID)
 
-		// Locate the execution (you may need to implement this function)
+		// Locate the execution
 		execution, err := executions.GetExecutionByID(nil, executionID)
 		if err != nil {
 			log.Error("Execution not found: ", err)
